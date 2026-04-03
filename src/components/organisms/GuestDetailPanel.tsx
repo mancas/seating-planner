@@ -11,29 +11,79 @@ interface Props {
 
 function GuestDetailPanel({ guest, onClose }: Props) {
   return (
-    <aside className="hidden md:flex flex-col w-[320px] min-w-[320px] bg-surface border-l border-border overflow-y-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <span className="text-label text-foreground-muted tracking-wider uppercase">
-          GUEST_DETAILS
-        </span>
-        <IconButton onClick={onClose} label="Close details">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="5" y1="5" x2="15" y2="15" />
-            <line x1="15" y1="5" x2="5" y2="15" />
-          </svg>
-        </IconButton>
+    <>
+      {/* Mobile: full-screen overlay */}
+      <div className="md:hidden fixed inset-0 z-50 flex flex-col bg-background overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+          <span className="text-label text-foreground-muted tracking-wider uppercase">
+            GUEST_DETAILS
+          </span>
+          <IconButton onClick={onClose} label="Close details">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="5" y1="5" x2="15" y2="15" />
+              <line x1="15" y1="5" x2="5" y2="15" />
+            </svg>
+          </IconButton>
+        </div>
+
+        {renderContent(guest)}
+
+        {/* Action buttons */}
+        <div className="px-4 py-4 mt-auto border-t border-border flex gap-3 shrink-0">
+          <button className="btn-secondary flex-1">CONTACT</button>
+          <button className="btn-primary flex-1">UPDATE</button>
+        </div>
       </div>
 
+      {/* Desktop: inline side panel */}
+      <aside className="hidden md:flex flex-col w-[320px] min-w-[320px] bg-surface border-l border-border overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <span className="text-label text-foreground-muted tracking-wider uppercase">
+            GUEST_DETAILS
+          </span>
+          <IconButton onClick={onClose} label="Close details">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="5" y1="5" x2="15" y2="15" />
+              <line x1="15" y1="5" x2="5" y2="15" />
+            </svg>
+          </IconButton>
+        </div>
+
+        {renderContent(guest)}
+
+        {/* Action buttons */}
+        <div className="px-4 py-4 mt-auto border-t border-border flex gap-3">
+          <button className="btn-secondary flex-1">CONTACT</button>
+          <button className="btn-primary flex-1">UPDATE</button>
+        </div>
+      </aside>
+    </>
+  )
+}
+
+function renderContent(guest: Guest) {
+  return (
+    <>
       {/* Guest identity */}
       <div className="py-6 px-4 flex flex-col items-center text-center">
         <Avatar
@@ -52,7 +102,7 @@ function GuestDetailPanel({ guest, onClose }: Props) {
         <GuestDetailSection title="CORE METADATA">
           <div className="flex items-center justify-between py-2">
             <span className="text-caption text-foreground-muted">STATUS</span>
-            <StatusBadge status={guest.status} />
+            <StatusBadge status={guest.status} alwaysVisible />
           </div>
           <div className="flex items-center justify-between py-2">
             <span className="text-caption text-foreground-muted">
@@ -155,13 +205,7 @@ function GuestDetailPanel({ guest, onClose }: Props) {
           </div>
         </GuestDetailSection>
       </div>
-
-      {/* Action buttons */}
-      <div className="px-4 py-4 mt-auto border-t border-border flex gap-3">
-        <button className="btn-secondary flex-1">CONTACT</button>
-        <button className="btn-primary flex-1">UPDATE</button>
-      </div>
-    </aside>
+    </>
   )
 }
 

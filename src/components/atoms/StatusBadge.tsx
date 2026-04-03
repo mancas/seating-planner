@@ -2,6 +2,7 @@ import type { GuestStatus } from '../../data/mock-guests'
 
 interface Props {
   status: GuestStatus
+  alwaysVisible?: boolean
 }
 
 const variantClasses: Record<GuestStatus, string> = {
@@ -10,10 +11,13 @@ const variantClasses: Record<GuestStatus, string> = {
   DECLINED: 'border border-red-500/50 text-red-400/70 bg-transparent',
 }
 
-function StatusBadge({ status }: Props) {
+function StatusBadge({ status, alwaysVisible = false }: Props) {
+  const visibilityClass = alwaysVisible
+    ? 'inline-flex'
+    : 'hidden md:inline-flex'
   return (
     <span
-      className={`hidden md:inline-flex items-center px-3 py-0.5 rounded text-label uppercase tracking-wider ${variantClasses[status]}`}
+      className={`${visibilityClass} items-center px-3 py-0.5 rounded text-label uppercase tracking-wider ${variantClasses[status]}`}
     >
       {status}
     </span>
