@@ -1,87 +1,53 @@
-# Codebase Context Updates
+# Codebase Context Updates — Semantic Table Refactor
 
-Updates to `generated/codebase-context.md` based on validated implementations.
-
----
-
-## From: Guest CRUD Flow (2026-04-03) — APPROVED
-
-### New Guardrails Added (G-15 through G-19)
-
-- **G-15**: Form inputs with validation must include `aria-invalid`. Error messages use `role="alert"`.
-- **G-16**: Avoid `setState` inside `useEffect` — use synchronous state adjustment during render.
-- **G-17**: Single source of truth for data transformations.
-- **G-18**: Delete unused component files.
-- **G-19**: Custom modal dialogs need keyboard and ARIA support.
+Updates to `generated/codebase-context.md` based on validated semantic table refactor implementation.
 
 ---
 
-## From: Replace Icons with react-icons (2026-04-03) — APPROVED
+## Changes to Key Dependencies
 
-### New Guardrails Added (G-20 through G-22)
+Add to the dependencies table:
 
-- **G-20**: Use a single icon family (Lucide `react-icons/lu`).
-- **G-21**: Verify icon export names against actual package.
-- **G-22**: Use `size` prop for icon dimensions.
+| Library               | Version | Purpose                                                                                  |
+| --------------------- | ------- | ---------------------------------------------------------------------------------------- |
+| @tanstack/react-table | ^8.21.3 | Headless, type-safe table library for column definitions, row models, and cell rendering |
 
----
+## Changes to File Structure
 
-## From: Seating Canvas (2026-04-03) — CHANGES_REQUESTED (Iteration 1)
-
-### New Guardrails Added (G-23 through G-26)
-
-- **G-23**: Data store function signatures must match their intended contract. Use `Partial<Pick<T, ...>>` to be explicit.
-- **G-24**: Spec is the authoritative reference for literal values. Do not substitute alternatives.
-- **G-25**: G-16 applies even when `useEffect` seems justified — the ESLint rule blocks regardless.
-- **G-26**: Collapse identical conditional branches, even if functionally correct due to aliasing.
-
-### Key Dependencies to Add
-
-| Library              | Version | Purpose                                                                |
-| -------------------- | ------- | ---------------------------------------------------------------------- |
-| @dnd-kit/react       | ^0.3.2  | Drag-and-drop for guest assignment, seat swapping, table repositioning |
-| react-zoom-pan-pinch | ^3.7.0  | Canvas pan and zoom with TransformWrapper/TransformComponent           |
-
-### New Files Added
+Update `GuestRow.tsx` description:
 
 ```
-src/
-├── data/
-│   ├── table-types.ts          (NEW: FloorTable, SeatAssignment, TableShape, sizing functions, NATO labels)
-│   ├── table-store.ts          (NEW: localStorage CRUD for tables, assignment, swap, clear)
-│   └── dnd-types.ts            (NEW: drag/drop type discriminators, coordinate conversion utility)
-├── hooks/
-│   └── useTableState.ts        (NEW: custom hook extracting table state management from App)
-└── components/
-    ├── atoms/
-    │   ├── SeatIndicator.tsx    (NEW: seat dot — empty/occupied/selected/drop-target/swap-target)
-    │   ├── ShapeToggle.tsx      (NEW: RECTANGULAR/CIRCULAR toggle button group)
-    │   └── CanvasStatusBar.tsx  (NEW: static ZOOM/LAYER display)
-    ├── molecules/
-    │   ├── CanvasToolbar.tsx    (NEW: floating 4-tool toolbar with select/pan/add-circle/add-rect)
-    │   ├── CanvasTable.tsx      (NEW: table rendering — shape, badge, label, guest count, seats, rotation)
-    │   └── SeatAssignmentPopover.tsx (NEW: assign/unassign guest popover anchored to seat)
-    └── organisms/
-        ├── SeatingCanvas.tsx    (NEW: main canvas with TransformWrapper, DnD context, tool state)
-        └── CanvasPropertiesPanel.tsx (NEW: right sidebar for table properties — label, shape, seats, rotation)
+├── GuestRow.tsx        (mobile-only compact row, named export GuestRowMobile)
 ```
 
-### Modified Files
+## Changes to Code Conventions
 
-- `src/App.tsx` — Added table state via `useTableState` hook, SeatingCanvas rendering for canvas tab, CanvasPropertiesPanel, guest deletion cascade to table assignments, sidebar context props
-- `src/components/organisms/LeftSidebar.tsx` — Added `activeTab` prop, conditional LAYOUT/OBJECTS active state, ADD TABLE button, unassigned guests list
+Add:
 
-### Update "Prior Spec Decisions" — Seating Canvas Status
+- **Named exports for sub-components**: When a component is refactored to serve a narrower role (e.g., mobile-only), use a named export (`export { GuestRowMobile }`) instead of a default export. The consuming file imports with `{ GuestRowMobile }`.
 
-Change status from "Draft" to "In Progress":
+## Changes to Architectural Patterns
 
-```
-### Spec: Seating Canvas — Status: In Progress (2026-04-03)
-```
+Add under **Component patterns observed**:
 
-### Architectural Patterns — New Patterns
+- `@tanstack/react-table` for data tables: Column definitions declared at module scope with `createColumnHelper<T>()` for reference stability. Table instance created with `useReactTable` inside the component. Headers rendered via `table.getHeaderGroups()` → `flexRender`. Rows via `table.getRowModel().rows` → `row.getVisibleCells()` → `flexRender`. Desktop table uses `hidden md:table`, mobile card layout is a separate `<div className="md:hidden">` block.
+- Description list pattern for key-value metadata: `<dl>` with `<div>` wrappers (valid HTML5) containing `<dt>`/`<dd>` pairs, styled with `flex items-center justify-between`.
 
-- **Custom hooks**: `useTableState` extracts table CRUD logic from `App.tsx` to reduce component complexity. Returns state + wrapped callbacks.
-- **Table data layer**: `table-store.ts` follows the `guest-store.ts` pattern (G-17 compliant). Separate localStorage keys: `seating-plan:tables` and `seating-plan:table-counter`.
-- **Coordinate conversion**: `dnd-types.ts` provides `screenToCanvas()` to translate viewport coordinates to canvas coordinates accounting for pan/zoom transform.
-- **Canvas interaction model**: Tool-based state machine (`select`/`pan`/`add-circle`/`add-rectangle`). DnD and table interaction gated on `select` tool. Auto-revert to `select` after table placement.
+## Changes to Prior Spec Decisions
+
+Update the Semantic Table Refactor entry:
+
+### Spec: Semantic Table Refactor — Status: Completed (2026-04-03)
+
+Key architectural decisions:
+
+1. **DD-1: Table Styling Strategy** — `border-separate` + `border-spacing-0` on `<table>` for per-cell border control. `table-fixed` + `w-full` with explicit `<th>` widths. Column widths on `<th>` via conditional className.
+2. **DD-2: @tanstack/react-table (Headless)** — `createColumnHelper<Guest>()` at module scope, `useReactTable` with `getCoreRowModel()` inside component. `flexRender` for headers and cells.
+3. **DD-3: GuestRow → GuestRowMobile** — Desktop row rendering moved to column `cell` definitions in `GuestTable.tsx`. `GuestRow.tsx` exports only `GuestRowMobile` (named export).
+4. **DD-4: Description List for Core Metadata** — `<dl>`/`<dt>`/`<dd>` with `<div>` wrappers inside `GuestDetailSection`.
+5. **DD-5: Column Width Mapping** — auto (name), `w-[120px]` (status), `w-[100px]` (table), `w-[60px]` (actions) — matching old `grid-cols-[1fr_120px_100px_60px]`.
+6. **DD-6: Click Target on `<tr>`** — `onClick` on `<tr>` with `row.original.id`. Cursor and hover via Tailwind classes.
+
+## New Guardrails
+
+See `generated/guardrails.md` for G-27 and G-28.

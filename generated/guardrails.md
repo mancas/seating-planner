@@ -151,3 +151,17 @@ Lessons learned and constraints established from validated specs.
 
 **Rule**: Extends G-12. When an if/else or ternary has identical branches, collapse them into a single unconditional block — even if the code is functionally correct due to aliasing or side effects. Identical branches confuse reviewers and suggest incomplete implementation.
 **Reason**: `swapSeats` had identical if/else branches with a comment "Re-read target table in case source and target are the same table." While the aliasing made both branches functionally correct, the identical code violated G-12 and was misleading.
+
+---
+
+## From: Semantic Table Refactor (2026-04-03)
+
+### G-27: Define @tanstack/react-table Column Definitions at Module Scope
+
+**Rule**: When using `@tanstack/react-table`, define the `columns` array (via `createColumnHelper<T>()`) at module scope (outside the component function), not inside the component. This ensures a stable reference and prevents unnecessary re-renders from `useReactTable` detecting a new columns reference on every render.
+**Reason**: The TanStack Table docs explicitly warn that `data` and `columns` need stable references. Defining columns inside the component creates a new array reference on every render, causing the table to re-evaluate all row models unnecessarily. Module-scope columns are the recommended pattern from official docs.
+
+### G-28: Use `border-separate` + `border-spacing-0` for Styled `<table>` Elements
+
+**Rule**: When applying per-row or per-cell borders (e.g., `border-l-2` on `<tr>` for selected state indicators), use `border-collapse: separate` with `border-spacing: 0` on the `<table>` element. Do not use `border-collapse: collapse`.
+**Reason**: `border-collapse: collapse` prevents `<tr>` borders from rendering in some browsers and blocks `border-radius` on cells. `border-separate` with `border-spacing-0` gives full control over individual cell/row borders while maintaining zero spacing between cells. The Tailwind classes are `border-separate border-spacing-0`.

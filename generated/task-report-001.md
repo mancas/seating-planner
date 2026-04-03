@@ -2,55 +2,49 @@
 
 ## Task
 
-Create the table type definitions, sizing geometry functions, and localStorage-backed data layer for canvas tables.
+Install `@tanstack/react-table` and define column definitions in `GuestTable.tsx`.
 
-## Status: Complete
+## Status: COMPLETE
 
 ## Changes Made
 
-### `src/data/table-types.ts` (new)
+### 1. Installed `@tanstack/react-table` (`package.json`)
 
-- Defined `TableShape` type (`'rectangular' | 'circular'`)
-- Defined `SeatAssignment` interface (`seatIndex`, `guestId`)
-- Defined `FloorTable` interface (`id`, `badgeId`, `label`, `shape`, `seatCount`, `x`, `y`, `rotation`, `seats`)
-- Exported sizing constants: `SEAT_SPACING`, `TABLE_PADDING`, `SEAT_RADIUS`, `MIN_RECT_WIDTH`, `MIN_RECT_HEIGHT`, `MIN_CIRCLE_DIAMETER`
-- Exported `NATO_LABELS` array (26 NATO phonetic alphabet words)
-- Implemented `getRectTableSize(seatCount)` — computes width/height based on long-side seat count
-- Implemented `getCircleTableDiameter(seatCount)` — computes diameter scaling with seat count
-- Implemented `getSeatPositions(shape, seatCount, width, height)` — returns x/y positions for each seat around the table perimeter
+- Ran `npm install @tanstack/react-table`
+- Added `@tanstack/react-table: ^8.21.3` to `dependencies`
+- `package-lock.json` updated accordingly (2 packages added)
 
-### `src/data/table-store.ts` (new)
+### 2. Added imports to `GuestTable.tsx` (lines 4-13)
 
-- Follows the same localStorage + memory-fallback pattern as `guest-store.ts`
-- Uses `STORAGE_KEY = 'seating-plan:tables'` and `COUNTER_KEY = 'seating-plan:table-counter'`
-- `getTables()` / `getTableById(id)` — read operations
-- `addTable(data)` — auto-generates `id` via uuid, `badgeId` as zero-padded counter (T001, T002, ...), `label` as `TABLE <NATO>` cycling through NATO alphabet
-- `updateTable(id, data)` — handles seat-count reduction (auto-unassigns seats beyond new count), rotation clamping via `((rotation % 360) + 360) % 360`
-- `deleteTable(id)` — removes table from storage
-- `assignGuestToSeat(tableId, seatIndex, guestId)` / `unassignSeat(tableId, seatIndex)` — individual seat management
-- `swapSeats(sourceTableId, sourceSeatIndex, targetTableId, targetSeatIndex)` — handles move-to-empty, swap-occupied, cross-table, and same-seat no-op
-- `clearGuestAssignments(guestId)` — removes a guest from all table seat assignments
-- Re-exports `FloorTable`, `TableShape`, `SeatAssignment` types
+Added the following imports after the existing three imports:
 
-## Acceptance Criteria Verification
+- `createColumnHelper`, `useReactTable`, `getCoreRowModel`, `flexRender` from `@tanstack/react-table`
+- `Avatar` from `../atoms/Avatar`
+- `StatusBadge` from `../atoms/StatusBadge`
+- `IconButton` from `../atoms/IconButton`
+- `LuEllipsis` from `react-icons/lu`
 
-| Criteria                                                                 | Status |
-| ------------------------------------------------------------------------ | ------ |
-| Both files compile (no TS errors)                                        | Pass   |
-| addTable auto-generates badgeId (T001) and label (TABLE ALFA) correctly  | Pass   |
-| updateTable with reduced seatCount auto-unassigns seats beyond new count | Pass   |
-| updateTable clamps rotation (-90 → 270, 720 → 0)                         | Pass   |
-| swapSeats: move to empty seat                                            | Pass   |
-| swapSeats: swap two occupied seats                                       | Pass   |
-| swapSeats: cross-table swap                                              | Pass   |
-| swapSeats: same-seat no-op                                               | Pass   |
-| swapSeats: empty source no-op                                            | Pass   |
-| clearGuestAssignments removes guest from all tables                      | Pass   |
-| getRectTableSize(8).width > getRectTableSize(4).width                    | Pass   |
-| getCircleTableDiameter(8) > getCircleTableDiameter(4)                    | Pass   |
-| getSeatPositions returns correct number of positions                     | Pass   |
+Existing imports (`Guest`, `GuestRow`, `TableGroupHeader`) were preserved untouched.
 
-## Files Created
+### 3. Defined column helper and columns array (lines 15-60)
 
-- `src/data/table-types.ts`
-- `src/data/table-store.ts`
+- `columnHelper` created with `createColumnHelper<Guest>()` at module scope (line 15)
+- `columns` array defined at module scope (lines 17-60) with 4 column definitions:
+  1. **firstName** accessor — renders Avatar + name + ID
+  2. **status** accessor — renders `<StatusBadge>`
+  3. **tableAssignment** accessor — renders table name or `'- - -'`
+  4. **actions** display column — renders `<IconButton>` with `<LuEllipsis>`
+
+### 4. No existing JSX modified
+
+The component function body and return JSX (lines 76-167) are completely untouched. The `GuestRow` import is preserved for TASK-002.
+
+## Verification
+
+- `npx tsc --noEmit` — passes with zero errors
+- `@tanstack/react-table` present in `package.json` dependencies
+- All acceptance criteria met
+
+## LSP Notes
+
+The LSP reports `useReactTable`, `getCoreRowModel`, `flexRender`, and `columns` as unused. This is expected — they are consumed in TASK-002 when the JSX is wired to use `useReactTable`.

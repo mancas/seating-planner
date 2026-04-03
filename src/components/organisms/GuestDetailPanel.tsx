@@ -110,26 +110,30 @@ function renderContent(guest: Guest) {
       {/* Core Metadata */}
       <div className="px-4">
         <GuestDetailSection title="CORE METADATA">
-          <div className="flex items-center justify-between py-2">
-            <span className="text-caption text-foreground-muted">STATUS</span>
-            <StatusBadge status={guest.status} alwaysVisible />
-          </div>
-          <div className="flex items-center justify-between py-2">
-            <span className="text-caption text-foreground-muted">
-              ACCESS LEVEL
-            </span>
-            <span className="text-body-sm text-foreground">
-              {guest.accessLevel}
-            </span>
-          </div>
-          <div className="flex items-center justify-between py-2">
-            <span className="text-caption text-foreground-muted">
-              ASSIGNED TABLE
-            </span>
-            <span className="text-body-sm text-foreground">
-              {guest.tableAssignment ?? '- - -'}
-            </span>
-          </div>
+          <dl>
+            <div className="flex items-center justify-between py-2">
+              <dt className="text-caption text-foreground-muted">STATUS</dt>
+              <dd>
+                <StatusBadge status={guest.status} alwaysVisible />
+              </dd>
+            </div>
+            <div className="flex items-center justify-between py-2">
+              <dt className="text-caption text-foreground-muted">
+                ACCESS LEVEL
+              </dt>
+              <dd className="text-body-sm text-foreground">
+                {guest.accessLevel}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between py-2">
+              <dt className="text-caption text-foreground-muted">
+                ASSIGNED TABLE
+              </dt>
+              <dd className="text-body-sm text-foreground">
+                {guest.tableAssignment ?? '- - -'}
+              </dd>
+            </div>
+          </dl>
         </GuestDetailSection>
       </div>
 

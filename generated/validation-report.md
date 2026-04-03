@@ -1,337 +1,172 @@
-# Validation Report — Guest CRUD Flow
+# Validation Report — Semantic Table Refactor
 
-**Spec**: `spec/guest-crud-flow.md`
+**Spec**: `spec/semantic-table-refactor.md`
 **Date**: 2026-04-03
+**Validator**: Validator Agent
 
 ---
 
-## Iteration 1 — CHANGES_REQUESTED
+## Verdict: APPROVED
 
-**CRITICAL**: 0 | **MAJOR**: 4 | **MINOR**: 6
-
-### MAJOR Issues Found
-
-| ID      | File(s)                            | Description                                                                 |
-| ------- | ---------------------------------- | --------------------------------------------------------------------------- |
-| MAJOR-1 | GuestForm.tsx, FormError.tsx       | Missing `aria-invalid` on validated inputs and `role="alert"` on FormError  |
-| MAJOR-2 | App.tsx:40-46                      | `setSelectedGuestId` in `useEffect` causes ESLint error (blocks pre-commit) |
-| MAJOR-3 | App.tsx, GuestTable.tsx            | Double search filtering — search applied in both App and GuestTable         |
-| MAJOR-4 | SelectInput.tsx, TextareaInput.tsx | Created but never used — dead code                                          |
+Zero CRITICAL findings. Zero MAJOR findings.
 
 ---
 
-## Iteration 2 — APPROVED
+## Step 3: Completeness Check — Acceptance Criteria
 
-**CRITICAL**: 0 | **MAJOR**: 0 | **MINOR**: 6 (unchanged, acceptable)
+| #   | Acceptance Criterion                                                                                                   | Status | Notes                                                                                                                                                                                                                      |
+| --- | ---------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Desktop guest list renders as `<table>` with `<thead>`, `<tr>`, `<th scope="col">`, `<tbody>`, `<td>` via `flexRender` | PASS   | `GuestTable.tsx:114-173` — semantic `<table>` with `<thead>`, `<th scope="col">`, `<tbody>`, `<tr>`, `<td>`, all rendered via `flexRender`                                                                                 |
+| 2   | Column definitions use `createColumnHelper<Guest>()`, table instance via `useReactTable` with `getCoreRowModel()`      | PASS   | `GuestTable.tsx:15-60` — `columnHelper = createColumnHelper<Guest>()`, 4 columns defined. `GuestTable.tsx:105-109` — `useReactTable({ data: guests, columns, getCoreRowModel: getCoreRowModel() })`                        |
+| 3   | Visual appearance pixel-identical — column widths, spacing, alignment, hover, selected, typography                     | PASS   | Column widths mapped correctly: auto (name), `w-[120px]` (status), `w-[100px]` (table), `w-[60px]` (actions). `table-fixed` + `w-full`. Styling classes match spec. `border-separate border-spacing-0` for border control. |
+| 4   | Row click handler preserved via `<tr onClick>`                                                                         | PASS   | `GuestTable.tsx:157` — `onClick={() => onGuestClick(row.original.id)}` on `<tr>`                                                                                                                                           |
+| 5   | Hover background `hover:bg-gray-800/50` preserved                                                                      | PASS   | `GuestTable.tsx:158` — className includes `hover:bg-gray-800/50`                                                                                                                                                           |
+| 6   | Selected row styling `border-l-2 border-l-primary bg-surface-elevated` preserved                                       | PASS   | `GuestTable.tsx:159-161` — conditional className with selected/unselected border states                                                                                                                                    |
+| 7   | Empty state `NO_RESULTS // QUERY_MISMATCH` in `<tr><td colSpan={columns.length}>`                                      | PASS   | `GuestTable.tsx:144-152` — `<tr><td colSpan={table.getAllColumns().length}>` with correct message                                                                                                                          |
+| 8   | Mobile layout unchanged — no `<table>` elements, no @tanstack/react-table                                              | PASS   | `GuestTable.tsx:176-208` — mobile block uses `<div className="md:hidden">` with `GuestRowMobile` card layout, no table elements                                                                                            |
+| 9   | Core Metadata uses `<dl>`/`<dt>`/`<dd>` elements                                                                       | PASS   | `GuestDetailPanel.tsx:113-136` — `<dl>` wrapping three `<div>` groups with `<dt>`/`<dd>` pairs                                                                                                                             |
+| 10  | Core Metadata visual appearance identical                                                                              | PASS   | Same `flex items-center justify-between py-2` layout on `<div>` wrappers. Same `className` on `<dt>` and `<dd>`. Tailwind Preflight resets `<dd>` margin.                                                                  |
+| 11  | `npx tsc -b` compiles without errors                                                                                   | PASS   | Verified — zero errors                                                                                                                                                                                                     |
+| 12  | All existing prop types, interfaces, and import paths unchanged                                                        | PASS   | `Props` interface in `GuestTable.tsx:62-67` unchanged. `GuestRowMobile` Props identical to old `GuestRow` Props. `GuestDetailPanel` Props unchanged.                                                                       |
+| 13  | `@tanstack/react-table` in `package.json` dependencies                                                                 | PASS   | `"@tanstack/react-table": "^8.21.3"` confirmed in `package.json` dependencies                                                                                                                                              |
 
-### MAJOR Issue Resolution
-
-| ID      | Status   | Verification Details                                                                                                                                                                                                                                |
-| ------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| MAJOR-1 | RESOLVED | `FormError.tsx` now has `role="alert"` and accepts `id` prop. `GuestForm.tsx` adds `aria-invalid` and `aria-describedby` on both `firstName` and `lastName` inputs. `FormField.tsx` computes `errorId` from `htmlFor` and passes it to `FormError`. |
-| MAJOR-2 | RESOLVED | `useEffect` removed from App.tsx. Replaced with synchronous state adjustment during render (lines 40-46) with guard `selectedGuestId !== locationState.selectedGuestId` to prevent re-render loops. `useEffect` removed from imports.               |
-| MAJOR-3 | RESOLVED | Duplicate filtering removed from `GuestTable.tsx`. Filtering is now solely in `App.tsx` (lines 101-104). `GuestTable` receives pre-filtered `guests` prop and only groups them. Comment at line 26 documents the responsibility boundary.           |
-| MAJOR-4 | RESOLVED | `SelectInput.tsx` and `TextareaInput.tsx` deleted. No remaining imports or references found in the codebase.                                                                                                                                        |
-
-### New Issues Introduced by Fixes
-
-None detected.
-
-### Build Verification
-
-| Check              | Result | Notes                                                                                                                     |
-| ------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------- |
-| `npx tsc --noEmit` | PASS   | Zero errors                                                                                                               |
-| `npm run lint`     | PASS   | Zero errors, 1 warning (`react-hooks/incompatible-library` for `watch()` — known acceptable React Compiler interop issue) |
-| `npm run build`    | PASS   | Built successfully (74 modules, 167ms)                                                                                    |
-
-### Remaining MINOR Issues (not blocking)
-
-| ID      | Severity | File(s)                                                | Description                                              |
-| ------- | -------- | ------------------------------------------------------ | -------------------------------------------------------- |
-| MINOR-1 | MINOR    | AddGuestPage.tsx, EditGuestPage.tsx                    | Duplicated `OutletContext` interface                     |
-| MINOR-2 | MINOR    | GuestForm.tsx, GuestDetailPanel.tsx, ConfirmDialog.tsx | Destructive button styling duplicated                    |
-| MINOR-3 | MINOR    | GuestForm.tsx:112                                      | Heading uses `text-heading-3` vs spec's `text-heading-1` |
-| MINOR-4 | MINOR    | ConfirmDialog.tsx                                      | No Escape key, ARIA dialog role, or focus trap           |
-| MINOR-5 | MINOR    | GuestDetailPanel.tsx:109                               | Dialog not dismissed before `onDelete`                   |
-| MINOR-6 | MINOR    | GuestForm.tsx:165-173                                  | Native `<select>` lacks custom dropdown arrow            |
+**Result**: 13/13 acceptance criteria met. No requirements missed. No scope creep detected.
 
 ---
 
-## Final Verdict: APPROVED
+## Step 4: Convention Compliance
 
-All 4 MAJOR issues from Iteration 1 have been resolved correctly. No new CRITICAL or MAJOR issues were introduced. The build, type-check, and lint all pass cleanly. The 6 MINOR issues remain as non-blocking recommendations for future improvement.
+| Convention                                     | Status | Notes                                                                                        |
+| ---------------------------------------------- | ------ | -------------------------------------------------------------------------------------------- |
+| Naming (camelCase vars, PascalCase components) | PASS   | `columnHelper`, `columns`, `GuestRowMobile`, `GuestTable`, `GuestDetailPanel`                |
+| No semicolons                                  | PASS   | Prettier check passes                                                                        |
+| Single quotes                                  | PASS   | Prettier check passes                                                                        |
+| 2-space indent                                 | PASS   | Prettier check passes                                                                        |
+| Trailing commas                                | PASS   | Prettier check passes                                                                        |
+| Relative imports                               | PASS   | All imports use relative paths (`../../data/mock-guests`, `../atoms/Avatar`, etc.)           |
+| `import type` for type-only imports            | PASS   | `import type { Guest }` used correctly in both files                                         |
+| Function declarations for components           | PASS   | `function GuestTable(...)`, `function GuestRowMobile(...)`, `function GuestDetailPanel(...)` |
+| `Props` interface local to file                | PASS   | Both files define `interface Props` locally                                                  |
+| Icons from `react-icons/lu` only               | PASS   | `LuEllipsis` from `react-icons/lu`                                                           |
+| Named export for `GuestRowMobile`              | PASS   | `export { GuestRowMobile }` — matches spec requirement                                       |
+| Default export for organisms                   | PASS   | `export default GuestTable`, `export default GuestDetailPanel`                               |
 
----
-
----
-
-# Validation Report — Seating Canvas
-
-**Spec**: `spec/seating-canvas.md`
-**Date**: 2026-04-03
-
----
-
-## Iteration 1 — CHANGES_REQUESTED
-
-**CRITICAL**: 2 | **MAJOR**: 4 | **MINOR**: 9
-
----
-
-## CRITICAL Findings
-
-### C-1: ESLint Error — `setState` inside `useEffect` in CanvasPropertiesPanel (G-16 violation)
-
-**File**: `src/components/organisms/CanvasPropertiesPanel.tsx:25-30`
-
-**Issue**: The `useEffect` at line 25 calls `setLabel`, `setShape`, `setSeatCount`, and `setRotation` synchronously inside an effect body. The `react-hooks/set-state-in-effect` ESLint rule flags this as an **error** (not warning). This **blocks the pre-commit hook** (`npm run lint` exits with error code).
-
-Additionally, the `react-hooks/exhaustive-deps` rule warns that `table.label`, `table.shape`, `table.seatCount`, and `table.rotation` are missing from the dependency array (only `table.id` is listed).
-
-**Spec note**: The task instructions (TASK-004) acknowledge this pattern and state "Using useEffect here is acceptable because we're synchronizing form state to an external selection change." However, the ESLint rule disagrees and produces a blocking error. G-16 explicitly warns about this.
-
-**Fix**: Replace the `useEffect` with the "adjusting state during render" pattern. Track `prevTableId` with a ref or state variable and reset form state synchronously during render when `table.id` changes:
-
-```typescript
-const [prevTableId, setPrevTableId] = useState(table.id)
-if (prevTableId !== table.id) {
-  setPrevTableId(table.id)
-  setLabel(table.label)
-  setShape(table.shape)
-  setSeatCount(table.seatCount)
-  setRotation(table.rotation)
-}
-```
-
-Remove the `useEffect` and its import entirely.
+**Result**: All conventions followed.
 
 ---
 
-### C-2: `updateTable` Type Signature Omits `label` — Spec Violation
+## Step 5: Best Practices Research Findings
 
-**File**: `src/data/table-store.ts:92-94`
+### @tanstack/react-table
 
-**Issue**: The `updateTable` function signature is:
+1. **Column definitions at module scope**: The docs recommend stable column references to avoid re-renders. `columns` is correctly defined at module scope (`GuestTable.tsx:17-60`). PASS.
 
-```typescript
-data: Partial<Omit<FloorTable, 'id' | 'badgeId' | 'label'>>
-```
+2. **`createColumnHelper<Guest>()`**: Correct usage of the type-safe column helper pattern per official docs. PASS.
 
-This **omits `label`** from the accepted data, meaning TypeScript should reject calls that pass `label`. However, the spec (DD-3, AC-16) requires that labels be editable via the properties panel, and `CanvasPropertiesPanel` does pass `label` in its `onUpdate` callback.
+3. **`data` stability**: The TanStack docs warn that `data` needs a stable reference. Here, `guests` is passed as a prop from `App.tsx` and represents the already-filtered array. Since `guests` is a new array reference on each filter change (expected behavior), the table will re-render when data changes — this is correct and intentional. The table instance is created inside the component (not memoized), which is fine because `useReactTable` handles internal memoization. PASS.
 
-The call chain works at **runtime** because:
+4. **`getCoreRowModel()`**: Called correctly as a function passed to the options. PASS.
 
-1. `CanvasPropertiesPanel.onUpdate` passes `{ label, shape, seatCount, rotation }`
-2. `useTableState.handleUpdateTable` accepts `Partial<Pick<FloorTable, 'label' | 'shape' | 'seatCount' | 'x' | 'y' | 'rotation'>>` (includes `label`)
-3. `storeUpdateTable(id, data)` is called — TypeScript accepts the wider type being passed to the narrower parameter via structural typing (excess property checks don't apply to spread variables)
-4. The `...data` spread inside `updateTable` includes `label` at runtime
+5. **`flexRender`**: Used correctly for both header and cell rendering. PASS.
 
-So label updates work by accident, but the **type contract is incorrect**. If someone relied on the `updateTable` type signature, they would reasonably conclude `label` cannot be updated.
+6. **`row.original`**: Used correctly to access the `Guest` object for click handlers and selected state comparison. PASS.
 
-**Fix**: Change the `updateTable` signature to include `label`:
+### Semantic HTML Table Accessibility
 
-```typescript
-data: Partial<Omit<FloorTable, 'id' | 'badgeId'>>
-```
+1. **`scope="col"` on `<th>`**: All header cells include `scope="col"` (`GuestTable.tsx:130`). PASS.
 
-Or use the spec's Pick-based signature:
+2. **`<thead>` / `<tbody>` structure**: Correct semantic grouping. PASS.
 
-```typescript
-data: Partial<
-  Pick<FloorTable, 'label' | 'shape' | 'seatCount' | 'x' | 'y' | 'rotation'>
->
-```
+3. **`<table>` → `<thead>` → `<tr>` → `<th>` hierarchy**: Valid HTML structure. PASS.
+
+4. **`colSpan` for empty state**: `colSpan={table.getAllColumns().length}` ensures the empty message spans all columns. PASS.
+
+5. **`<dl>`/`<dt>`/`<dd>` for description lists**: Correct semantic pattern for key-value pairs. `<div>` wrappers inside `<dl>` are valid per HTML5 spec. PASS.
+
+### ESLint Warning: `react-hooks/incompatible-library`
+
+ESLint reports a **warning** (not an error) about `useReactTable` at line 105. This is from the `react-hooks/incompatible-library` rule related to the React Compiler. The warning states that TanStack Table's API "returns functions which cannot be memoized." This is a known characteristic of `@tanstack/react-table` and is informational only — it does not affect runtime correctness. The React Compiler will skip memoizing this component, which is acceptable. This is NOT a blocking issue.
 
 ---
 
-## MAJOR Findings
+## Step 6: Code Quality Assessment
 
-### M-1: Badge ID Format — `T001` Instead of Spec's `T01`
+### Readability: GOOD
 
-**File**: `src/data/table-store.ts:72`
+- Column definitions are clearly structured with descriptive headers and self-documenting cell renderers
+- Width mapping logic in the header is readable with clear column ID checks
+- Mobile and desktop blocks are clearly separated with comments
 
-**Issue**: The code uses `padStart(3, '0')` producing `T001`, `T002`, etc. The spec (DD-5, AC-7, AC-8, AC-9, AC-15) consistently shows `T01`, `T02` (2-digit zero-padding).
+### Maintainability: GOOD
 
-**Impact**: Visual inconsistency with spec. All UI references to badge IDs will show 3 digits instead of 2.
+- Column definitions are modular — adding/removing columns is a single array entry change
+- `GuestRowMobile` is cleanly extracted with a focused responsibility
+- The `<dl>` refactor in `GuestDetailPanel` is surgical and minimal
 
-**Fix**: Change `padStart(3, '0')` to `padStart(2, '0')`.
+### Scalability: GOOD
 
----
+- @tanstack/react-table foundation enables incremental addition of sorting, filtering, pagination without structural changes
+- Column width mapping could be moved to column `meta` for cleaner code (noted as MINOR)
 
-### M-2: Default Seat Count is 6 Instead of Spec's 8
+### DRY: GOOD
 
-**File**: `src/components/organisms/SeatingCanvas.tsx:173`
+- No duplicate logic between desktop and mobile — they share the `guests` data prop but render independently
+- Column cell functions are self-contained
 
-**Issue**: When placing a new table via the canvas click handler, `seatCount: 6` is used. The spec (AC-7, AC-8) says "8 seats" as the default.
+### Simplicity: GOOD
 
-**Impact**: New tables placed via toolbar click will have 6 seats instead of the specified 8.
+- Minimal API surface used (`getCoreRowModel` only — no unnecessary features)
+- No over-abstraction
 
-**Fix**: Change `seatCount: 6` to `seatCount: 8`.
+### Correct API Usage: GOOD
 
----
+- `createColumnHelper`, `useReactTable`, `getCoreRowModel`, `flexRender` all used per official docs
+- `columnHelper.accessor` for data columns, `columnHelper.display` for action column
+- `table.getHeaderGroups()`, `table.getRowModel().rows`, `row.getVisibleCells()` — canonical iteration patterns
 
-### M-3: NATO Label "ALFA" vs Spec's "ALPHA"
+### Semantic HTML: GOOD
 
-**File**: `src/data/table-types.ts:30`
-
-**Issue**: The first NATO label is `'ALFA'`. The spec's `NATO_LABELS` array (Data Requirements section) explicitly lists `'ALPHA'` as the first entry. While "ALFA" is the correct international NATO phonetic alphabet spelling, the spec is the authoritative reference and uses "ALPHA".
-
-**Impact**: First auto-generated table label will be "TABLE ALFA" instead of "TABLE ALPHA".
-
-**Fix**: Change `'ALFA'` to `'ALPHA'` in the `NATO_LABELS` array to match the spec exactly.
-
----
-
-### M-4: `swapSeats` Has Identical If/Else Branches (G-12 Violation)
-
-**File**: `src/data/table-store.ts:205-219`
-
-**Issue**: The `if (sourceTableId === targetTableId)` and `else` branches at lines 205-219 contain **identical code**. This is precisely the pattern guardrail G-12 warns about. While functionally correct (the aliasing means the same-table case operates on the already-updated seats array from line 197-202), the duplication is confusing and suggests a copy-paste error.
-
-**Fix**: Remove the conditional and keep a single block:
-
-```typescript
-tables[targetTableIdx] = {
-  ...tables[targetTableIdx],
-  seats: tables[targetTableIdx].seats.filter(
-    (s) => s.seatIndex !== targetSeatIndex,
-  ),
-}
-```
+- `<table>`, `<thead>`, `<tbody>`, `<tr>`, `<th scope="col">`, `<td>` — correct structure
+- `<dl>`, `<dt>`, `<dd>` — correct description list pattern
+- `border-separate` + `border-spacing-0` for border control on `<tr>` — addresses the known cross-browser issue
 
 ---
 
-## MINOR Findings
+## Step 7: Classified Findings
 
-| ID  | File                           | Description                                                                             |
-| --- | ------------------------------ | --------------------------------------------------------------------------------------- |
-| m-1 | `SeatingCanvas.tsx:41`         | `onDeleteTable` prop declared in Props but never used — dead code                       |
-| m-2 | `SeatAssignmentPopover.tsx`    | Missing Escape key dismiss handler and ARIA `role="dialog"` attributes (G-19)           |
-| m-3 | `CanvasToolbar.tsx:29`         | Buttons have `title` but missing `aria-label` — spec says both                          |
-| m-4 | `CanvasTable.tsx:102`          | Guest count text shows `0/8` instead of spec's `0/8 Guests` (missing suffix)            |
-| m-5 | `CanvasStatusBar.tsx:5`        | Separator `\|` uses parent `gap-2` instead of spec's `mx-2` — visually equivalent       |
-| m-6 | `SeatIndicator.tsx:19`         | Uses `w-3.5 h-3.5` (rem-based 14px) vs spec's `w-[14px] h-[14px]` — equivalent          |
-| m-7 | `SeatAssignmentPopover.tsx:68` | Header uses `text-caption` instead of spec's `text-label`; missing `border-b` separator |
-| m-8 | `LeftSidebar.tsx:56`           | Section header shows `UNASSIGNED` instead of spec's `UNASSIGNED_GUESTS`                 |
-| m-9 | `LeftSidebar.tsx:59-71`        | Guest list items missing initials avatar circle per spec sidebar design                 |
+### CRITICAL: None
 
----
+### MAJOR: None
 
-## Convention Compliance
+### MINOR
 
-| Convention                     | Status | Notes                                                   |
-| ------------------------------ | ------ | ------------------------------------------------------- |
-| No semicolons                  | PASS   | All files                                               |
-| Single quotes                  | PASS   | All files                                               |
-| Trailing commas                | PASS   | All files                                               |
-| Function declarations          | PASS   | All components use `function X()`                       |
-| Default exports                | PASS   | All components                                          |
-| `Props` interface pattern      | PASS   | All components                                          |
-| `import type` for types        | PASS   | All type imports use `import type`                      |
-| Typography classes (G-13)      | PASS   | Correct classes used throughout                         |
-| G-8: focus-visible for buttons | PASS   | All `<button>` elements include focus-visible           |
-| G-11: keyboard accessible      | PASS   | Uses `<button>` elements, not `<div onClick>`           |
-| G-20/G-21/G-22: react-icons    | PASS   | All icons from `lu`, verified exports, `size` prop used |
-| G-5: border radius             | PASS   | Uses `rounded` consistently                             |
-| Prettier formatting            | PASS   | `npx prettier --check src/` passes                      |
-| TypeScript compilation         | PASS   | `tsc -b` completes with zero errors                     |
-| ESLint                         | PASS   | C-1 resolved; no errors                                 |
-
-## Spec Acceptance Criteria Coverage
-
-| AC                               | Status  | Notes                                                          |
-| -------------------------------- | ------- | -------------------------------------------------------------- |
-| AC-1: Canvas with dot-grid       | PASS    |                                                                |
-| AC-2: Empty canvas               | PASS    |                                                                |
-| AC-3: Status bar                 | PASS    |                                                                |
-| AC-4: Toolbar 4 tools            | PASS    |                                                                |
-| AC-5: Tool switching             | PASS    |                                                                |
-| AC-6: Pan tool                   | PASS    |                                                                |
-| AC-7: Add circle table           | PASS    | Default seatCount 8 (M-2 fixed)                                |
-| AC-8: Add rect table             | PASS    | Default seatCount 8 (M-2 fixed)                                |
-| AC-9: Table rendering            | PARTIAL | Missing "Guests" suffix (m-4); badge format fixed (M-1)        |
-| AC-10: Rect auto-sizing          | PASS    |                                                                |
-| AC-11: Circle auto-sizing        | PASS    |                                                                |
-| AC-12: Seat count resize         | PASS    |                                                                |
-| AC-13: Selected state            | PASS    | Dashed cobalt border                                           |
-| AC-14: Deselect on empty click   | PASS    |                                                                |
-| AC-15: Properties panel          | PASS    | All sections present                                           |
-| AC-16: Update label              | PASS    | Type contract correct (C-2 fixed)                              |
-| AC-17: Toggle shape              | PASS    |                                                                |
-| AC-18: Update seat count         | PASS    |                                                                |
-| AC-19: Drag table                | PASS    | Mouse-based repositioning                                      |
-| AC-20: Persist position          | PASS    |                                                                |
-| AC-21: Pan tool ignores tables   | PASS    |                                                                |
-| AC-22: Delete table              | PASS    |                                                                |
-| AC-23: Seat click popover        | PASS    |                                                                |
-| AC-24: Assign guest              | PASS    |                                                                |
-| AC-25: Unassign popover          | PASS    |                                                                |
-| AC-26: Unassign button           | PASS    |                                                                |
-| AC-27: Auto-unassign on reduce   | PASS    |                                                                |
-| AC-28: Data persistence          | PASS    |                                                                |
-| AC-29: Guest deletion cascade    | PASS    |                                                                |
-| AC-30-32: DnD guest assignment   | PARTIAL | Handler ready, no useDraggable/useDroppable wiring on elements |
-| AC-33: Only unassigned draggable | PASS    | Computed correctly                                             |
-| AC-34: Rotation control          | PASS    |                                                                |
-| AC-35: Rotation rendering        | PASS    | CSS transform applied                                          |
-| AC-36: Rotated guest display     | PASS    |                                                                |
-| AC-37-40: Seat swap DnD          | PARTIAL | Handler ready, no drag/drop wiring on seats                    |
-| AC-30 (sidebar): LAYOUT active   | PASS    |                                                                |
-| AC-31 (sidebar): ADD TABLE       | PASS    |                                                                |
-
-**Note on DnD**: The `DragDropProvider` is set up and the `onDragEnd` handler routes events correctly for guest assignment, table-body drops, and seat swaps. However, `useDraggable`/`useDroppable` hooks are not wired to individual seat indicators or guest list items yet. The spec task breakdown (TASK-003 note) explicitly defers DnD wiring. The visual rendering is complete and the handler logic is correct — actual drag/drop interactivity requires wiring the hooks to DOM elements as follow-up.
+| #   | Finding                                               | Severity | Location                 | Recommendation                                                                                                                                                                                                                                                                                                                                                                         |
+| --- | ----------------------------------------------------- | -------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M-1 | Column width mapping uses inline conditional chain    | MINOR    | `GuestTable.tsx:119-126` | Consider moving width to column `meta` property (e.g., `meta: { widthClass: 'w-[120px]' }`) for cleaner separation. Not blocking — current approach is readable and functional.                                                                                                                                                                                                        |
+| M-2 | ESLint warning for `react-hooks/incompatible-library` | MINOR    | `GuestTable.tsx:105`     | Known issue with React Compiler + @tanstack/react-table. No action needed currently. May want to add an eslint-disable comment if it becomes noisy in CI.                                                                                                                                                                                                                              |
+| M-3 | No `<caption>` on the `<table>` element               | MINOR    | `GuestTable.tsx:114`     | MDN recommends `<caption>` for accessible table identification. Could add a visually hidden caption like `<caption className="sr-only">Guest list</caption>`. Not blocking — the table context is clear from the page structure.                                                                                                                                                       |
+| M-4 | `<tr>` with `onClick` lacks keyboard accessibility    | MINOR    | `GuestTable.tsx:155-162` | Per G-11, clickable elements should be keyboard accessible. `<tr>` with `onClick` should ideally have `tabIndex={0}`, `role="button"`, and `onKeyDown`. However, this is pre-existing behavior (the old `<div onClick>` in `GuestRow.tsx` had the same issue), and the spec explicitly states "preserve existing behavior." Not a regression — carried forward from pre-refactor code. |
 
 ---
 
-## Iteration 1 Verdict
+## Step 8: Issue Verdict
 
-**CHANGES_REQUESTED** — 2 CRITICAL, 4 MAJOR issues identified.
+**APPROVED**
 
----
+- 0 CRITICAL findings
+- 0 MAJOR findings
+- 4 MINOR findings (noted, not blocking)
 
-## Iteration 2 — Re-review
-
-**Date**: 2026-04-03
-
-### CRITICAL / MAJOR Issue Resolution
-
-| ID  | Severity | Status   | Verification                                                                                                                                                    |
-| --- | -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| C-1 | CRITICAL | RESOLVED | `CanvasPropertiesPanel.tsx:1` imports only `useState` (no `useEffect`). Lines 25-32 use render-time state adjustment via `prevTableId` — correct React pattern. |
-| C-2 | CRITICAL | RESOLVED | `table-store.ts:94` signature is `Partial<Omit<FloorTable, 'id' \| 'badgeId'>>` — `label` now accepted in the type contract.                                    |
-| M-1 | MAJOR    | RESOLVED | `table-store.ts:72` uses `padStart(2, '0')` — badge IDs produce `T01`, `T02` per spec DD-5.                                                                     |
-| M-2 | MAJOR    | RESOLVED | `SeatingCanvas.tsx:173` uses `seatCount: 8` — matches spec AC-7/AC-8.                                                                                           |
-| M-3 | MAJOR    | RESOLVED | `table-types.ts:30` first NATO label is `'ALPHA'` — matches spec exactly.                                                                                       |
-| M-4 | MAJOR    | RESOLVED | `table-store.ts:204-210` — single unconditional block with clarifying comment; no duplicate branches (G-12 satisfied).                                          |
-
-### New Issues Introduced by Fixes
-
-None detected.
-
-### Build Verification
-
-| Check              | Result | Notes                                   |
-| ------------------ | ------ | --------------------------------------- |
-| `npx tsc --noEmit` | PASS   | Zero errors                             |
-| `npm run build`    | PASS   | 102 modules transformed, built in 235ms |
-
-### Remaining MINOR Issues (unchanged, not blocking)
-
-| ID  | File                           | Description                                                                             |
-| --- | ------------------------------ | --------------------------------------------------------------------------------------- |
-| m-1 | `SeatingCanvas.tsx:41`         | `onDeleteTable` prop declared in Props but never used — dead code                       |
-| m-2 | `SeatAssignmentPopover.tsx`    | Missing Escape key dismiss handler and ARIA `role="dialog"` attributes (G-19)           |
-| m-3 | `CanvasToolbar.tsx:29`         | Buttons have `title` but missing `aria-label` — spec says both                          |
-| m-4 | `CanvasTable.tsx:102`          | Guest count text shows `0/8` instead of spec's `0/8 Guests` (missing suffix)            |
-| m-5 | `CanvasStatusBar.tsx:5`        | Separator `\|` uses parent `gap-2` instead of spec's `mx-2` — visually equivalent       |
-| m-6 | `SeatIndicator.tsx:19`         | Uses `w-3.5 h-3.5` (rem-based 14px) vs spec's `w-[14px] h-[14px]` — equivalent          |
-| m-7 | `SeatAssignmentPopover.tsx:68` | Header uses `text-caption` instead of spec's `text-label`; missing `border-b` separator |
-| m-8 | `LeftSidebar.tsx:56`           | Section header shows `UNASSIGNED` instead of spec's `UNASSIGNED_GUESTS`                 |
-| m-9 | `LeftSidebar.tsx:59-71`        | Guest list items missing initials avatar circle per spec sidebar design                 |
+All 13 acceptance criteria met. TypeScript compiles clean. Prettier formatting passes. ESLint reports only 1 non-blocking warning. All project conventions followed. Code quality is good across all dimensions.
 
 ---
 
-## Final Verdict: APPROVED
+## Summary
 
-All 2 CRITICAL and 4 MAJOR issues from Iteration 1 have been resolved correctly. No new CRITICAL or MAJOR issues were introduced by the fixes. TypeScript compilation and production build both pass cleanly. The 9 MINOR issues remain as non-blocking recommendations for future improvement.
+The semantic table refactor is well-executed:
+
+1. **GuestTable.tsx**: Successfully migrated from `<div>` + CSS Grid to `<table>` + @tanstack/react-table. Column definitions are type-safe, at module scope (stable reference), and replicate the exact cell JSX from the old `GuestRow.tsx` desktop block. The `useReactTable` instance is correctly wired with `getCoreRowModel`. Header and row rendering follows the canonical `flexRender` pattern. Accessibility attributes (`scope="col"`) are present. Column widths map precisely to the old grid template.
+
+2. **GuestRow.tsx**: Cleanly refactored to `GuestRowMobile` as a named export. Desktop rendering removed (now handled by column definitions). Mobile layout preserved with correct styling.
+
+3. **GuestDetailPanel.tsx**: Core Metadata section surgically converted from `<span>` pairs to `<dl>`/`<dt>`/`<dd>` with `<div>` wrappers (valid HTML5). All classes preserved. No other sections touched.

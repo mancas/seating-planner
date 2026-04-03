@@ -1,6 +1,63 @@
 import type { Guest } from '../../data/mock-guests'
-import GuestRow from '../molecules/GuestRow'
+import { GuestRowMobile } from '../molecules/GuestRow'
 import TableGroupHeader from '../molecules/TableGroupHeader'
+import {
+  createColumnHelper,
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+} from '@tanstack/react-table'
+import Avatar from '../atoms/Avatar'
+import StatusBadge from '../atoms/StatusBadge'
+import IconButton from '../atoms/IconButton'
+import { LuEllipsis } from 'react-icons/lu'
+
+const columnHelper = createColumnHelper<Guest>()
+
+const columns = [
+  columnHelper.accessor('firstName', {
+    header: 'NAME / IDENTIFIER',
+    cell: (info) => {
+      const guest = info.row.original
+      return (
+        <div className="flex items-center gap-3">
+          <Avatar
+            firstName={guest.firstName}
+            lastName={guest.lastName}
+            size="sm"
+          />
+          <div>
+            <p className="text-body-sm font-semibold text-foreground-heading uppercase">
+              {guest.firstName} {guest.lastName}
+            </p>
+            <p className="text-caption text-foreground-muted">ID: {guest.id}</p>
+          </div>
+        </div>
+      )
+    },
+  }),
+  columnHelper.accessor('status', {
+    header: 'STATUS',
+    cell: (info) => <StatusBadge status={info.getValue()} />,
+  }),
+  columnHelper.accessor('tableAssignment', {
+    header: 'TABLE',
+    cell: (info) => (
+      <span className="text-body-sm text-foreground-muted">
+        {info.getValue() ?? '- - -'}
+      </span>
+    ),
+  }),
+  columnHelper.display({
+    id: 'actions',
+    header: 'ACTIONS',
+    cell: () => (
+      <IconButton label="Actions">
+        <LuEllipsis size={16} />
+      </IconButton>
+    ),
+  }),
+]
 
 interface Props {
   guests: Guest[]
@@ -45,31 +102,67 @@ function GuestTable({
   const isEmpty = guests.length === 0
   const hasActiveSearch = searchQuery.trim().length > 0
 
+  const table = useReactTable({
+    data: guests,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  })
+
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 overflow-y-auto overflow-x-hidden min-w-0">
       {/* Desktop layout */}
-      <div className="hidden md:block">
-        <div className="hidden md:grid grid-cols-[1fr_120px_100px_60px] gap-4 px-6 py-3 border-b border-border text-label text-foreground-muted uppercase tracking-wider">
-          <span>NAME / IDENTIFIER</span>
-          <span>STATUS</span>
-          <span>TABLE</span>
-          <span>ACTIONS</span>
-        </div>
-        {isEmpty && hasActiveSearch ? (
-          <div className="hidden md:flex items-center justify-center py-16 text-foreground-muted text-label tracking-wider">
-            NO_RESULTS // QUERY_MISMATCH
-          </div>
-        ) : (
-          guests.map((guest) => (
-            <GuestRow
-              key={guest.id}
-              guest={guest}
-              isSelected={guest.id === selectedGuestId}
-              onClick={() => onGuestClick(guest.id)}
-            />
-          ))
-        )}
-      </div>
+      <table className="hidden md:table w-full border-separate border-spacing-0 table-auto">
+        <thead>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <tr key={headerGroup.id}>
+              {headerGroup.headers.map((header) => {
+                return (
+                  <th
+                    key={header.id}
+                    scope="col"
+                    className={`px-4 py-3 text-left font-normal border-b border-border text-label text-foreground-muted uppercase tracking-wider`}
+                  >
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
+                  </th>
+                )
+              })}
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {isEmpty && hasActiveSearch ? (
+            <tr>
+              <td
+                colSpan={table.getAllColumns().length}
+                className="py-16 text-center text-foreground-muted text-label tracking-wider"
+              >
+                NO_RESULTS // QUERY_MISMATCH
+              </td>
+            </tr>
+          ) : (
+            table.getRowModel().rows.map((row) => (
+              <tr
+                key={row.original.id}
+                onClick={() => onGuestClick(row.original.id)}
+                className={`cursor-pointer hover:bg-gray-800/50 ${
+                  row.original.id === selectedGuestId
+                    ? 'border-l-2 border-l-primary bg-surface-elevated'
+                    : 'border-l-2 border-l-transparent'
+                }`}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} className="px-4 py-3">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
 
       {/* Mobile layout */}
       <div className="md:hidden">
@@ -93,7 +186,7 @@ function GuestTable({
                   totalSeats={tableKey === 'UNASSIGNED' ? 0 : 8}
                 />
                 {groupGuests.map((guest) => (
-                  <GuestRow
+                  <GuestRowMobile
                     key={guest.id}
                     guest={guest}
                     isSelected={guest.id === selectedGuestId}
