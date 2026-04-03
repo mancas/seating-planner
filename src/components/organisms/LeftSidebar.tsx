@@ -1,12 +1,12 @@
 import { LuUserPlus, LuPlus, LuGripVertical } from 'react-icons/lu'
 import { useDraggable } from '@dnd-kit/react'
+import { useLocation, useNavigate } from 'react-router'
 import SidebarNavItem from '../molecules/SidebarNavItem'
 import type { Guest } from '../../data/mock-guests'
 import type { FloorTable } from '../../data/table-types'
 import { DRAG_TYPE_GUEST } from '../../data/dnd-types'
 
 interface Props {
-  activeTab: string
   onAddGuest: () => void
   onAddTable?: () => void
   guests?: Guest[]
@@ -36,12 +36,15 @@ function DraggableGuestItem({ guest }: { guest: Guest }) {
 }
 
 function LeftSidebar({
-  activeTab,
   onAddGuest,
   onAddTable,
   guests = [],
   tables = [],
 }: Props) {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const isCanvasView = location.pathname === '/seating-plan'
+
   const allAssignedGuestIds = new Set(
     tables.flatMap((t) => t.seats.map((s) => s.guestId)),
   )
@@ -57,15 +60,21 @@ function LeftSidebar({
 
       {/* Nav items */}
       <div className="flex-1 py-2">
-        <SidebarNavItem label="PROPERTIES" isActive={false} />
-        <SidebarNavItem label="LAYOUT" isActive={activeTab === 'canvas'} />
-        <SidebarNavItem label="OBJECTS" isActive={activeTab === 'guests'} />
-        <SidebarNavItem label="EXPORT" isActive={false} />
+        <SidebarNavItem
+          label="Listado de invitados"
+          isActive={!isCanvasView}
+          onClick={() => navigate('/')}
+        />
+        <SidebarNavItem
+          label="Canvas"
+          isActive={isCanvasView}
+          onClick={() => navigate('/seating-plan')}
+        />
       </div>
 
       {/* Bottom actions */}
       <div className="mt-auto px-4 py-4 border-t border-border">
-        {activeTab === 'canvas' ? (
+        {isCanvasView ? (
           <>
             <button
               className="btn-primary w-full flex items-center justify-center gap-2"

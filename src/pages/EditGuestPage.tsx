@@ -22,7 +22,7 @@ function EditGuestPage() {
   // Edge case: invalid/non-existent guest ID → silent redirect
   useEffect(() => {
     if (!guest) {
-      navigate('/?tab=guests', { replace: true })
+      navigate('/', { replace: true })
     }
   }, [guest, navigate])
 

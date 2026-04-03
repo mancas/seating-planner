@@ -1,97 +1,81 @@
-# Task Report — TASK-004: Canvas Organisms
+# Task Report — TASK-004: Refactor App.tsx — route-based view switching and navigation
 
 ## Status: COMPLETE
 
-## Files Created
+## Files Modified
 
-- `src/components/organisms/SeatingCanvas.tsx` (new)
-- `src/components/organisms/CanvasPropertiesPanel.tsx` (new)
+- `src/App.tsx`
 
 ## Implementation Summary
 
-### SeatingCanvas.tsx
+### 1. Removed `useSearchParams` import and usage
 
-Full-featured canvas editor component with the following capabilities:
+- Removed `useSearchParams` from the `react-router` import
+- Removed `const [searchParams, setSearchParams] = useSearchParams()`
+- Removed `rawTab`, `activeTab`, and `onTabChange` derivations
 
-**Props**: Accepts `tables`, `guests`, `selectedTableId`, and callbacks for table CRUD, guest assignment/unassignment, and seat swapping.
+### 2. Derived active view from pathname
 
-**Internal state**:
+- Added `const isCanvasView = location.pathname === '/seating-plan'` after the existing `useLocation()` call
 
-- `activeTool` (CanvasTool, default `'select'`) — current toolbar tool
-- `activeSeat` (ActiveSeat | null) — tracks which seat's popover is open
-- `transformRef` (ReactZoomPanPinchContentRef) — ref to pan/zoom instance
-- `dragState` (DragState | null) — mouse-based table repositioning state
+### 3. Removed search state
 
-**DnD integration** (`@dnd-kit/react` v0.3.2):
+- Removed `const [searchQuery, setSearchQuery] = useState('')`
+- Removed the `filteredGuests` filter computation
+- Replaced `filteredGuests` with `guests` in the `GuestTable` call
+- Passed `searchQuery=""` to `GuestTable` (prop is still required in GuestTable's interface)
 
-- Wraps canvas area in `<DragDropProvider onDragEnd={handleDragEnd}>`
-- `handleDragEnd` routes drops based on `source.data.type` and target data shape:
-  - `DRAG_TYPE_GUEST` → `DropSeatData`: calls `onAssignGuest`
-  - `DRAG_TYPE_SEAT` → `DropSeatData`: calls `onSwapSeats`
-  - `DRAG_TYPE_GUEST` → `DropTableData` (no seatIndex): finds first empty seat, calls `onAssignGuest`
-- Event typing uses inline object type matching `DragOperationSnapshot` shape (avoids importing `DragEndEvent` which is a function type alias, not an event interface)
+### 4. Updated post-action navigation (3 occurrences)
 
-**Pan/zoom** (`react-zoom-pan-pinch` v3.7.0):
+- `handleAddGuest`: `navigate('/?tab=guests', ...)` → `navigate('/', { replace: true })`
+- `handleUpdateGuest`: `navigate('/?tab=guests', ...)` → `navigate('/', { state: { selectedGuestId: id } })`
+- `handleDeleteGuest`: `navigate('/?tab=guests', ...)` → `navigate('/', { replace: true })`
 
-- `TransformWrapper` with `disabled` and `panning.disabled` toggled by activeTool
-- Fixed scale (min=1, max=1), double-click and wheel zoom disabled
-- `TransformComponent` fills available space
+### 5. Updated `canvasContent` block
 
-**Canvas click handler**:
+- Removed `activeTab={activeTab}` from `LeftSidebar` JSX
+- Changed `<main>` className to static `"flex-1 flex flex-col overflow-hidden pb-16 md:pb-0"`
 
-- Closes active popover on any click
-- Add tools: computes canvas coordinates via `screenToCanvas()`, calls `onAddTable`, auto-reverts to select
-- Select tool: deselects table on background click
+### 6. Updated `defaultContent` block
 
-**Table repositioning** (mouse-based, not DnD):
+- Removed `activeTab={activeTab}` from `LeftSidebar` JSX
+- Removed the `activeTab === 'guests'` ternary branch and MODULE_OFFLINE fallback
+- Restructured to: `isChildRoute` → Outlet, else `guests.length === 0` → EmptyState, else → guest list
+- Updated `selectedGuest && activeTab === 'guests' && !isChildRoute` → `selectedGuest && !isChildRoute`
 
-- `onMouseDown` on table wrapper → captures start position and original table coords
-- `onMouseMove` on canvas → computes delta (accounting for zoom scale), calls `onUpdateTable`
-- `onMouseUp` / `onMouseLeave` → clears drag state
+### 7. Updated `TopNav` call site
 
-**Unassigned guests**: computed via `useMemo` from tables' seat assignments vs full guest list
+- Changed to `<TopNav />` (no props)
 
-**Render structure**:
+### 8. Updated `BottomTabBar` call site
 
-- Mobile: placeholder with `CANVAS_EDITOR // DESKTOP_REQUIRED`
-- Desktop: `hidden md:flex flex-1 relative overflow-hidden bg-background`
-  - DragDropProvider → TransformWrapper → TransformComponent → dot-grid div → CanvasTable instances
-  - Absolute-positioned CanvasToolbar (top-left) and CanvasStatusBar (top-right)
-  - SeatAssignmentPopover when activeSeat is set
+- Changed to `<BottomTabBar />` (no props)
 
-**Dot grid**: `radial-gradient(circle, var(--nc-gray-700) 1px, transparent 1px)` at 24px spacing
+### 9. Updated canvas/default conditional
 
-### CanvasPropertiesPanel.tsx
+- Replaced `activeTab === 'canvas' && !isChildRoute` with `isCanvasView && !isChildRoute`
 
-Right-side properties panel for editing a selected table.
+### 10. Cleaned up unused imports
 
-**Props**: `table` (FloorTable), `onUpdate`, `onDelete`, `onClose`
+- Removed `useSearchParams` from react-router import
+- `useState` is still used for `guests` and `selectedGuestId`, so kept
 
-**Internal form state**: `label`, `shape`, `seatCount`, `rotation` — reset via `useEffect` when `table.id` changes
+## Acceptance Criteria Verification
 
-**Layout sections**:
+| Criterion                                  | Status                                        |
+| ------------------------------------------ | --------------------------------------------- |
+| App compiles (`npx tsc --noEmit`)          | PASS                                          |
+| `/` renders guest list                     | PASS — defaultContent always shows guest list |
+| `/seating-plan` renders canvas             | PASS — `isCanvasView` derives from pathname   |
+| `DragDropProvider` wraps canvas view       | PASS — unchanged                              |
+| Post-action navigation goes to `/`         | PASS — all 3 occurrences updated              |
+| No `searchParams` references in App.tsx    | PASS                                          |
+| No `activeTab` references in App.tsx       | PASS                                          |
+| No `onTabChange` references in App.tsx     | PASS                                          |
+| `TopNav` rendered without props            | PASS                                          |
+| `BottomTabBar` rendered without props      | PASS                                          |
+| `LeftSidebar` rendered without `activeTab` | PASS                                          |
 
-1. **Header**: "PROPERTIES" label + close IconButton (LuX)
-2. **INFORMATION**: Label input (`.input` class), reference ID badge (`.badge` class)
-3. **CONFIGURATION**:
-   - ShapeToggle component for rectangular/circular
-   - Seat count range slider (1–20) with `accent-[var(--nc-primary)]` + numeric display
-   - Rotation range slider (0–359) with `accent-[var(--nc-primary)]` + degree display
-   - Preset angle buttons: 0°, 90°, 180°, 270° with active state styling
-4. **Actions**: "UPDATE CHANGES" (btn-primary w-full), "DELETE ENTITY" (btn-ghost w-full text-foreground-muted)
+## Notes
 
-**Panel styling**: `hidden md:flex flex-col w-[320px] min-w-[320px] bg-surface border-l border-border h-full overflow-y-auto` — matches GuestDetailPanel pattern
-
-## Conventions Followed
-
-- Function declarations (not arrow functions) for components
-- Default exports
-- Props interface (not inline)
-- No semicolons
-- Single quotes
-- Trailing commas
-- `import type` for type-only imports
-
-## Verification
-
-- `npx tsc --noEmit`: **PASS** — zero errors
+- `GuestTable` still requires `searchQuery` as a required prop in its interface. Passed `""` as a placeholder. A follow-up task should make this prop optional or remove it from `GuestTable` entirely.

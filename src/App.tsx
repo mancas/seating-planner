@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useSearchParams, useNavigate, useLocation, Outlet } from 'react-router'
+import { useNavigate, useLocation, Outlet } from 'react-router'
 import { DragDropProvider } from '@dnd-kit/react'
 import {
   getGuests,
@@ -29,24 +29,14 @@ import FAB from './components/atoms/FAB'
 import EmptyState from './components/organisms/EmptyState'
 
 function App() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const rawTab = searchParams.get('tab') ?? 'guests'
-  const activeTab = ['guests', 'canvas', 'tools', 'more'].includes(rawTab)
-    ? rawTab
-    : 'guests'
-
-  const onTabChange = (tab: string) => {
-    setSearchParams({ tab })
-  }
-
   const navigate = useNavigate()
   const location = useLocation()
+  const isCanvasView = location.pathname === '/seating-plan'
 
   const isChildRoute = location.pathname.startsWith('/guests/')
 
   const [guests, setGuests] = useState<Guest[]>(() => getGuests())
   const [selectedGuestId, setSelectedGuestId] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
 
   const locationState = location.state as { selectedGuestId?: string } | null
   if (locationState?.selectedGuestId) {
@@ -73,7 +63,7 @@ function App() {
     (data: Omit<Guest, 'id'>) => {
       storeAddGuest(data)
       setGuests(getGuests())
-      navigate('/?tab=guests', { replace: true })
+      navigate('/', { replace: true })
     },
     [navigate],
   )
@@ -82,7 +72,7 @@ function App() {
     (id: string, data: Omit<Guest, 'id'>) => {
       storeUpdateGuest(id, data)
       setGuests(getGuests())
-      navigate('/?tab=guests', { state: { selectedGuestId: id } })
+      navigate('/', { state: { selectedGuestId: id } })
     },
     [navigate],
   )
@@ -93,7 +83,7 @@ function App() {
       storeDeleteGuest(id)
       setGuests(getGuests())
       setSelectedGuestId(null)
-      navigate('/?tab=guests', { replace: true })
+      navigate('/', { replace: true })
     },
     [navigate, handleClearGuestAssignments],
   )
@@ -122,11 +112,6 @@ function App() {
     totalGuests > 0 ? Math.round((confirmedCount / totalGuests) * 100) : 0
   const dietaryFlagCount = guests.filter((g) => g.dietary.type !== null).length
   const waitlistCount = pendingCount
-
-  const filteredGuests = guests.filter((g) => {
-    const fullName = `${g.firstName} ${g.lastName}`.toLowerCase()
-    return fullName.includes(searchQuery.toLowerCase())
-  })
 
   const selectedCanvasTable =
     tables.find((t) => t.id === selectedCanvasTableId) ?? null
@@ -197,15 +182,12 @@ function App() {
   const canvasContent = (
     <>
       <LeftSidebar
-        activeTab={activeTab}
         onAddGuest={handleNavigateToAdd}
         onAddTable={handleSidebarAddTable}
         guests={guests}
         tables={tables}
       />
-      <main
-        className={`flex-1 flex flex-col ${activeTab === 'canvas' ? 'overflow-hidden' : 'overflow-y-auto'} pb-16 md:pb-0`}
-      >
+      <main className="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0">
         <SeatingCanvas
           tables={tables}
           guests={guests}
@@ -233,13 +215,12 @@ function App() {
   const defaultContent = (
     <>
       <LeftSidebar
-        activeTab={activeTab}
         onAddGuest={handleNavigateToAdd}
         onAddTable={handleSidebarAddTable}
         guests={guests}
         tables={tables}
       />
-      <main className={`flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0`}>
+      <main className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0">
         {isChildRoute ? (
           <Outlet
             context={{
@@ -250,36 +231,30 @@ function App() {
               onCancel: () => navigate(-1),
             }}
           />
-        ) : activeTab === 'guests' ? (
-          guests.length === 0 ? (
-            <EmptyState onAddGuest={handleNavigateToAdd} />
-          ) : (
-            <>
-              <GuestListHeader
-                confirmedCount={confirmedCount}
-                pendingCount={pendingCount}
-                totalGuests={totalGuests}
-                waitlistCount={waitlistCount}
-              />
-              <GuestTable
-                guests={filteredGuests}
-                selectedGuestId={selectedGuestId}
-                onGuestClick={onGuestClick}
-                searchQuery={searchQuery}
-              />
-              <GuestListFooterStats
-                confirmationRate={confirmationRate}
-                dietaryFlagCount={dietaryFlagCount}
-              />
-            </>
-          )
+        ) : guests.length === 0 ? (
+          <EmptyState onAddGuest={handleNavigateToAdd} />
         ) : (
-          <div className="flex-1 flex items-center justify-center text-foreground-muted text-label tracking-wider">
-            {activeTab.toUpperCase()} // MODULE_OFFLINE
-          </div>
+          <>
+            <GuestListHeader
+              confirmedCount={confirmedCount}
+              pendingCount={pendingCount}
+              totalGuests={totalGuests}
+              waitlistCount={waitlistCount}
+            />
+            <GuestTable
+              guests={guests}
+              selectedGuestId={selectedGuestId}
+              onGuestClick={onGuestClick}
+              searchQuery=""
+            />
+            <GuestListFooterStats
+              confirmationRate={confirmationRate}
+              dietaryFlagCount={dietaryFlagCount}
+            />
+          </>
         )}
       </main>
-      {selectedGuest && activeTab === 'guests' && !isChildRoute && (
+      {selectedGuest && !isChildRoute && (
         <GuestDetailPanel
           guest={selectedGuest}
           onClose={() => setSelectedGuestId(null)}
@@ -292,14 +267,9 @@ function App() {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      <TopNav
-        activeTab={activeTab}
-        onTabChange={onTabChange}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
+      <TopNav />
       <div className="flex flex-1 overflow-hidden">
-        {activeTab === 'canvas' && !isChildRoute ? (
+        {isCanvasView && !isChildRoute ? (
           <DragDropProvider onDragEnd={handleDragEnd}>
             {canvasContent}
           </DragDropProvider>
@@ -308,7 +278,7 @@ function App() {
         )}
       </div>
       {!isChildRoute && <FAB onClick={handleNavigateToAdd} label="Add guest" />}
-      <BottomTabBar activeTab={activeTab} onTabChange={onTabChange} />
+      <BottomTabBar />
     </div>
   )
 }

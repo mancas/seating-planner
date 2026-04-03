@@ -1,40 +1,53 @@
-# Task Report — TASK-003: Refactor GuestDetailPanel.tsx — Semantic Core Metadata with `<dl>`/`<dt>`/`<dd>`
+# Task Report — TASK-003: Update `LeftSidebar` — replace nav items with route-based links
 
 ## Status: COMPLETE
 
 ## Files Modified
 
-- `src/components/organisms/GuestDetailPanel.tsx`
+- `src/components/organisms/LeftSidebar.tsx`
 
 ## Changes Made
 
-Replaced the Core Metadata key-value `<div>`/`<span>` pairs with semantic `<dl>`/`<dt>`/`<dd>` elements. This is a pure markup change with no visual impact.
+### 1. Added router imports (line 3)
 
-### Specific changes in `renderContent` (lines 112–137):
+- Added `import { useLocation, useNavigate } from 'react-router'`
 
-1. Added `<dl>` wrapper as the first child of `<GuestDetailSection title="CORE METADATA">`
-2. **STATUS row**: Changed label `<span>` → `<dt>`; wrapped `<StatusBadge>` in `<dd>`
-3. **ACCESS LEVEL row**: Changed label `<span>` → `<dt>`; changed value `<span>` → `<dd>` (both keep existing `className`)
-4. **ASSIGNED TABLE row**: Changed label `<span>` → `<dt>`; changed value `<span>` → `<dd>` (both keep existing `className`)
-5. Closed `</dl>` before `</GuestDetailSection>`
+### 2. Removed `activeTab` from Props interface (lines 9–14)
 
-### What was NOT changed:
+- Removed `activeTab: string` from the `Props` interface
 
-- `<div>` wrappers with `flex items-center justify-between py-2` preserved
-- Preferences, Gift, and Logistics sections untouched
-- No new imports or dependencies added
+### 3. Removed `activeTab` from function signature (lines 38–43)
+
+- Removed `activeTab` from the destructured props
+
+### 4. Added route-based state derivation (lines 44–46)
+
+- Added `useLocation()` and `useNavigate()` hooks
+- Derived `isCanvasView` from `location.pathname === '/seating-plan'`
+
+### 5. Replaced nav items (lines 62–73)
+
+- Removed four placeholder nav items: PROPERTIES, LAYOUT, OBJECTS, EXPORT
+- Added two route-based nav links:
+  - "Listado de invitados" — active when `!isCanvasView` (covers `/`, `/guests/new`, `/guests/:id/edit`), navigates to `/`
+  - "Canvas" — active when `isCanvasView`, navigates to `/seating-plan`
+
+### 6. Updated bottom actions conditional (line 77)
+
+- Replaced `activeTab === 'canvas'` with `isCanvasView`
 
 ## Acceptance Criteria Verification
 
-| Criteria                                                              | Status |
-| --------------------------------------------------------------------- | ------ |
-| Core Metadata uses `<dl>` as root wrapper                             | PASS   |
-| Each label uses `<dt>` instead of `<span>`                            | PASS   |
-| Each value uses `<dd>` instead of `<span>`                            | PASS   |
-| `<div>` wrappers with flex classes preserved                          | PASS   |
-| Visual appearance identical (Tailwind Preflight resets `<dd>` margin) | PASS   |
-| No new imports or dependencies                                        | PASS   |
-| TypeScript compiles without errors                                    | PASS   |
+| Criteria                                                            | Status |
+| ------------------------------------------------------------------- | ------ |
+| Sidebar shows exactly two nav links                                 | PASS   |
+| "Listado de invitados" is active at `/` and `/guests/*`             | PASS   |
+| "Canvas" is active at `/seating-plan`                               | PASS   |
+| Clicking a link navigates to the correct route                      | PASS   |
+| Bottom section shows ADD GUEST on `/`                               | PASS   |
+| Bottom section shows ADD TABLE + unassigned list on `/seating-plan` | PASS   |
+| `activeTab` removed from Props interface                            | PASS   |
+| TypeScript compiles without errors                                  | PASS   |
 
 ## Type Check
 
@@ -42,10 +55,15 @@ Replaced the Core Metadata key-value `<div>`/`<span>` pairs with semantic `<dl>`
 npx tsc --noEmit — passed with no errors
 ```
 
+## Dependencies Note
+
+TASK-004 must update `App.tsx` to stop passing `activeTab` to `LeftSidebar`. Currently the build passes because `activeTab` is no longer in the Props interface — any call site still passing it will get a TS error when TASK-004 hasn't been applied yet (or it may be silently ignored if the prop is spread). This is the expected coordination between TASK-003 and TASK-004.
+
 ## Conventions Followed
 
 - No semicolons
 - Single quotes
 - 2-space indentation
 - Trailing commas
-- Only the Core Metadata section was modified
+- Uses existing `SidebarNavItem` molecule with `label`, `isActive`, `onClick` props
+- Labels match spec decision DD-3: "Listado de invitados" and "Canvas" (not uppercase cyberpunk style)

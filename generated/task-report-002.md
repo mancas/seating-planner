@@ -1,44 +1,33 @@
-# Task Report: TASK-002 — Refactor GuestTable Desktop to `<table>` + GuestRow to Mobile-Only
+# Task Report: TASK-002 — Simplify TopNav: remove center nav links and search input
 
 ## Status: COMPLETED
 
 ## Changes Made
 
-### Part A: `src/components/molecules/GuestRow.tsx`
+### `src/components/organisms/TopNav.tsx`
 
-1. **Renamed** `GuestRow` to `GuestRowMobile`
-2. **Removed desktop block** — deleted the entire `{/* Desktop layout */}` div with `hidden md:grid` and all its children
-3. **Removed desktop-only imports**: `LuEllipsis`, `Avatar`, `StatusBadge`, `IconButton`
-4. **Kept mobile-relevant imports**: `Guest` type, `StatusIcon`
-5. **Simplified component structure** — removed `md:hidden` from inner div since visibility is controlled by the parent
-6. **Changed export** from `export default GuestRow` to `export { GuestRowMobile }` (named export, no default)
+1. **Removed `NavLink` import** — `import NavLink from '../atoms/NavLink'`
+2. **Removed `SearchInput` import** — `import SearchInput from '../atoms/SearchInput'`
+3. **Removed `Props` interface** — eliminated `activeTab`, `onTabChange`, `searchQuery`, `onSearchChange` props
+4. **Simplified function signature** — changed from `function TopNav({ activeTab, onTabChange, searchQuery, onSearchChange }: Props)` to `function TopNav()`
+5. **Removed center section** — deleted the `hidden md:flex` div containing `NavLink` components for CANVAS and GUEST LIST tabs
+6. **Removed SearchInput wrapper** — deleted the `hidden md:block` div containing `SearchInput` from the right section
+7. **Preserved remaining right section** — `IconButton` (settings with `LuSettings`) and `Avatar` remain unchanged
 
-### Part B: `src/components/organisms/GuestTable.tsx`
+## File Summary (before → after)
 
-1. **Updated import** from `import GuestRow from ...` to `import { GuestRowMobile } from ...`
-2. **Added `useReactTable` call** after `hasActiveSearch`/`isEmpty`, consuming `guests` and `columns`
-3. **Replaced desktop block** — the old `<div className="hidden md:block">` with manual grid header and `GuestRow` map is now a semantic `<table className="hidden md:table ...">` with:
-   - `<thead>` rendered via `table.getHeaderGroups()` → `flexRender`
-   - `<th>` elements with `scope="col"` for accessibility
-   - Column widths: auto (name), `w-[120px]` (status), `w-[100px]` (table), `w-[60px]` (actions)
-   - `<tbody>` rows rendered via `table.getRowModel().rows` → `row.getVisibleCells()` → `flexRender`
-   - Row click, hover, and selected styling preserved
-   - Empty search state as `<tr><td colSpan={...}>NO_RESULTS // QUERY_MISMATCH</td></tr>`
-4. **Updated mobile block** — all `<GuestRow` references replaced with `<GuestRowMobile`
+- **Before**: 58 lines, 5 imports, 4 props, 3 layout sections (left, center, right with search)
+- **After**: 27 lines, 3 imports, 0 props, 2 layout sections (left, right with settings + avatar)
 
 ## Acceptance Criteria Verification
 
-| Criterion                                                                             | Status |
-| ------------------------------------------------------------------------------------- | ------ |
-| `GuestRow.tsx` exports only `GuestRowMobile` as named export (no default)             | PASS   |
-| `GuestRowMobile` renders only mobile card layout                                      | PASS   |
-| `GuestRow.tsx` no longer imports `Avatar`, `StatusBadge`, `IconButton`, `LuEllipsis`  | PASS   |
-| Desktop guest list renders as `<table>` with `<thead>` and `<tbody>`                  | PASS   |
-| `<th>` elements have `scope="col"`                                                    | PASS   |
-| Headers rendered via `table.getHeaderGroups()` → `flexRender`                         | PASS   |
-| Rows rendered via `table.getRowModel().rows` → `row.getVisibleCells()` → `flexRender` | PASS   |
-| Row click, hover, and selected styling work correctly                                 | PASS   |
-| Column widths: auto, 120px, 100px, 60px                                               | PASS   |
-| Empty search state renders as `<tr><td colSpan>`                                      | PASS   |
-| Mobile layout unchanged — uses `GuestRowMobile`                                       | PASS   |
-| `npx tsc -b` compiles without errors                                                  | PASS   |
+| Criterion                                                 | Status |
+| --------------------------------------------------------- | ------ |
+| `TopNav` renders brand text (left)                        | PASS   |
+| `TopNav` renders settings icon button (right)             | PASS   |
+| `TopNav` renders avatar (right)                           | PASS   |
+| No `NavLink` buttons visible                              | PASS   |
+| No search input visible                                   | PASS   |
+| No unused imports (`NavLink`, `SearchInput` removed)      | PASS   |
+| No unused props (interface removed, signature simplified) | PASS   |
+| `npx tsc --noEmit` compiles without errors                | PASS   |

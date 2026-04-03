@@ -165,3 +165,17 @@ Lessons learned and constraints established from validated specs.
 
 **Rule**: When applying per-row or per-cell borders (e.g., `border-l-2` on `<tr>` for selected state indicators), use `border-collapse: separate` with `border-spacing: 0` on the `<table>` element. Do not use `border-collapse: collapse`.
 **Reason**: `border-collapse: collapse` prevents `<tr>` borders from rendering in some browsers and blocks `border-radius` on cells. `border-separate` with `border-spacing-0` gives full control over individual cell/row borders while maintaining zero spacing between cells. The Tailwind classes are `border-separate border-spacing-0`.
+
+---
+
+## From: Sidebar Navigation (2026-04-03)
+
+### G-29: Clean Up Vestigial Props After Interface Changes
+
+**Rule**: When a feature removes functionality (e.g., search, tab switching), audit all components that consumed the removed data to eliminate vestigial props, state, and derived values. A required prop that is always passed a constant (like `searchQuery=""`) is dead code that confuses future developers.
+**Reason**: After removing search from `TopNav`, the `GuestTable` component retained `searchQuery` as a required prop, and `App.tsx` passed `searchQuery=""`. The `hasActiveSearch` check and `NO_RESULTS // QUERY_MISMATCH` empty state in `GuestTable` became unreachable dead code. Props that always receive the same constant value should be removed or made optional.
+
+### G-30: Verify Component Import Graph After Removing Consumers
+
+**Rule**: When removing imports of a component from its only consumer (e.g., removing `NavLink` from `TopNav`, removing `SearchInput` from `TopNav`), check whether any other file still imports the component. If not, the component file is dead code per G-18. Document for cleanup even if deletion is out of scope for the current spec.
+**Reason**: After the sidebar navigation refactor, `NavLink.tsx` and potentially `SearchInput.tsx` have zero consumers but were not flagged during development. A simple `grep import.*ComponentName` catches these orphaned files immediately.

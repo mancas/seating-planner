@@ -21,6 +21,7 @@
 | react-icons                  | ^5.6.0   | Icon library (Lucide `lu` family used exclusively)                  |
 | react-zoom-pan-pinch         | ^3.7.0   | Pan/zoom for seating canvas                                         |
 | @dnd-kit/react               | ^0.3.2   | Drag-and-drop for guest seat assignment and seat swapping           |
+| @tanstack/react-table        | ^8.21.3  | Headless table utilities for the desktop guest list                 |
 | uuid                         | ^13.0.0  | UUID v4 generation for guest and table IDs                          |
 | tailwindcss                  | ^4.2.2   | Utility-first CSS framework (v4 CSS-first config)                   |
 | @tailwindcss/vite            | ^4.2.2   | Vite plugin for TailwindCSS v4                                      |
@@ -80,6 +81,7 @@
 - **Data fetching**: None — client-only with localStorage persistence.
 - **Drag-and-drop**: `@dnd-kit/react` with `DragDropProvider` wrapping the canvas tab. Three drag types: guest from sidebar (`DRAG_TYPE_GUEST`), occupied seat for swapping (`DRAG_TYPE_SEAT`), and drop targets (seats and table bodies). `handleDragEnd` in `App.tsx` orchestrates all DnD interactions.
 - **Canvas**: `react-zoom-pan-pinch` for pan/zoom. Tables rendered as positioned `<div>`s with CSS transforms for rotation. Geometry helpers in `table-types.ts` compute table sizes and seat positions based on shape and seat count. Toolbar with select/pan/add-circle/add-rectangle tools.
+- **Desktop guest table**: Uses `@tanstack/react-table` with `createColumnHelper<Guest>()` for the desktop `<table>` layout. Column definitions at module scope (per G-27). `border-separate border-spacing-0` for styled row borders (per G-28).
 - **Error handling**: Minimal. localStorage read/write wrapped in try/catch with silent fallback. No global error boundary. No error reporting.
 - **Styling approach**: Nought Cobalt design system. Tailwind utility classes in JSX for all component styling. `src/index.css` provides design tokens via `@theme` (Tailwind utilities) and `:root` (`--nc-*` CSS custom properties), base element styles, typography `@utility` classes, and component base styles in `@layer components`. `src/App.css` is empty.
 
@@ -141,7 +143,7 @@ src/
         ├── GuestForm.tsx       (add/edit form with react-hook-form, all guest fields, delete dialog)
         ├── GuestListFooterStats.tsx (3 stat cards with progress bar, desktop-only)
         ├── GuestListHeader.tsx (title + summary stats, responsive desktop/mobile layouts)
-        ├── GuestTable.tsx      (flat table desktop / grouped mobile, search empty state)
+        ├── GuestTable.tsx      (semantic <table> desktop via @tanstack/react-table / grouped mobile, search empty state)
         ├── LeftSidebar.tsx     (nav items + ADD GUEST/ADD TABLE buttons, desktop-only, draggable guests)
         ├── SeatingCanvas.tsx   (interactive floor plan: tables, seats, zoom/pan, toolbar, status bar)
         └── TopNav.tsx          (brand + nav links + search + LuSettings + avatar)
@@ -212,7 +214,7 @@ Hooks that wrap a store module:
 - **Pre-commit enforcement**: Prettier format check + ESLint run via Husky pre-commit hook
 - **No test suite**: No tests exist or are required by the pre-commit hook
 - **Entry point**: `index.html` → `src/main.tsx` → `App.tsx`
-- **Static assets**: `public/favicon.svg`
+- **Static assets**: `public/favicon.svg`, `public/icons.svg`
 - **Font loading**: Google Fonts preconnect + stylesheet links in `index.html` `<head>` for Space Grotesk (400, 500, 600, 700)
 - **Cyberpunk aesthetic**: All UI labels use uppercase, underscores, and technical-sounding codes (e.g., `REGISTRY.SYSTEM_V4`, `SEATING_01`, `PLANNER_V1.0`, `IDENTITY_MATRIX`, `STATUS_CLASSIFICATION`, `NO_RECORDS // INITIALIZE_DB`)
 - **Responsive pattern**: Single components adapt via Tailwind responsive utilities (`hidden md:block`, `md:hidden`, `md:flex`, etc.) — no separate mobile/desktop component files
@@ -306,12 +308,25 @@ Key architectural decisions:
 11. **DD-11: useTableState hook** — Custom hook encapsulating table store operations + React state sync.
 12. **DD-12: Geometry helpers** — `SEAT_SPACING`, `TABLE_PADDING`, `SEAT_RADIUS`, min dimension constants, `getSeatPositions()` for computing seat coordinates.
 
-### Spec: Semantic Table Refactor — Status: Draft (2026-04-03)
+### Spec: Semantic Table Refactor — Status: Completed (2026-04-03)
 
-Planned refactor (not yet implemented):
+Key architectural decisions:
 
-1. Replace `<div>` grid layouts with proper `<table>` elements in the desktop guest list.
-2. Replace detail panel Core Metadata section with `<dl>` elements.
+1. **DD-1: @tanstack/react-table for desktop guest list** — `createColumnHelper<Guest>()` at module scope, `useReactTable` with `getCoreRowModel`. Replaces prior `<div>` grid layout.
+2. **DD-2: Semantic `<table>` element** — Desktop guest list uses `<table>`, `<thead>`, `<tbody>`, `<tr>`, `<th scope="col">`, `<td>` for proper HTML semantics and accessibility.
+3. **DD-3: `border-separate border-spacing-0`** — Table uses `border-separate` to support per-row borders (selected state `border-l-2`).
+4. **DD-4: Column definitions at module scope** — Per G-27, columns defined outside the component for stable references.
+
+### Spec: Sidebar Navigation — Status: Draft (2026-04-03)
+
+Planned changes (not yet implemented):
+
+1. **DD-1: Route-based navigation** — Replace `/?tab=guests` and `/?tab=canvas` with `/` and `/seating-plan` as proper routes.
+2. **DD-2: Sidebar as primary navigation** — Two links: "Listado de invitados" (`/`) and "Canvas" (`/seating-plan`). Remove TopNav tab selector and search input.
+3. **DD-3: Active state from route path** — Derive active view from `useLocation().pathname` instead of `useSearchParams`.
+4. **DD-4: BottomTabBar route navigation** — CANVAS/GUESTS tabs navigate via routes instead of query params.
+5. **DD-5: Remove old nav items** — PROPERTIES, LAYOUT, OBJECTS, EXPORT removed from sidebar.
+6. **DD-6: TopNav simplification** — Retains only brand text, settings icon, and avatar.
 
 ## Guardrails and Lessons Learned
 
@@ -402,3 +417,11 @@ The `react-hooks/set-state-in-effect` ESLint rule will block the pre-commit hook
 
 **G-26: Collapse Identical Conditional Branches**
 Extends G-12. When an if/else or ternary has identical branches, collapse them into a single unconditional block.
+
+### From: Semantic Table Refactor (2026-04-03)
+
+**G-27: Define @tanstack/react-table Column Definitions at Module Scope**
+When using `@tanstack/react-table`, define the `columns` array (via `createColumnHelper<T>()`) at module scope (outside the component function), not inside the component. This ensures a stable reference and prevents unnecessary re-renders.
+
+**G-28: Use `border-separate` + `border-spacing-0` for Styled `<table>` Elements**
+When applying per-row or per-cell borders, use `border-collapse: separate` with `border-spacing: 0` on the `<table>` element. Do not use `border-collapse: collapse`. The Tailwind classes are `border-separate border-spacing-0`.
