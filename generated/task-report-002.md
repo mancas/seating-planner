@@ -1,56 +1,45 @@
-# Task Report: TASK-002 — Atom Components
+# Task Report: TASK-002 — Create Guest Store
 
 ## Task
 
-Create all 9 atom components under `src/components/atoms/`.
+Create the localStorage-backed data layer (`src/data/guest-store.ts`) that replaces direct consumption of `mock-guests.ts`. Exports CRUD functions and stat helpers.
 
 ## Status: COMPLETED
 
 ## Changes Made
 
-### Directories Created
+### Files Created
 
-- `src/components/` (new)
-- `src/components/atoms/` (new)
+1. **`src/data/guest-store.ts`** (new) — localStorage-backed guest data store with:
+   - Type re-exports: `Guest`, `GuestStatus` (using `import type`)
+   - Storage key: `seating-plan:guests`
+   - Internal helpers: `readFromStorage()` and `writeToStorage()` with in-memory fallback
+   - CRUD operations: `getGuests`, `getGuestById`, `addGuest`, `updateGuest`, `deleteGuest`
+   - Stat helpers: `getConfirmedCount`, `getPendingCount`, `getConfirmationRate`, `getDietaryFlagCount`, `getTotalGuests`, `getWaitlistCount`, `getGuestsByTable`
 
-### Files Created (9 components)
+### Implementation Details
 
-1. **`src/components/atoms/StatusBadge.tsx`** — Renders GuestStatus as a colored badge. CONFIRMED: filled cobalt, PENDING: outlined cobalt, DECLINED: outlined red. Hidden on mobile (`hidden md:inline-flex`).
-
-2. **`src/components/atoms/StatusIcon.tsx`** — Mobile-only status indicator. CONFIRMED: checkmark circle SVG in cobalt. PENDING/DECLINED: three-dots SVG in muted. Visible only on mobile (`md:hidden`).
-
-3. **`src/components/atoms/Avatar.tsx`** — Circular div showing initials from firstName + lastName. Three sizes: sm (32px), md (40px, default), lg (64px). Uses `bg-surface-elevated text-foreground-heading`.
-
-4. **`src/components/atoms/StatCard.tsx`** — Uses the `.card` component class. Displays label (text-label, uppercase, muted) and value (text-heading-3). Optional `mobileBorder` adds left cobalt border. Accepts children.
-
-5. **`src/components/atoms/SearchInput.tsx`** — Wrapper with magnifying glass SVG icon + input using `.input` class. Default placeholder: "SEARCH_DATABASE". Wrapper styled with `bg-surface-elevated border-border`.
-
-6. **`src/components/atoms/IconButton.tsx`** — Generic icon button with `aria-label`. Hover reveals elevated surface background and brighter text. Accepts children for icon content.
-
-7. **`src/components/atoms/NavLink.tsx`** — Uppercase text button for navigation. Active state: heading color + cobalt bottom border. Inactive: muted text, transparent border, hover brightens.
-
-8. **`src/components/atoms/FAB.tsx`** — Fixed floating action button, mobile only (`md:hidden`). Circular cobalt button with person-add SVG icon. Positioned bottom-right with `z-50`.
-
-9. **`src/components/atoms/TabBarItem.tsx`** — Flex-column button for bottom tab bar. Active: icon in cobalt pill (`rounded-lg px-3 py-1`), label in cobalt. Inactive: muted colors.
+- **UUID generation**: Uses `v4` from `uuid` package for new guest IDs
+- **Deep merge**: `updateGuest` performs nested spread for `dietary` and `logistics` objects to avoid overwriting unspecified nested fields
+- **Division-by-zero guard**: `getConfirmationRate` returns `0` when there are no guests
+- **In-memory fallback**: When `localStorage` is unavailable (SSR, quota exceeded), falls back to an in-memory `Guest[]` array
+- **All named exports**: No default export; all functions and types are named exports
 
 ## Conventions Verified
 
-| Convention                                  | Status |
-| ------------------------------------------- | ------ |
-| No semicolons                               | PASS   |
-| Single quotes                               | PASS   |
-| 2-space indent                              | PASS   |
-| `import type` for type-only imports         | PASS   |
-| Function declarations (not arrow)           | PASS   |
-| `export default ComponentName` (not inline) | PASS   |
-| No barrel index.ts files                    | PASS   |
-| PascalCase component names                  | PASS   |
+| Convention                          | Status |
+| ----------------------------------- | ------ |
+| No semicolons                       | PASS   |
+| Single quotes                       | PASS   |
+| Trailing commas                     | PASS   |
+| 2-space indent                      | PASS   |
+| `import type` for type-only imports | PASS   |
+| Named exports only (no default)     | PASS   |
+| Explicit return types               | PASS   |
 
 ## Validation
 
-| Check                  | Result                      |
-| ---------------------- | --------------------------- |
-| `npx tsc --noEmit`     | PASS — zero errors          |
-| `npx prettier --check` | PASS — all files formatted  |
-| `npx eslint`           | PASS — zero warnings/errors |
-| No semicolons (grep)   | PASS — zero matches         |
+| Check              | Result                                                                 |
+| ------------------ | ---------------------------------------------------------------------- |
+| `npx tsc --noEmit` | PASS — zero errors                                                     |
+| Scope isolation    | PASS — only `src/data/guest-store.ts` created; no other files modified |

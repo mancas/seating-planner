@@ -1,55 +1,75 @@
-# Task Report — TASK-006: Organism — GuestListHeader
+# Task Report — TASK-006: Create GuestForm Organism
 
 ## Status: COMPLETE
 
 ## File Created
 
-- `src/components/organisms/GuestListHeader.tsx`
+- `src/components/organisms/GuestForm.tsx`
 
 ## Implementation Summary
 
-Created the `GuestListHeader` organism component with responsive desktop/mobile layouts.
+Created the `GuestForm` organism component — a full add/edit guest form with react-hook-form integration, five form sections, conditional fields, and action buttons.
 
 ### Props
 
-| Prop             | Type     | Description                 |
-| ---------------- | -------- | --------------------------- |
-| `confirmedCount` | `number` | Number of confirmed guests  |
-| `pendingCount`   | `number` | Number of pending guests    |
-| `totalGuests`    | `number` | Total guest count           |
-| `waitlistCount`  | `number` | Number of waitlisted guests |
+| Prop       | Type                                | Description                        |
+| ---------- | ----------------------------------- | ---------------------------------- |
+| `guest`    | `Guest \| undefined`                | Guest to edit (undefined for add)  |
+| `onSubmit` | `(data: Omit<Guest, 'id'>) => void` | Called with transformed guest data |
+| `onDelete` | `(id: string) => void \| undefined` | Called to delete guest (edit only) |
+| `onCancel` | `() => void`                        | Called when cancel button clicked  |
 
-### Desktop Layout (`hidden md:block`)
+### Form Structure
 
-- Label: `REGISTRY.SYSTEM_V4` with `text-label text-primary tracking-wider`
-- Title: `GUEST_LIST` with `text-heading-1 text-foreground-heading mt-1`
-- Two `StatCard` components in `flex gap-4 mt-4`:
-  - "TOTAL CONFIRMED" / `confirmedCount`
-  - "PENDING" / `pendingCount`
+- **Mode detection**: `isEdit = !!guest` determines add vs edit mode
+- **react-hook-form**: `useForm<GuestFormValues>` with `register`, `handleSubmit`, `watch`, `setValue`, `formState: { errors }`
+- **Default values**: Flattened from `Guest` type for edit mode, empty strings/false/PENDING for add mode
 
-### Mobile Layout (`md:hidden`)
+### Form Sections
 
-- Label: `SYSTEM_LOG` with `text-label text-primary tracking-wider`
-- Title: `GUEST LIST` with `text-heading-1 text-foreground-heading mt-1`
-- Subtitle: `STATUS: {confirmedCount} / {totalGuests} CONFIRMED` with `text-caption text-foreground-muted mt-1`
-- Two `StatCard` components in `grid grid-cols-2 gap-3 mt-4` with `mobileBorder` prop:
-  - "TOTAL GUESTS" / `totalGuests`
-  - "WAITLIST" / `waitlistCount`
+1. **IDENTITY_MATRIX** — firstName (required), lastName (required), role
+2. **STATUS_CLASSIFICATION** — status (select, required), accessLevel
+3. **SEATING_ALLOCATION** — tableAssignment, seatNumber (number input)
+4. **DIETARY_PROTOCOL** — dietaryType, dietaryNotes (textarea)
+5. **LOGISTICS_CONFIG** — shuttleRequired (Toggle), shuttleFrom (conditional), lodgingBooked (Toggle), lodgingVenue (conditional)
 
-### Wrapper
+### Conditional Fields
 
-- `<div className="px-4 md:px-6 py-4 md:py-6">`
+- `shuttleFrom` input shown only when `shuttleRequired` is true (via `watch`)
+- `lodgingVenue` input shown only when `lodgingBooked` is true (via `watch`)
+
+### Submit Handler
+
+Transforms flat `GuestFormValues` into nested `Omit<Guest, 'id'>` structure:
+
+- Empty strings converted to `null` for optional fields
+- `seatNumber` parsed from string to `number | null` via `parseInt`
+- Nested `dietary` and `logistics` objects reconstructed
+
+### Action Buttons
+
+- CANCEL — calls `onCancel`
+- DELETE — shown only in edit mode, opens `ConfirmDialog`
+- SAVE_ENTRY — submits the form
+
+### Delete Confirmation
+
+- Uses `ConfirmDialog` molecule with `showDeleteDialog` state
+- Displays guest full name as target
+- Calls `onDelete?.(guest!.id)` on confirm
 
 ## Conventions Followed
 
 - No semicolons
 - Single quotes
 - 2-space indentation
-- Function declaration (`function GuestListHeader`)
-- Default export (`export default GuestListHeader`)
+- Trailing commas
+- Function declaration (`function GuestForm`)
+- Default export (`export default GuestForm`)
 - No barrel files
-- Relative imports (`../atoms/StatCard`)
+- Relative imports for all local modules
 
 ## Verification
 
-- TypeScript type-check (`tsc --noEmit`): **PASS** — zero errors
+- TypeScript type-check (`tsc --noEmit`): **PASS** — zero GuestForm-specific errors
+- Pre-existing LSP errors in `App.tsx` are unrelated to this task

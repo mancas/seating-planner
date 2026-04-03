@@ -22,17 +22,10 @@ function GuestTable({
   onGuestClick,
   searchQuery,
 }: Props) {
-  const query = searchQuery.toLowerCase().trim()
-  const filtered = query
-    ? guests.filter((g) => {
-        const fullName = `${g.firstName} ${g.lastName}`.toLowerCase()
-        return fullName.includes(query)
-      })
-    : guests
-
-  // Group filtered guests by table assignment for mobile view
+  // Group guests by table assignment for mobile view
+  // Filtering is handled by the parent (App.tsx) — guests prop is already filtered
   const groupMap = new Map<string, Guest[]>()
-  for (const guest of filtered) {
+  for (const guest of guests) {
     const key = guest.tableAssignment ?? 'UNASSIGNED'
     const group = groupMap.get(key)
     if (group) {
@@ -49,7 +42,8 @@ function GuestTable({
     return a.localeCompare(b)
   })
 
-  const isEmpty = filtered.length === 0
+  const isEmpty = guests.length === 0
+  const hasActiveSearch = searchQuery.trim().length > 0
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -61,12 +55,12 @@ function GuestTable({
           <span>TABLE</span>
           <span>ACTIONS</span>
         </div>
-        {isEmpty ? (
+        {isEmpty && hasActiveSearch ? (
           <div className="hidden md:flex items-center justify-center py-16 text-foreground-muted text-label tracking-wider">
             NO_RESULTS // QUERY_MISMATCH
           </div>
         ) : (
-          filtered.map((guest) => (
+          guests.map((guest) => (
             <GuestRow
               key={guest.id}
               guest={guest}
@@ -79,7 +73,7 @@ function GuestTable({
 
       {/* Mobile layout */}
       <div className="md:hidden">
-        {isEmpty ? (
+        {isEmpty && hasActiveSearch ? (
           <div className="md:hidden flex items-center justify-center py-16 text-foreground-muted text-label tracking-wider">
             NO_RESULTS // QUERY_MISMATCH
           </div>

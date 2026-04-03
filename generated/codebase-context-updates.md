@@ -1,146 +1,176 @@
 # Codebase Context Updates
 
-Updates to `generated/codebase-context.md` based on the validated Guest List Screen implementation.
+Updates to `generated/codebase-context.md` based on the validated Guest CRUD Flow implementation.
 
 ---
 
-## Guardrail Updates
+## New Guardrails Added (G-15 through G-19)
 
-Four new guardrails were added to `generated/guardrails.md`:
+### G-15: Form Inputs with Validation Must Include `aria-invalid`
 
-### G-11: All Interactive Elements Must Be Keyboard Accessible
+**Rule**: Any form input with validation must include `aria-invalid`. Error message elements must use `role="alert"`.
+**Source**: GuestForm's firstName/lastName inputs lacked `aria-invalid`; FormError lacked `role="alert"`.
 
-**Rule**: Every clickable element must be keyboard accessible. If using a `<button>`, ensure `cursor-pointer` is set (Tailwind preflight resets it to `default`). If using a `<div onClick>`, add `role="button"`, `tabIndex={0}`, and an `onKeyDown` handler — or refactor to a real `<button>`. All buttons must include `focus-visible` outline per G-8.
-**Source**: IconButton missing focus-visible, NavLink missing cursor-pointer, GuestRow/SidebarNavItem using div onClick without keyboard support.
+### G-16: Avoid `setState` Inside `useEffect` — Use Synchronous State Adjustment
 
-### G-12: Always Review Ternary Branches for Copy-Paste Errors
+**Rule**: Prefer the "adjusting state during render" pattern over `useEffect` with `setState` for state derived from navigation/props.
+**Source**: `setSelectedGuestId` inside `useEffect` in App.tsx caused ESLint error and cascading renders.
 
-**Rule**: When writing conditional expressions (ternaries), verify that true and false branches produce different outputs. A ternary where both branches return the same value is always a bug.
-**Source**: GuestDetailPanel shuttle label ternary had identical branches — `shuttleRequired ? 'SHUTTLE REQUIRED' : 'SHUTTLE REQUIRED'`.
+### G-17: Single Source of Truth for Data Transformations
 
-### G-13: Use Design System Typography Classes Consistently
+**Rule**: Filtering/sorting should happen in exactly one place. Don't duplicate transformations across parent and child.
+**Source**: Search filtering was applied in both App.tsx and GuestTable.tsx.
 
-**Rule**: All text elements must use the appropriate typography utility class from the design system. Never rely on inherited font sizing when a typography class is specified in the spec.
-**Source**: NavLink was missing the `text-label` class, relying on inherited sizing instead.
+### G-18: Delete Unused Component Files
 
-### G-14: Mobile-Specific Groups Need Contextual Data
+**Rule**: If a component is created but never imported, delete it. Dead code increases cognitive load.
+**Source**: SelectInput.tsx and TextareaInput.tsx were created but never used.
 
-**Rule**: When rendering grouped data with different semantics, ensure group metadata reflects the group's actual context. Don't hardcode values that only apply to some groups.
-**Source**: Mobile guest table hardcoded `totalSeats={8}` for UNASSIGNED group.
+### G-19: Custom Modal Dialogs Need Keyboard and ARIA Support
+
+**Rule**: Modals must include `role="alertdialog"`, `aria-modal="true"`, `aria-labelledby`, and Escape key handling.
+**Source**: ConfirmDialog lacked standard modal accessibility patterns.
 
 ---
 
 ## Sections to Update in `generated/codebase-context.md`
 
-### 1. Update "Prior Spec Decisions" — Guest List Screen status
+### 1. Update Key Dependencies table
+
+Add these new entries:
+
+| Library         | Version | Purpose                                       |
+| --------------- | ------- | --------------------------------------------- |
+| react-hook-form | ^7.x    | Form state management, validation, submission |
+| uuid            | ^11.x   | UUID v4 generation for guest IDs              |
+| @types/uuid     | ^10.x   | TypeScript types for uuid (devDependency)     |
+
+### 2. Update "Prior Spec Decisions" — Guest CRUD Flow status
 
 Change:
 
 ```
-### Spec: Guest List Screen (`spec/guest-list-screen.md`) — Status: Draft
+### Spec: Guest CRUD Flow (`spec/guest-crud-flow.md`) — Status: Draft (Confirmed, awaiting implementation)
 ```
 
 To:
 
 ```
-### Spec: Guest List Screen (`spec/guest-list-screen.md`) — Status: Implemented (pass with issues)
+### Spec: Guest CRUD Flow (`spec/guest-crud-flow.md`) — Status: In Progress (Iteration 1 — CHANGES_REQUESTED)
 ```
 
-### 2. Update "Guardrails and Lessons Learned"
+### 3. Update "Data fetching" in Architectural Patterns
 
 Replace:
 
 ```
-See `generated/guardrails.md` for 10 guardrails established from the Nought Cobalt design system implementation, covering Tailwind v4 configuration patterns, CSS variable namespacing, dark mode policy, and migration safety practices.
+- **Data fetching**: None (mock data). `src/data/mock-guests.ts` exports typed `Guest` interface, `GuestStatus` type, 6 mock guests, and stat helper functions...
 ```
 
 With:
 
 ```
-See `generated/guardrails.md` for 14 guardrails established from the Nought Cobalt design system and Guest List Screen implementations, covering Tailwind v4 configuration patterns, CSS variable namespacing, dark mode policy, migration safety practices, accessibility requirements, and component development patterns.
-
-Key guardrails:
-
-- **G-1**: `@import 'tailwindcss'` must be the very first line of `src/index.css`, top-level, never nested.
-- **G-2**: `@theme` for Tailwind utility generation, `:root` `--nc-*` for direct CSS variables.
-- **G-3**: Always use `var(--nc-*)` in custom CSS, never raw hex or Tailwind's `var(--color-*)`.
-- **G-4**: No light mode — dark only. No `prefers-color-scheme` media queries.
-- **G-5**: Default border radius is 4px.
-- **G-6**: Use `@utility` for multi-property utility classes, not `@layer utilities`.
-- **G-7**: Use `@layer components` for component base styles.
-- **G-8**: `focus-visible` for buttons, `focus` for inputs.
-- **G-9**: Google Fonts must include preconnect links.
-- **G-10**: Grep entire `src/` for old variable names when renaming CSS custom properties.
-- **G-11**: All interactive elements must be keyboard accessible with `cursor-pointer` and `focus-visible`.
-- **G-12**: Review ternary branches for copy-paste errors (identical branches = bug).
-- **G-13**: Use design system typography classes consistently — never rely on inherited sizing.
-- **G-14**: Mobile-specific groups need contextual data, don't hardcode values.
+- **Data fetching**: localStorage-backed persistence. `src/data/guest-store.ts` provides CRUD operations (`getGuests`, `getGuestById`, `addGuest`, `updateGuest`, `deleteGuest`) and stat helpers. Reads/writes `Guest[]` to localStorage under key `"seating-plan:guests"`. In-memory fallback if localStorage unavailable. Type definitions remain in `src/data/mock-guests.ts`. App starts with empty guest list (no mock data seeding).
 ```
 
-### 3. Update "File organization" in Code Conventions
+### 4. Update "Routing Architecture"
 
 Replace:
 
 ```
-- **File organization**: Flat `src/` directory currently; planned atomic design structure (`src/components/atoms/`, `molecules/`, `organisms/`) per guest-list-screen spec. No barrel `index.ts` files.
+- `main.tsx` wraps `<App />` in `<BrowserRouter>` from `react-router`
+- `App.tsx` uses `useSearchParams` for tab switching at root `/`
+- Supported tabs: `guests` (default), `canvas`, `tools`, `more`
+- Invalid tab values fall back to `guests`
+- No sub-route definitions currently exist — the entire app renders at `/`
 ```
 
 With:
 
 ```
-- **File organization**: Atomic design structure: `src/components/atoms/` (9 components), `src/components/molecules/` (4 components), `src/components/organisms/` (7 components). Mock data in `src/data/`. No barrel `index.ts` files.
+- `main.tsx` defines route tree: `<BrowserRouter>` wraps `<Routes>` with `<App />` as layout route
+- Routes: index (`/`), `/guests/new` (AddGuestPage), `/guests/:id/edit` (EditGuestPage)
+- `App.tsx` is the layout component using `<Outlet />` for child routes
+- `App.tsx` uses `useSearchParams` for tab switching at root `/`
+- Supported tabs: `guests` (default), `canvas`, `tools`, `more`
+- Invalid tab values fall back to `guests`
+- Child route data passed via Outlet context (`guests`, `onAdd`, `onUpdate`, `onDelete`, `onCancel`)
+- Page components in `src/pages/` directory (new convention for route-level components)
 ```
 
-### 4. Update "Structure" in Architectural Patterns
+### 5. Update "State management" in Architectural Patterns
 
 Replace:
 
 ```
-- **Structure**: Single-page application (SPA) with React + BrowserRouter. Currently a minimal Vite scaffold — one component (`App.tsx`) with no route definitions. Routing planned via query params (`/?tab=guests`, `/?tab=canvas`) at root `/`.
+- **State management**: Local component state via `useState` in `App.tsx`. No global state library. `App` owns `selectedGuestId`, `searchQuery`, and `activeTab` (via `useSearchParams`). Data and callbacks passed down as props.
 ```
 
 With:
 
 ```
-- **Structure**: Single-page application (SPA) with React + BrowserRouter. App shell with query-param tab routing (`/?tab=guests`, `/?tab=canvas`) at root `/`. Three-panel desktop layout (TopNav, LeftSidebar, main content + optional GuestDetailPanel). Mobile layout with bottom tab bar, FAB, and table-grouped guest list.
+- **State management**: Local component state via `useState` in `App.tsx`. No global state library. `App` owns `guests` (synced with localStorage via guest-store), `selectedGuestId`, `searchQuery`, and `activeTab` (via `useSearchParams`). CRUD operations update both localStorage and React state. Data and callbacks passed down as props (direct children) and Outlet context (route children).
 ```
 
-### 5. Update "Current CSS Architecture" — App.css
+### 6. Update "Current File Structure"
+
+Add new files to the structure:
+
+```
+src/
+├── App.css                    (empty)
+├── App.tsx                    (layout route, tab routing, state management, CRUD callbacks)
+├── index.css                  (design system: tokens, theme, base styles, utilities, components)
+├── main.tsx                   (entry point: StrictMode + BrowserRouter + Routes + layout route)
+├── data/
+│   ├── mock-guests.ts         (Guest/GuestStatus types, mock data array, stat helpers — types only used)
+│   └── guest-store.ts         (NEW: localStorage CRUD, stat helpers, in-memory fallback)
+├── pages/
+│   ├── AddGuestPage.tsx       (NEW: thin wrapper for add guest route)
+│   └── EditGuestPage.tsx      (NEW: thin wrapper for edit guest route with redirect)
+└── components/
+    ├── atoms/
+    │   ├── Avatar.tsx
+    │   ├── FAB.tsx
+    │   ├── FormError.tsx       (NEW: inline validation error message)
+    │   ├── IconButton.tsx
+    │   ├── NavLink.tsx
+    │   ├── SearchInput.tsx
+    │   ├── StatCard.tsx
+    │   ├── StatusBadge.tsx
+    │   ├── StatusIcon.tsx
+    │   ├── TabBarItem.tsx
+    │   └── Toggle.tsx          (NEW: on/off toggle switch)
+    ├── molecules/
+    │   ├── ConfirmDialog.tsx   (NEW: modal confirmation dialog)
+    │   ├── FormField.tsx       (NEW: label + input + error stack)
+    │   ├── FormSection.tsx     (NEW: section heading + grouped fields)
+    │   ├── GuestDetailSection.tsx
+    │   ├── GuestRow.tsx
+    │   ├── SidebarNavItem.tsx
+    │   └── TableGroupHeader.tsx
+    └── organisms/
+        ├── BottomTabBar.tsx
+        ├── EmptyState.tsx      (NEW: empty guest list placeholder)
+        ├── GuestDetailPanel.tsx (MODIFIED: onUpdate/onDelete props, DELETE button)
+        ├── GuestForm.tsx       (NEW: add/edit form with react-hook-form)
+        ├── GuestListFooterStats.tsx
+        ├── GuestListHeader.tsx
+        ├── GuestTable.tsx
+        ├── LeftSidebar.tsx     (MODIFIED: onAddGuest callback prop)
+        └── TopNav.tsx
+```
+
+### 7. Update "Guardrails and Lessons Learned"
 
 Replace:
 
 ```
-**`src/App.css`** (190 lines):
-
-- Component styles using `--nc-*` design tokens exclusively
-- Styles for: `.counter`, `.hero`, `#center`, `#next-steps`, `#docs`, `#spacer`, `.ticks`
-- Uses native CSS nesting extensively
-- Responsive breakpoints at `max-width: 1024px`
-- Dark mode icon filter applied unconditionally for `#social .button-icon`
-
-**Note**: `#root` currently has `width: 1126px` and `text-align: center` — this will need adjustment for full-viewport layouts.
+See `generated/guardrails.md` for 14 guardrails established from the Nought Cobalt design system and Guest List Screen implementations...
 ```
 
 With:
 
 ```
-**`src/App.css`** (0 lines):
-
-- Emptied — all Vite template styles removed. Component styling is done via Tailwind utility classes in JSX.
-
-**`#root`** (line 185): `width: 100%`, `min-height: 100svh`, `display: flex`, `flex-direction: column` — full-viewport layout for the app shell.
-```
-
-### 6. Update "Data fetching" in Architectural Patterns
-
-Replace:
-
-```
-- **Data fetching**: None currently implemented. Mock data planned in `src/data/mock-guests.ts`.
-```
-
-With:
-
-```
-- **Data fetching**: None (mock data). `src/data/mock-guests.ts` exports typed `Guest` interface, `GuestStatus` type, 6 mock guests, and stat helper functions (`getConfirmedCount`, `getPendingCount`, `getConfirmationRate`, `getDietaryFlagCount`, `getTotalGuests`, `getWaitlistCount`, `getGuestsByTable`).
+See `generated/guardrails.md` for 19 guardrails established from the Nought Cobalt design system, Guest List Screen, and Guest CRUD Flow implementations, covering Tailwind v4 configuration, CSS variable namespacing, dark mode policy, migration safety, accessibility requirements, component development patterns, form validation accessibility, state management patterns, data transformation ownership, dead code prevention, and modal dialog accessibility.
 ```

@@ -1,52 +1,45 @@
-# Task Report — TASK-008: Organism — GuestDetailPanel
+# Task Report — TASK-008: Create Page Components
 
 ## Status: COMPLETE
 
-## Summary
+## Files Created
 
-Created the `GuestDetailPanel` organism component — a right-side detail panel that displays comprehensive guest information including identity, metadata, preferences, logistics, and action buttons.
-
-## File Created
-
-- `src/components/organisms/GuestDetailPanel.tsx` (148 lines)
+- `src/pages/AddGuestPage.tsx`
+- `src/pages/EditGuestPage.tsx`
 
 ## Implementation Details
 
-### Props
+### `src/pages/AddGuestPage.tsx`
 
-| Prop      | Type         | Description                        |
-| --------- | ------------ | ---------------------------------- |
-| `guest`   | `Guest`      | The guest object to display        |
-| `onClose` | `() => void` | Callback to close the detail panel |
-
-### Structure
-
-- **Aside wrapper**: `hidden md:flex flex-col w-[320px] min-w-[320px] bg-surface border-l border-border overflow-y-auto` — desktop-only, fixed width, scrollable
-- **Header**: Flex row with "GUEST_DETAILS" label and close IconButton (20x20 X SVG)
-- **Guest identity**: Centered Avatar (`size="lg"`), name as `h2`, role as muted text
-- **Core Metadata section**: GuestDetailSection with three flex rows for STATUS (StatusBadge), ACCESS LEVEL, and ASSIGNED TABLE (falls back to "- - -" if null)
-- **Preferences section**: GuestDetailSection showing dietary type in bold if present, notes in an elevated card with italic styling, or "NO_RESTRICTIONS" if no type
-- **Logistics section**: GuestDetailSection with two rows (shuttle and lodging), each with an SVG icon placeholder and conditional "From:" / "Venue:" details or "N/A"
-- **Action buttons**: `mt-auto` footer with CONTACT (btn-secondary) and UPDATE (btn-primary) buttons, both non-functional
-
-### Dependencies
-
-- `Guest` type from `src/data/mock-guests.ts`
-- `Avatar` atom (`src/components/atoms/Avatar.tsx`) — displays guest initials
-- `StatusBadge` atom (`src/components/atoms/StatusBadge.tsx`) — renders status with variant styling
-- `IconButton` atom (`src/components/atoms/IconButton.tsx`) — close button with accessibility label
-- `GuestDetailSection` molecule (`src/components/molecules/GuestDetailSection.tsx`) — titled section wrapper with border-top
-
-### Conventions Followed
-
-- No semicolons
-- Single quotes for imports
-- 2-space indentation
-- Function declaration (not arrow)
+- Created `src/pages/` directory
+- Implements `AddGuestPage` function component
+- Uses `useOutletContext<OutletContext>()` to access `onAdd` and `onCancel` from parent layout route
+- Renders `<GuestForm onSubmit={onAdd} onCancel={onCancel} />`
+- `OutletContext` interface defines the full context shape (`guests`, `onAdd`, `onUpdate`, `onDelete`, `onCancel`)
 - Default export
+
+### `src/pages/EditGuestPage.tsx`
+
+- Uses `useParams<{ id: string }>()` to get guest ID from URL
+- Uses `useOutletContext<OutletContext>()` to access `guests`, `onUpdate`, `onDelete`, `onCancel`
+- Uses `useNavigate()` for redirect on invalid guest ID
+- Finds guest from `guests` array by ID
+- Edge case handling: `useEffect` redirects to `/?tab=guests` if guest not found (invalid/deleted ID)
+- Returns `null` while redirecting (no flash of content)
+- Renders `<GuestForm guest={guest} onSubmit={(data) => onUpdate(id!, data)} onDelete={onDelete} onCancel={onCancel} />`
+- Default export
+
+## Design Decisions
+
+- Both pages share the same `OutletContext` interface definition (could be extracted to a shared type file in future)
+- `EditGuestPage` uses a silent redirect for missing guests rather than showing an error state, matching the spec requirement
+
+## Conventions Followed
+
+- No semicolons, single quotes, 2-space indent
+- Function declaration with default export
 - `import type` for type-only imports
-- No barrel file created
 
 ## Verification
 
-- `npx tsc --noEmit` — zero errors
+- `npx tsc --noEmit` passes with zero errors

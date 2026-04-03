@@ -13,6 +13,7 @@ export interface Guest {
     type: string | null
     notes: string | null
   }
+  gift: number | null
   logistics: {
     shuttleRequired: boolean
     shuttleFrom: string | null
@@ -31,6 +32,7 @@ export const guests: Guest[] = [
     accessLevel: 'TIER_01',
     tableAssignment: 'TABLE_04',
     seatNumber: 1,
+    gift: 250,
     dietary: {
       type: 'VEGAN',
       notes:
@@ -52,6 +54,7 @@ export const guests: Guest[] = [
     accessLevel: 'TIER_01',
     tableAssignment: 'TABLE_04',
     seatNumber: 2,
+    gift: null,
     dietary: {
       type: null,
       notes: null,
@@ -72,6 +75,7 @@ export const guests: Guest[] = [
     accessLevel: 'TIER_02',
     tableAssignment: 'TABLE_02',
     seatNumber: 1,
+    gift: 100,
     dietary: {
       type: 'VEGETARIAN',
       notes: null,
@@ -92,6 +96,7 @@ export const guests: Guest[] = [
     accessLevel: 'TIER_01',
     tableAssignment: 'TABLE_02',
     seatNumber: 2,
+    gift: 150,
     dietary: {
       type: null,
       notes: null,
@@ -112,6 +117,7 @@ export const guests: Guest[] = [
     accessLevel: 'TIER_02',
     tableAssignment: null,
     seatNumber: null,
+    gift: null,
     dietary: {
       type: 'GLUTEN-FREE',
       notes: 'Celiac disease - strict cross-contamination protocol',
@@ -132,6 +138,7 @@ export const guests: Guest[] = [
     accessLevel: 'TIER_02',
     tableAssignment: null,
     seatNumber: null,
+    gift: null,
     dietary: {
       type: null,
       notes: null,

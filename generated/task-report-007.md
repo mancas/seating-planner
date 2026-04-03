@@ -1,56 +1,51 @@
-# Task Report — TASK-007: Organism — GuestTable
+# Task Report — TASK-007: Refactor Routing and App Shell
 
 ## Status: COMPLETE
 
-## File Created
+## Files Modified
 
-- `src/components/organisms/GuestTable.tsx`
+- `src/main.tsx`
+- `src/App.tsx`
 
 ## Implementation Details
 
-### Props Interface
+### `src/main.tsx`
 
-- `guests: Guest[]` — full guest list passed in
-- `selectedGuestId: string | null` — currently selected guest for highlight
-- `onGuestClick: (guestId: string) => void` — click handler
-- `searchQuery: string` — filters guests by case-insensitive substring on full name
+- Replaced simple `<BrowserRouter><App /></BrowserRouter>` with a full route-based setup using `Routes` and `Route` from `react-router`
+- App is now a layout route (`<Route element={<App />}>`) with child routes:
+  - `index` route renders `null` (main guest list handled by App itself)
+  - `guests/new` renders `<AddGuestPage />`
+  - `guests/:id/edit` renders `<EditGuestPage />`
 
-### Search / Filtering
+### `src/App.tsx`
 
-- Trims and lowercases the query, then filters `firstName + ' ' + lastName` with `.includes()`
-- Empty query shows all guests
-
-### Desktop View (`hidden md:block`)
-
-- Column header row using `grid-cols-[1fr_120px_100px_60px]` with labels: NAME / IDENTIFIER, STATUS, TABLE, ACTIONS
-- Maps filtered guests to `GuestRow` with `isSelected` and `onClick` props
-- Empty state: centered `NO_RESULTS // QUERY_MISMATCH` message
-
-### Mobile View (`md:hidden`)
-
-- Groups filtered guests by `tableAssignment` (null → 'UNASSIGNED')
-- Sorts keys: named tables alphabetically first, UNASSIGNED last
-- Each group renders `TableGroupHeader` with:
-  - `location` derived via `getLocationLabel()` helper (TABLE_01 → LOCATION_A, etc.)
-  - `tableName` formatted (TABLE_04 → "TABLE 04", UNASSIGNED → "NO TABLE")
-  - `seatCount` = group size, `totalSeats` = 8 (hardcoded)
-- Then renders `GuestRow` for each guest in the group
-- Empty state: same message with `md:hidden`
-
-### Helper Function
-
-- `getLocationLabel(table: string): string` — extracts numeric portion from table name, converts to letter via `String.fromCharCode(64 + num)`, returns `LOCATION_{letter}`. Returns `'UNASSIGNED'` for unassigned.
-
-### Wrapper
-
-- `<div className="flex-1 overflow-y-auto">` as the outer container
+- **Removed** all imports from `./data/mock-guests` (was importing `guests` array and stat functions)
+- **Added** imports from `./data/guest-store` (`getGuests`, `addGuest`, `updateGuest`, `deleteGuest`)
+- **Added** type import for `Guest` from `./data/mock-guests`
+- **Added** `EmptyState` component import
+- **Added** React Router hooks: `useNavigate`, `useLocation`, `Outlet`
+- **Added** `useCallback` and `useEffect` imports
+- **State management**: `guests` is now `useState<Guest[]>(() => getGuests())` instead of imported mock array
+- **Navigation**: Added `isChildRoute` detection via `location.pathname.startsWith('/guests/')`
+- **Auto-select after edit**: `useEffect` reads `location.state.selectedGuestId` and applies it
+- **CRUD callbacks**: `handleAddGuest`, `handleUpdateGuest`, `handleDeleteGuest` using store functions with navigation
+- **Navigation callbacks**: `handleNavigateToAdd`, `handleNavigateToEdit` for routing to form pages
+- **Stats computed from state**: `confirmedCount`, `pendingCount`, `totalGuests`, `confirmationRate`, `dietaryFlagCount`, `waitlistCount`
+- **Search filtering**: `filteredGuests` computed from `guests` state, passed to `GuestTable`
+- **JSX structure**:
+  - `LeftSidebar` receives `onAddGuest={handleNavigateToAdd}`
+  - When `isChildRoute`, renders `<Outlet context={...}>` instead of guest list
+  - When not child route and `guests.length === 0`, renders `<EmptyState>`
+  - `GuestDetailPanel` receives `onUpdate` and `onDelete` props; hidden when `isChildRoute`
+  - `FAB` hidden when `isChildRoute`, wired to `handleNavigateToAdd`
+  - `import './App.css'` was not present (confirmed no removal needed)
 
 ## Conventions Followed
 
 - No semicolons, single quotes, 2-space indent
 - Function declaration with default export
-- `import type { Guest }` from data module
-- No barrel file imports
+- `useCallback` for stable function references passed as props
+- `import type` for type-only imports
 
 ## Verification
 

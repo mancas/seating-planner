@@ -1,58 +1,61 @@
-# Task Report — TASK-003: Molecule Components
+# Task Report — TASK-003: Create Form Atom Components
 
 ## Status: COMPLETE
 
 ## Files Created
 
-- `src/components/molecules/GuestRow.tsx`
-- `src/components/molecules/SidebarNavItem.tsx`
-- `src/components/molecules/GuestDetailSection.tsx`
-- `src/components/molecules/TableGroupHeader.tsx`
+- `src/components/atoms/Toggle.tsx`
+- `src/components/atoms/SelectInput.tsx`
+- `src/components/atoms/TextareaInput.tsx`
+- `src/components/atoms/FormError.tsx`
 
 ## Implementation Details
 
-### GuestRow.tsx
+### Toggle.tsx
 
-- **Props**: `{ guest: Guest, isSelected: boolean, onClick: () => void }`
-- **Desktop layout** (`hidden md:grid`): 4-column grid with Avatar + name/ID, StatusBadge, table assignment (or "- - -" when null), and IconButton with ellipsis dots
-- **Mobile layout** (`md:hidden flex`): seat number (zero-padded 2-digit), name as `FIRST_LAST` uppercase bold, role below in muted caption, StatusIcon on right
-- **Selected state**: `border-l-2 border-l-primary bg-surface-elevated` on both layouts
-- **Not selected**: `border-l-2 border-l-transparent`
-- **Hover**: `hover:bg-gray-800/50`, cursor pointer, full row clickable via wrapper div
-- Uses atoms: Avatar (sm), StatusBadge, StatusIcon, IconButton
+- **Props**: `{ checked: boolean, onChange: (checked: boolean) => void, id?: string }`
+- Renders a `<button>` with `role="switch"`, `aria-checked={checked}`, `type="button"`
+- Track: 44px wide, 24px tall, rounded-full
+- Off state: `bg-gray-700`, on state: `bg-primary`
+- Circle indicator: 18px white circle, positioned with absolute top-[3px] left-[3px]
+- Slides via `translate-x-[20px]` when checked, `translate-x-0` when unchecked
+- Transitions on both background color and transform (200ms)
+- Focus: `focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2`
+- `cursor-pointer`, `onClick` calls `onChange(!checked)`
 
-### SidebarNavItem.tsx
+### SelectInput.tsx
 
-- **Props**: `{ label: string, isActive: boolean, onClick?: () => void }`
-- **Active**: `text-primary bg-primary/10 border-l-2 border-l-primary`
-- **Inactive**: `text-foreground-muted hover:text-foreground hover:bg-surface-elevated border-l-2 border-l-transparent`
-- Base: `py-3 px-4 cursor-pointer transition-colors text-body-sm`
+- **Props**: `{ value: string, onChange: (value: string) => void, options: { value: string; label: string }[], id?: string, hasError?: boolean }`
+- Wrapped in `<div className="relative">` for custom chevron positioning
+- Native `<select>` with `.input` CSS class, `w-full`, `appearance-none`, `pr-10`
+- Custom SVG chevron-down positioned `absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none`
+- Error state: adds `border-red-500/50` to select
+- Maps `options` array to `<option>` elements with `key={option.value}`
 
-### GuestDetailSection.tsx
+### TextareaInput.tsx
 
-- **Props**: `{ title: string, children: ReactNode }`
-- Title: `text-label text-foreground-muted uppercase tracking-wider`
-- Content wrapper: `border-t border-border pt-4 mt-4` with `mt-3` for children spacing
+- **Props**: `{ value: string, onChange: (value: string) => void, placeholder?: string, id?: string, rows?: number, hasError?: boolean }`
+- Native `<textarea>` with `.input` CSS class, `w-full`, `resize-none`
+- `rows` defaults to 3
+- Error state: adds `border-red-500/50`
 
-### TableGroupHeader.tsx
+### FormError.tsx
 
-- **Props**: `{ location: string, tableName: string, seatCount: number, totalSeats: number }`
-- Mobile only (`md:hidden`)
-- Location: `text-label text-primary tracking-wider uppercase`
-- Row: table name in `text-heading-4 text-foreground-heading` left, seats `text-caption text-foreground-muted` right
-- Bottom separator: `border-b border-border mt-2 mb-2`
+- **Props**: `{ message?: string }`
+- Returns `null` when `message` is falsy
+- Renders: `<p className="text-caption text-red-400 mt-1">{message}</p>`
 
 ## Conventions Followed
 
 - No semicolons
-- Single quotes for imports
+- Single quotes (no imports needed for these components)
 - 2-space indentation
-- `import type { Guest } from '../../data/mock-guests'` (relative paths)
+- `Props` interface declared above component function
 - Function declarations (not arrow functions)
 - Default exports
-- No barrel/index files
+- PascalCase file names
 
 ## Verification
 
-- TypeScript compilation: zero errors
-- No LSP diagnostics on any molecule file
+- TypeScript compilation: zero errors (`npx tsc --noEmit` passed cleanly)
+- All four files created and match specified interfaces exactly

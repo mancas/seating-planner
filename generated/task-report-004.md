@@ -1,66 +1,90 @@
 # Task Report: TASK-004
 
-## Task: Organism — TopNav
+## Task: Create Form Molecule Components
 
 ## Status: COMPLETED
 
 ## Changes Made
 
-### File: `src/components/organisms/TopNav.tsx` (created)
+### File: `src/components/molecules/FormField.tsx` (created)
 
-Created the `TopNav` organism component that composes four atom components into a responsive navigation bar.
+Created the `FormField` molecule component that wraps a form input with a label and error message.
 
 **Props interface:**
 
-| Prop             | Type                      | Description                  |
-| ---------------- | ------------------------- | ---------------------------- |
-| `activeTab`      | `string`                  | Currently active tab ID      |
-| `onTabChange`    | `(tab: string) => void`   | Callback when tab is clicked |
-| `searchQuery`    | `string`                  | Current search input value   |
-| `onSearchChange` | `(query: string) => void` | Callback when search changes |
+| Prop       | Type        | Description                         |
+| ---------- | ----------- | ----------------------------------- |
+| `label`    | `string`    | Label text displayed above input    |
+| `htmlFor`  | `string?`   | Associates label with input by id   |
+| `required` | `boolean?`  | Shows red asterisk after label      |
+| `error`    | `string?`   | Error message displayed below input |
+| `children` | `ReactNode` | The actual input component          |
 
 **Structure:**
 
-- **Root `<nav>`**: `w-full h-14 bg-surface border-b border-border flex items-center justify-between px-4 md:px-6 shrink-0`
-- **Left section** (`flex items-center gap-3`):
-  - Mobile-only cobalt dot (`w-1.5 h-1.5 rounded-full bg-primary md:hidden`)
-  - Brand text "PLANNER_V1.0" (`text-label font-semibold text-foreground-heading tracking-wider`)
-- **Center section** (`hidden md:flex items-center gap-6` — desktop only):
-  - `NavLink` "CANVAS" — active when `activeTab === 'canvas'`
-  - `NavLink` "GUEST LIST" — active when `activeTab === 'guests'`
-- **Right section** (`flex items-center gap-2 md:gap-3`):
-  - `SearchInput` wrapped in `hidden md:block` (desktop only)
-  - `IconButton` with inline SVG gear icon (6-tooth cog, 20x20), `label="Settings"`
-  - `Avatar` with `firstName="John"` `lastName="Doe"` `size="sm"`
+- Vertical stack (`flex flex-col gap-1`)
+- `<label>` with `text-label text-foreground-muted uppercase tracking-wider`
+- Optional red asterisk `<span className="text-red-400"> *</span>` when `required`
+- `{children}` slot for input
+- `<FormError>` atom for error display
 
-**Atom imports (relative paths, no barrel files):**
+### File: `src/components/molecules/FormSection.tsx` (created)
 
-- `NavLink` from `../atoms/NavLink`
-- `SearchInput` from `../atoms/SearchInput`
-- `IconButton` from `../atoms/IconButton`
-- `Avatar` from `../atoms/Avatar`
+Created the `FormSection` molecule component that groups related form fields under a titled section.
 
-**Mobile responsiveness:** On mobile, only the cobalt dot, brand text, settings icon button, and avatar are visible. The center nav links and search input are hidden via `hidden md:flex` and `hidden md:block` respectively.
+**Props interface:**
 
-**Directory created:** `src/components/organisms/`
+| Prop       | Type        | Description                    |
+| ---------- | ----------- | ------------------------------ |
+| `title`    | `string`    | Section heading text           |
+| `children` | `ReactNode` | Form fields within the section |
+
+**Structure:**
+
+- Bordered section (`border-t border-border pt-4 mt-6`)
+- `<h3>` with `text-label text-foreground-muted uppercase tracking-wider`
+- Children container (`mt-4 flex flex-col gap-4`)
+
+### File: `src/components/molecules/ConfirmDialog.tsx` (created)
+
+Created the `ConfirmDialog` molecule component for destructive action confirmation.
+
+**Props interface:**
+
+| Prop           | Type         | Description                   |
+| -------------- | ------------ | ----------------------------- |
+| `title`        | `string`     | Dialog heading                |
+| `targetName`   | `string`     | Name of item being acted upon |
+| `message`      | `string`     | Explanatory message           |
+| `confirmLabel` | `string?`    | Custom confirm button text    |
+| `cancelLabel`  | `string?`    | Custom cancel button text     |
+| `onConfirm`    | `() => void` | Confirm callback              |
+| `onCancel`     | `() => void` | Cancel callback               |
+
+**Structure:**
+
+- Fixed overlay (`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm`) with click-to-dismiss
+- Dialog card (`bg-surface border border-border rounded max-w-md`) with `stopPropagation`
+- Warning icon (inline SVG triangle with `!`) + title
+- Target name line and message
+- Button row: secondary cancel button + red confirm button (`bg-red-600 hover:bg-red-700`)
 
 ## Conventions Verified
 
 - [x] No semicolons
 - [x] Single quotes
 - [x] 2-space indentation
-- [x] Function declaration (not arrow function)
-- [x] Default export
-- [x] No barrel files
-- [x] Imports from `../atoms/ComponentName`
+- [x] Function declarations (not arrow functions)
+- [x] Default exports
+- [x] `Props` interface naming convention
+- [x] `import type` for React types (verbatimModuleSyntax)
+- [x] No barrel file imports
+- [x] Relative imports from `../atoms/FormError`
 
 ## Acceptance Criteria Verification
 
-- [x] `src/components/organisms/TopNav.tsx` created
-- [x] Props match spec: `activeTab`, `onTabChange`, `searchQuery`, `onSearchChange`
-- [x] Nav element with exact Tailwind classes from spec
-- [x] Left section with mobile cobalt dot + brand text
-- [x] Center section with NavLink "CANVAS" and "GUEST LIST" (desktop only)
-- [x] Right section with SearchInput (desktop only), IconButton (gear SVG), Avatar
-- [x] Mobile: only brand + dot, settings, avatar visible
-- [x] Full project type-check passes (`tsc --noEmit` — 0 errors)
+- [x] `src/components/molecules/FormField.tsx` created with correct Props and structure
+- [x] `src/components/molecules/FormSection.tsx` created with correct Props and structure
+- [x] `src/components/molecules/ConfirmDialog.tsx` created with correct Props and structure
+- [x] Full project type-check passes (`tsc --noEmit` — 0 errors for new files)
+- [x] Follows existing molecule patterns from `GuestDetailSection.tsx` and `SidebarNavItem.tsx`

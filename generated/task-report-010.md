@@ -1,39 +1,55 @@
-# Task Report — TASK-010: Organism — BottomTabBar
+# Task Report — TASK-010: Update GuestDetailPanel with `onUpdate` and `onDelete` Callbacks
 
 ## Status: DONE
 
-## File Created
+## File Modified
 
-- `src/components/organisms/BottomTabBar.tsx`
+- `src/components/organisms/GuestDetailPanel.tsx`
 
 ## Implementation Details
 
-### Props Interface
+### New Imports
 
-- `activeTab: string` — identifies which tab is currently active
-- `onTabChange: (tab: string) => void` — callback fired when a tab is tapped
+- `useState` from `react`
+- `ConfirmDialog` from `../molecules/ConfirmDialog`
 
-### Structure
+### Updated Props Interface
 
-- `<nav>` wrapper with classes: `md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-border`
-  - Hidden on `md` and above; fixed to viewport bottom on mobile
-- Inner `<div>` with `flex items-center justify-around py-2 px-4` for evenly spaced tabs
+```typescript
+interface Props {
+  guest: Guest
+  onClose: () => void
+  onUpdate: () => void
+  onDelete: () => void
+}
+```
 
-### Tabs Rendered
+### Component State
 
-| Label  | Tab Value | Icon            |
-| ------ | --------- | --------------- |
-| CANVAS | `canvas`  | Pencil/edit     |
-| GUESTS | `guests`  | Person          |
-| TOOLS  | `tools`   | Wrench          |
-| MORE   | `more`    | Horizontal dots |
+- `showDeleteDialog` — boolean state controlling visibility of the delete confirmation dialog
 
-Each tab is a `<TabBarItem>` from `../atoms/TabBarItem` receiving:
+### Button Changes (both mobile and desktop)
 
-- `icon` — inline SVG (16x16, viewBox 0 0 24 24)
-- `label` — uppercase tab name
-- `isActive` — `activeTab === '<tab-value>'`
-- `onClick` — `() => onTabChange('<tab-value>')`
+Three buttons now rendered in each action bar:
+
+| Button  | Style           | Behavior                                              |
+| ------- | --------------- | ----------------------------------------------------- |
+| CONTACT | `btn-secondary` | Non-functional (unchanged, out of scope)              |
+| DELETE  | `bg-red-600`    | Opens `ConfirmDialog` via `setShowDeleteDialog(true)` |
+| UPDATE  | `btn-primary`   | Calls `onUpdate` prop                                 |
+
+- DELETE button uses `type="button"` and full Tailwind classes: `bg-red-600 hover:bg-red-700 text-white flex-1 px-5 py-2.5 rounded font-semibold text-sm cursor-pointer focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2`
+- Button order: CONTACT, DELETE, UPDATE
+
+### ConfirmDialog Integration
+
+Rendered conditionally at the end of the component JSX (inside the fragment, after `</aside>`):
+
+- `title="CONFIRM_DELETION"`
+- `targetName` composed from `guest.firstName` and `guest.lastName`
+- `message` warns about irreversible deletion
+- `onConfirm` wired to `onDelete` prop
+- `onCancel` hides the dialog via `setShowDeleteDialog(false)`
 
 ### Conventions Followed
 
@@ -42,4 +58,9 @@ Each tab is a `<TabBarItem>` from `../atoms/TabBarItem` receiving:
 - 2-space indentation
 - `function` declaration (not arrow)
 - `export default` at bottom
-- No barrel files
+
+## Verification
+
+- TypeScript compilation passes with zero errors (`npx tsc --noEmit`)
+- Both mobile and desktop button sections updated identically
+- ConfirmDialog import resolves (TASK-004 dependency already complete)

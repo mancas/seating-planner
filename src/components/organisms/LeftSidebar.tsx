@@ -1,6 +1,10 @@
 import SidebarNavItem from '../molecules/SidebarNavItem'
 
-function LeftSidebar() {
+interface Props {
+  onAddGuest: () => void
+}
+
+function LeftSidebar({ onAddGuest }: Props) {
   return (
     <aside className="hidden md:flex flex-col w-[220px] min-w-[220px] bg-surface border-r border-border">
       {/* Session info */}
@@ -21,7 +25,7 @@ function LeftSidebar() {
       <div className="mt-auto px-4 py-4 border-t border-border">
         <button
           className="btn-primary w-full flex items-center justify-center gap-2"
-          onClick={() => {}}
+          onClick={onAddGuest}
         >
           <svg
             width="16"

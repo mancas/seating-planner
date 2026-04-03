@@ -1,15 +1,20 @@
+import { useState } from 'react'
 import type { Guest } from '../../data/mock-guests'
 import Avatar from '../atoms/Avatar'
 import StatusBadge from '../atoms/StatusBadge'
 import IconButton from '../atoms/IconButton'
 import GuestDetailSection from '../molecules/GuestDetailSection'
+import ConfirmDialog from '../molecules/ConfirmDialog'
 
 interface Props {
   guest: Guest
   onClose: () => void
+  onUpdate: () => void
+  onDelete: () => void
 }
 
-function GuestDetailPanel({ guest, onClose }: Props) {
+function GuestDetailPanel({ guest, onClose, onUpdate, onDelete }: Props) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   return (
     <>
       {/* Mobile: full-screen overlay */}
@@ -41,7 +46,16 @@ function GuestDetailPanel({ guest, onClose }: Props) {
         {/* Action buttons */}
         <div className="px-4 py-4 mt-auto border-t border-border flex gap-3 shrink-0">
           <button className="btn-secondary flex-1">CONTACT</button>
-          <button className="btn-primary flex-1">UPDATE</button>
+          <button
+            type="button"
+            className="bg-red-600 hover:bg-red-700 text-white flex-1 px-5 py-2.5 rounded font-semibold text-sm cursor-pointer focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+            onClick={() => setShowDeleteDialog(true)}
+          >
+            DELETE
+          </button>
+          <button className="btn-primary flex-1" onClick={onUpdate}>
+            UPDATE
+          </button>
         </div>
       </div>
 
@@ -74,9 +88,28 @@ function GuestDetailPanel({ guest, onClose }: Props) {
         {/* Action buttons */}
         <div className="px-4 py-4 mt-auto border-t border-border flex gap-3">
           <button className="btn-secondary flex-1">CONTACT</button>
-          <button className="btn-primary flex-1">UPDATE</button>
+          <button
+            type="button"
+            className="bg-red-600 hover:bg-red-700 text-white flex-1 px-5 py-2.5 rounded font-semibold text-sm cursor-pointer focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+            onClick={() => setShowDeleteDialog(true)}
+          >
+            DELETE
+          </button>
+          <button className="btn-primary flex-1" onClick={onUpdate}>
+            UPDATE
+          </button>
         </div>
       </aside>
+
+      {showDeleteDialog && (
+        <ConfirmDialog
+          title="CONFIRM_DELETION"
+          targetName={`${guest.firstName} ${guest.lastName}`}
+          message="This action is irreversible. Guest record will be permanently removed from the database."
+          onConfirm={onDelete}
+          onCancel={() => setShowDeleteDialog(false)}
+        />
+      )}
     </>
   )
 }
@@ -141,6 +174,43 @@ function renderContent(guest: Guest) {
             <p className="text-body-sm text-foreground-muted">
               NO_RESTRICTIONS
             </p>
+          )}
+        </GuestDetailSection>
+      </div>
+
+      {/* Gift */}
+      <div className="px-4">
+        <GuestDetailSection title="GIFT_REGISTRY">
+          {guest.gift !== null ? (
+            <div className="flex items-center gap-2 py-2">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-foreground-muted shrink-0"
+              >
+                <rect x="2" y="7" width="12" height="7" rx="1" />
+                <path d="M8 7V14" />
+                <path d="M2 9h12" />
+                <path d="M8 7C8 7 6 5 5 4c-1-1-1-2.5 0-3.5s2.5-1 3 0" />
+                <path d="M8 7C8 7 10 5 11 4c1-1 1-2.5 0-3.5s-2.5-1-3 0" />
+              </svg>
+              <div>
+                <p className="text-body-sm text-foreground">
+                  GIFT_VALUE:{' '}
+                  <span className="font-bold">
+                    ${guest.gift.toLocaleString()}
+                  </span>
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-body-sm text-foreground-muted">NO_GIFT_LOGGED</p>
           )}
         </GuestDetailSection>
       </div>

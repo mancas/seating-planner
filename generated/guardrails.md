@@ -79,3 +79,32 @@ Lessons learned and constraints established from validated specs.
 
 **Rule**: When rendering grouped data with different semantics (e.g., assigned vs. unassigned groups), ensure group metadata (like `totalSeats`) reflects the group's actual context. Don't hardcode values that only apply to some groups.
 **Reason**: The mobile guest table hardcoded `totalSeats={8}` for all groups, including UNASSIGNED, which incorrectly showed "2/8 seats" for guests with no table. Group-specific metadata should be derived from the group's context.
+
+---
+
+## From: Guest CRUD Flow (2026-04-03)
+
+### G-15: Form Inputs with Validation Must Include `aria-invalid`
+
+**Rule**: Any form input that has validation (required, pattern, etc.) must include `aria-invalid={errors.fieldName ? 'true' : 'false'}`. Error message elements must use `role="alert"` to be announced by screen readers.
+**Reason**: The react-hook-form FAQ explicitly recommends `aria-invalid` for accessible error states. Visual error indicators (red borders) are invisible to screen readers. Discovered in Guest CRUD Flow validation where `firstName` and `lastName` inputs lacked `aria-invalid`.
+
+### G-16: Avoid `setState` Inside `useEffect` — Use Synchronous State Adjustment
+
+**Rule**: When you need to update state based on navigation state, location, or props, prefer the "adjusting state during render" pattern over `useEffect` with `setState`. Check React's "You Might Not Need an Effect" guide before adding any `useEffect` that calls `setState`.
+**Reason**: The React Compiler ESLint rule `react-hooks/set-state-in-effect` flags synchronous `setState` inside effects as an error. This causes cascading renders and blocks the pre-commit hook. The synchronous pattern avoids the extra render pass entirely.
+
+### G-17: Single Source of Truth for Data Transformations
+
+**Rule**: Data filtering, sorting, and transformation should happen in exactly one place. Do not filter/transform data in a parent component and then pass the result to a child that applies the same transformation again.
+**Reason**: In Guest CRUD Flow, search filtering was applied in both `App.tsx` (producing `filteredGuests`) and `GuestTable.tsx` (its own internal filter). This duplication creates a maintenance risk where changes to one filter won't propagate to the other, potentially causing divergent behavior.
+
+### G-18: Delete Unused Component Files
+
+**Rule**: If a component is created but never imported anywhere, delete it. Unused files are dead code that increases cognitive load, confuses new contributors, and may trigger unused-export linting errors in the future.
+**Reason**: `SelectInput.tsx` and `TextareaInput.tsx` atoms were created per spec but `GuestForm.tsx` used inline native elements instead. The files served no purpose but remained in the codebase.
+
+### G-19: Custom Modal Dialogs Need Keyboard and ARIA Support
+
+**Rule**: Custom modal/dialog components must include: `role="alertdialog"` or `role="dialog"`, `aria-modal="true"`, `aria-labelledby` pointing to the title element, an `onKeyDown` handler for Escape key to close, and ideally focus trapping.
+**Reason**: The `ConfirmDialog` component lacked these standard accessibility patterns. While not flagged as blocking for the initial implementation, these are important for WCAG compliance and should be added for any production modal.

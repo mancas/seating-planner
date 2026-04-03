@@ -195,6 +195,7 @@ interface Guest {
   accessLevel: string // e.g., "TIER_01"
   tableAssignment: string | null // e.g., "TABLE_04" or null if unassigned
   seatNumber: number | null // seat position within assigned table, e.g., 1, 2, 3; null if unassigned
+  gift: number | null // monetary value of the gift, e.g., 250; null if no gift logged
   dietary: {
     type: string | null // e.g., "VEGAN", "VEGETARIAN", null
     notes: string | null // e.g., "Severe nut allergy..."
@@ -404,6 +405,7 @@ interface Guest {
   status: GuestStatus
   accessLevel: string
   tableAssignment: string | null
+  gift: number | null
   dietary: {
     type: string | null
     notes: string | null
@@ -416,6 +418,8 @@ interface Guest {
   }
 }
 ```
+
+Note: `gift` field added in `guest-crud-flow` spec — monetary value of the guest's gift.
 
 ### Mock Data (4–6 guests)
 

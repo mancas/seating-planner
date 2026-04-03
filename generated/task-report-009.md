@@ -1,45 +1,33 @@
-# Task Report — TASK-009: Organism — GuestListFooterStats
+# Task Report — TASK-009: Update LeftSidebar with `onAddGuest` Callback
 
 ## Status: COMPLETE
 
 ## Summary
 
-Created the `GuestListFooterStats` organism component that renders three footer stat cards in a desktop-only 3-column grid layout.
+Modified `LeftSidebar` to accept an `onAddGuest` callback prop and wire it to the ADD GUEST button, replacing the previous no-op `onClick` handler.
 
-## File Created
+## File Modified
 
-- `src/components/organisms/GuestListFooterStats.tsx` (41 lines)
+- `src/components/organisms/LeftSidebar.tsx`
 
-## Implementation Details
+## Changes Made
 
-### Props
+1. Added `Props` interface with `onAddGuest: () => void`
+2. Updated function signature to destructure `{ onAddGuest }` from `Props`
+3. Replaced `onClick={() => {}}` with `onClick={onAddGuest}` on the ADD GUEST button
 
-| Prop               | Type     | Description                                                     |
-| ------------------ | -------- | --------------------------------------------------------------- |
-| `confirmationRate` | `number` | Percentage value for confirmation rate display and progress bar |
-| `dietaryFlagCount` | `number` | Count of dietary flags requiring action                         |
-
-### Structure
-
-- **Wrapper**: `hidden md:grid grid-cols-3 gap-4 px-6 py-4 mt-auto border-t border-border` — desktop-only 3-column grid with top border
-- **StatCard 1 — "CONFIRMATION RATE"**: Displays `{confirmationRate}%` with a progress bar (`bg-primary` fill on `bg-gray-800` track) and two labels showing system target and pending percentages
-- **StatCard 2 — "DIETARY FLAGS"**: Displays `dietaryFlagCount` with "Requires Action" caption text
-- **StatCard 3 — "RSVP DEADLINE"**: Displays static "T-08D" value with an "URGENT" badge (uses `.badge` class from `index.css`)
-
-### Dependencies
-
-- `StatCard` atom (`src/components/atoms/StatCard.tsx`) — used for all three cards via its `label`, `value`, and `children` props
-- `.badge` CSS class from `src/index.css:390`
-
-### Conventions Followed
+## Conventions Followed
 
 - No semicolons
 - Single quotes for imports
 - 2-space indentation
+- `Props` interface declared above function declaration
+- Props destructured in function parameters
 - Function declaration (not arrow)
 - Default export
-- No barrel file created
 
 ## Verification
 
-- `npx tsc --noEmit` — zero errors
+- No LSP errors in modified file
+- All existing styling, icon SVG, and button text preserved unchanged
+- Only the specified changes were made — no other modifications
