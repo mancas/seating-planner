@@ -9,6 +9,7 @@ import type { CanvasTool } from '../molecules/CanvasToolbar'
 import CanvasTable from '../molecules/CanvasTable'
 import CanvasStatusBar from '../atoms/CanvasStatusBar'
 import SeatAssignmentPopover from '../molecules/SeatAssignmentPopover'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 interface Props {
   tables: FloorTable[]
@@ -68,6 +69,8 @@ function SeatingCanvas({
   const [activeSeat, setActiveSeat] = useState<ActiveSeat | null>(null)
   const transformRef = useRef<ReactZoomPanPinchContentRef>(null)
   const canvasRef = useRef<HTMLDivElement>(null)
+  const isMobile = useIsMobile()
+  const [currentZoom, setCurrentZoom] = useState(1)
 
   // Table drag state (mouse-based repositioning)
   const [dragState, setDragState] = useState<DragState | null>(null)
@@ -173,29 +176,28 @@ function SeatingCanvas({
 
   return (
     <>
-      {/* Mobile placeholder */}
-      <div className="md:hidden flex-1 flex items-center justify-center bg-background p-8">
-        <p className="text-label text-foreground-muted tracking-wider text-center">
-          CANVAS_EDITOR // DESKTOP_REQUIRED
-        </p>
-      </div>
-
-      {/* Desktop canvas */}
-      <div className="hidden md:flex flex-1 relative overflow-hidden bg-background">
+      {/* Canvas — renders on both mobile and desktop */}
+      <div className="flex flex-1 relative overflow-hidden bg-background">
         <TransformWrapper
           ref={transformRef}
-          disabled={activeTool !== 'pan'}
+          disabled={isMobile ? false : activeTool !== 'pan'}
           initialScale={1}
-          minScale={1}
-          maxScale={1}
-          panning={{ disabled: activeTool !== 'pan' }}
+          minScale={isMobile ? 0.5 : 1}
+          maxScale={isMobile ? 3 : 1}
+          limitToBounds={false}
+          panning={{ disabled: isMobile ? false : activeTool !== 'pan' }}
+          pinch={{ disabled: !isMobile }}
           doubleClick={{ disabled: true }}
           wheel={{ disabled: true }}
+          onTransformed={
+            isMobile
+              ? (_ref, state) => {
+                  setCurrentZoom(state.scale)
+                }
+              : undefined
+          }
         >
-          <TransformComponent
-            wrapperStyle={{ width: '100%', height: '100%' }}
-            contentStyle={{ width: '100%', height: '100%' }}
-          >
+          <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }}>
             {/* Dot grid canvas area */}
             <div
               ref={canvasRef}
@@ -244,20 +246,38 @@ function SeatingCanvas({
                       origY: table.y,
                     })
                   }}
+                  isMobile={isMobile}
+                  activeTool={activeTool}
+                  onTableTouchDrag={(tableId, deltaX, deltaY) => {
+                    const instance = transformRef.current?.instance
+                    const scale = instance?.transformState.scale ?? 1
+                    const t = tables.find((tbl) => tbl.id === tableId)
+                    if (t) {
+                      onUpdateTable(tableId, {
+                        x: t.x + deltaX / scale,
+                        y: t.y + deltaY / scale,
+                      })
+                    }
+                  }}
                 />
               ))}
             </div>
           </TransformComponent>
         </TransformWrapper>
 
-        {/* Toolbar */}
-        <div className="absolute top-4 left-4 z-10">
+        {/* Mobile toolbar */}
+        <div className="md:hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-30">
+          <CanvasToolbar activeTool={activeTool} onToolChange={setActiveTool} />
+        </div>
+
+        {/* Desktop toolbar */}
+        <div className="hidden md:block absolute top-4 left-4 z-10">
           <CanvasToolbar activeTool={activeTool} onToolChange={setActiveTool} />
         </div>
 
         {/* Status bar */}
         <div className="absolute top-4 right-4 z-10">
-          <CanvasStatusBar />
+          <CanvasStatusBar zoom={isMobile ? currentZoom : undefined} />
         </div>
 
         {/* Seat assignment popover */}

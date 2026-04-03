@@ -1,3 +1,4 @@
+import { useState, useRef, useCallback } from 'react'
 import { useDraggable, useDroppable } from '@dnd-kit/react'
 import type { FloorTable, SeatAssignment } from '../../data/table-types'
 import type { Guest } from '../../data/mock-guests'
@@ -15,6 +16,7 @@ import type {
   DropTableData,
 } from '../../data/dnd-types'
 import SeatIndicator from '../atoms/SeatIndicator'
+import { useLongPress } from '../../hooks/useLongPress'
 
 interface Props {
   table: FloorTable
@@ -24,6 +26,9 @@ interface Props {
   onSeatClick: (seatIndex: number, anchorRect: DOMRect) => void
   activeSeatIndex: number | null
   onTableMouseDown?: (e: React.MouseEvent) => void
+  isMobile?: boolean
+  activeTool?: string
+  onTableTouchDrag?: (tableId: string, deltaX: number, deltaY: number) => void
 }
 
 /** A single seat: droppable (always) and draggable (only when occupied, for swap). */
@@ -34,6 +39,7 @@ function SeatSlot({
   guest,
   activeSeatIndex,
   onSeatClick,
+  isMobile,
 }: {
   seatIndex: number
   tableId: string
@@ -41,6 +47,7 @@ function SeatSlot({
   guest: Guest | undefined
   activeSeatIndex: number | null
   onSeatClick: (seatIndex: number, anchorRect: DOMRect) => void
+  isMobile?: boolean
 }) {
   const initials = guest
     ? `${guest.firstName.charAt(0)}${guest.lastName.charAt(0)}`
@@ -54,7 +61,7 @@ function SeatSlot({
 
   const { ref: dragRef, isDragging } = useDraggable({
     id: `seat-drag-${tableId}-${seatIndex}`,
-    disabled: isEmpty,
+    disabled: isEmpty || !!isMobile,
     data: {
       type: DRAG_TYPE_SEAT,
       tableId,
@@ -93,6 +100,9 @@ function CanvasTable({
   onSeatClick,
   activeSeatIndex,
   onTableMouseDown,
+  isMobile,
+  activeTool,
+  onTableTouchDrag,
 }: Props) {
   const isCircle = table.shape === 'circular'
 
@@ -126,9 +136,45 @@ function CanvasTable({
     onTableMouseDown?.(e)
   }
 
+  const touchStartPos = useRef<{ x: number; y: number } | null>(null)
+  const [isDragMode, setIsDragMode] = useState(false)
+
+  const handleLongPress = useCallback(() => {
+    if (isSelected && isMobile && activeTool === 'select') {
+      setIsDragMode(true)
+    }
+  }, [isSelected, isMobile, activeTool])
+
+  const handleTap = useCallback(() => {
+    onSelect()
+  }, [onSelect])
+
+  const longPressHandlers = useLongPress({
+    threshold: 300,
+    onLongPress: handleLongPress,
+    onTap: handleTap,
+  })
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (!isDragMode || !touchStartPos.current) return
+    e.preventDefault() // Prevent scroll/pan while dragging table
+    const touch = e.touches[0]
+    const deltaX = touch.clientX - touchStartPos.current.x
+    const deltaY = touch.clientY - touchStartPos.current.y
+    touchStartPos.current = { x: touch.clientX, y: touch.clientY }
+    onTableTouchDrag?.(table.id, deltaX, deltaY)
+  }
+
+  function handleTouchEnd() {
+    if (isDragMode) {
+      setIsDragMode(false)
+    }
+    touchStartPos.current = null
+  }
+
   return (
     <div
-      className="absolute"
+      className={`absolute ${isDragMode ? 'shadow-lg ring-2 ring-primary rounded' : ''}`}
       style={{
         left: table.x,
         top: table.y,
@@ -139,6 +185,24 @@ function CanvasTable({
       }}
       onMouseDown={handleMouseDown}
       onClick={(e) => e.stopPropagation()}
+      onTouchStart={(e) => {
+        if (isMobile && activeTool === 'select') {
+          touchStartPos.current = {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY,
+          }
+          longPressHandlers.onTouchStart()
+          e.stopPropagation()
+        }
+      }}
+      onTouchMove={(e) => {
+        longPressHandlers.onTouchMove()
+        handleTouchMove(e)
+      }}
+      onTouchEnd={() => {
+        longPressHandlers.onTouchEnd()
+        handleTouchEnd()
+      }}
     >
       {/* Table body */}
       <div
@@ -185,6 +249,8 @@ function CanvasTable({
               left: pos.x + SEAT_RADIUS - 14,
               top: pos.y + SEAT_RADIUS - 14,
             }}
+            onTouchStart={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
           >
             <SeatSlot
               seatIndex={i}
@@ -193,6 +259,7 @@ function CanvasTable({
               guest={guest}
               activeSeatIndex={activeSeatIndex}
               onSeatClick={onSeatClick}
+              isMobile={isMobile}
             />
           </div>
         )

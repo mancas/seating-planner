@@ -27,16 +27,22 @@ import GuestDetailPanel from './components/organisms/GuestDetailPanel'
 import BottomTabBar from './components/organisms/BottomTabBar'
 import FAB from './components/atoms/FAB'
 import EmptyState from './components/organisms/EmptyState'
+import MobilePropertiesSheet from './components/organisms/MobilePropertiesSheet'
+import MobileGuestsSheet from './components/organisms/MobileGuestsSheet'
+import { useIsMobile } from './hooks/useIsMobile'
+import { LuUsers } from 'react-icons/lu'
 
 function App() {
   const navigate = useNavigate()
   const location = useLocation()
   const isCanvasView = location.pathname === '/seating-plan'
+  const isMobile = useIsMobile()
 
   const isChildRoute = location.pathname.startsWith('/guests/')
 
   const [guests, setGuests] = useState<Guest[]>(() => getGuests())
   const [selectedGuestId, setSelectedGuestId] = useState<string | null>(null)
+  const [showMobileGuests, setShowMobileGuests] = useState(false)
 
   const locationState = location.state as { selectedGuestId?: string } | null
   if (locationState?.selectedGuestId) {
@@ -115,6 +121,10 @@ function App() {
 
   const selectedCanvasTable =
     tables.find((t) => t.id === selectedCanvasTableId) ?? null
+
+  const unassignedGuests = guests.filter(
+    (g) => !tables.some((t) => t.seats.some((s) => s.guestId === g.id)),
+  )
 
   const handleSidebarAddTable = useCallback(() => {
     handleAddTable({ shape: 'rectangular', seatCount: 8, x: 400, y: 300 })
@@ -209,6 +219,38 @@ function App() {
           onClose={() => setSelectedCanvasTableId(null)}
         />
       )}
+
+      {/* Mobile properties sheet */}
+      {isMobile && selectedCanvasTable && (
+        <MobilePropertiesSheet
+          table={selectedCanvasTable}
+          onUpdate={(data) => handleUpdateTable(selectedCanvasTable.id, data)}
+          onDelete={() => handleDeleteTable(selectedCanvasTable.id)}
+          onClose={() => setSelectedCanvasTableId(null)}
+        />
+      )}
+
+      {/* Mobile unassigned guests FAB */}
+      {isMobile && unassignedGuests.length > 0 && (
+        <button
+          className="md:hidden fixed bottom-[140px] right-4 z-30 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center cursor-pointer"
+          onClick={() => setShowMobileGuests(true)}
+          aria-label="View unassigned guests"
+        >
+          <LuUsers size={20} />
+          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center">
+            {unassignedGuests.length}
+          </span>
+        </button>
+      )}
+
+      {/* Mobile unassigned guests sheet */}
+      {isMobile && showMobileGuests && (
+        <MobileGuestsSheet
+          guests={unassignedGuests}
+          onClose={() => setShowMobileGuests(false)}
+        />
+      )}
     </>
   )
 
@@ -277,7 +319,9 @@ function App() {
           defaultContent
         )}
       </div>
-      {!isChildRoute && <FAB onClick={handleNavigateToAdd} label="Add guest" />}
+      {!isChildRoute && !isCanvasView && (
+        <FAB onClick={handleNavigateToAdd} label="Add guest" />
+      )}
       <BottomTabBar />
     </div>
   )

@@ -179,3 +179,27 @@ Lessons learned and constraints established from validated specs.
 
 **Rule**: When removing imports of a component from its only consumer (e.g., removing `NavLink` from `TopNav`, removing `SearchInput` from `TopNav`), check whether any other file still imports the component. If not, the component file is dead code per G-18. Document for cleanup even if deletion is out of scope for the current spec.
 **Reason**: After the sidebar navigation refactor, `NavLink.tsx` and potentially `SearchInput.tsx` have zero consumers but were not flagged during development. A simple `grep import.*ComponentName` catches these orphaned files immediately.
+
+---
+
+## From: Mobile Canvas (2026-04-03)
+
+### G-31: Clean Up Timer Refs on Component Unmount
+
+**Rule**: When a custom hook or component uses `setTimeout`/`setInterval` stored in a `useRef`, always add a cleanup `useEffect` that clears the timer on unmount. Even if the timer is expected to be short-lived, unmount during an active timer can cause stale callback execution.
+**Reason**: The `useLongPress` hook uses a 300ms `setTimeout` stored in `timerRef`. If the component unmounts during the long-press threshold window (e.g., rapid navigation), the timer callback fires on a stale closure. While React 19 handles this more gracefully than earlier versions, explicit cleanup prevents subtle bugs.
+
+### G-32: Choose One Responsive Visibility Strategy Per Element
+
+**Rule**: For elements that should only appear on mobile or desktop, use either CSS-based visibility (`md:hidden` / `hidden md:block`) OR JS-based conditional rendering (`isMobile && ...`), not both. Mixing creates redundancy and confusion about which mechanism controls visibility.
+**Reason**: The mobile unassigned guests FAB used both `isMobile &&` (JS guard) and `md:hidden` (CSS class). While functionally harmless, it obscures the actual visibility logic. The project's established pattern uses CSS-based visibility for layout elements and JS-based conditions for behavior-dependent rendering.
+
+### G-33: Align Equivalent Type Definitions Across Components
+
+**Rule**: When two components accept the same logical data shape for a prop (e.g., `onUpdate` for table properties), use the same TypeScript type expression. Prefer deriving from source types (`Partial<Pick<FloorTable, ...>>`) over manually spelling out the fields.
+**Reason**: `MobilePropertiesSheet` and `CanvasPropertiesPanel` both accept an `onUpdate` prop for table property changes but define the type differently — one uses `Partial<Pick<...>>` and the other manually lists fields. Divergent type definitions for the same contract create a maintenance burden when the source type changes.
+
+### G-34: Touch Event Listeners Must Accompany Mouse Listeners for Mobile Support
+
+**Rule**: When adding `document.addEventListener('mousedown', ...)` for close-on-outside-click behavior, always also add `touchstart` listener. Mobile browsers may not fire `mousedown` for touch interactions in all contexts.
+**Reason**: `SeatAssignmentPopover` originally only listened for `mousedown`, which meant outside-tap on mobile didn't close the popover. The fix was straightforward (add `touchstart`), but the pattern should be followed for any future popovers or menus.

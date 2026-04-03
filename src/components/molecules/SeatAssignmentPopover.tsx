@@ -26,7 +26,7 @@ function SeatAssignmentPopover({
   const popoverRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    function handleMouseDown(e: MouseEvent) {
+    function handlePointerDown(e: MouseEvent | TouchEvent) {
       if (
         popoverRef.current &&
         !popoverRef.current.contains(e.target as Node)
@@ -35,8 +35,12 @@ function SeatAssignmentPopover({
       }
     }
 
-    document.addEventListener('mousedown', handleMouseDown)
-    return () => document.removeEventListener('mousedown', handleMouseDown)
+    document.addEventListener('mousedown', handlePointerDown)
+    document.addEventListener('touchstart', handlePointerDown)
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      document.removeEventListener('touchstart', handlePointerDown)
+    }
   }, [onClose])
 
   const seatLabel = `SEAT_${String(seatIndex + 1).padStart(2, '0')}`
