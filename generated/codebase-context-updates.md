@@ -1,33 +1,115 @@
 # Codebase Context Updates
 
-Updates to `generated/codebase-context.md` based on the validated Nought Cobalt Design System implementation.
+Updates to `generated/codebase-context.md` based on the validated Guest List Screen implementation.
 
 ---
 
-## Sections to Update
+## Guardrail Updates
 
-### 1. Update "Current CSS Architecture" section
+Four new guardrails were added to `generated/guardrails.md`:
 
-Replace the existing "Current CSS Architecture (Important)" section with:
+### G-11: All Interactive Elements Must Be Keyboard Accessible
 
-```markdown
-### Current CSS Architecture
+**Rule**: Every clickable element must be keyboard accessible. If using a `<button>`, ensure `cursor-pointer` is set (Tailwind preflight resets it to `default`). If using a `<div onClick>`, add `role="button"`, `tabIndex={0}`, and an `onKeyDown` handler — or refactor to a real `<button>`. All buttons must include `focus-visible` outline per G-8.
+**Source**: IconButton missing focus-visible, NavLink missing cursor-pointer, GuestRow/SidebarNavItem using div onClick without keyboard support.
 
-**`src/index.css`** (402 lines):
+### G-12: Always Review Ternary Branches for Copy-Paste Errors
 
-- Line 1: `@import 'tailwindcss'` — top-level Tailwind v4 import
-- Lines 3–55: `@theme` block — Tailwind v4 CSS-first config defining:
-  - Gray scale: 12 steps (`gray-950` through `gray-50`)
-  - Cobalt accent scale: 8 steps (`cobalt-950` through `cobalt-300`)
-  - Semantic color aliases: `background`, `surface`, `surface-elevated`, `foreground`, `foreground-muted`, `foreground-heading`, `border`, `primary`, `primary-hover`, `primary-foreground`, `ring`
-  - AC convenience aliases: `muted`, `default`
-  - Font families: `--font-sans` (Space Grotesk), `--font-mono`
-  - Border radii: `--radius` (4px default), `--radius-sm` through `--radius-xl`
-- Lines 57–96: `:root` block — `--nc-*` namespaced CSS custom properties mirroring theme values + `color-scheme: dark`
-- Lines 98–195: Base element styles — `html`, `body`, `h1`–`h6`, `p`, `code`, `#root`
-- Lines 197–280: Typography `@utility` classes — 12 utilities: `text-display`, `text-heading-1` through `text-heading-5`, `text-body-lg`, `text-body`, `text-body-sm`, `text-caption`, `text-label`, `text-code`
-- Lines 282–402: `@layer components` — 6 component base styles: `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.card`, `.input`, `.badge`
+**Rule**: When writing conditional expressions (ternaries), verify that true and false branches produce different outputs. A ternary where both branches return the same value is always a bug.
+**Source**: GuestDetailPanel shuttle label ternary had identical branches — `shuttleRequired ? 'SHUTTLE REQUIRED' : 'SHUTTLE REQUIRED'`.
 
+### G-13: Use Design System Typography Classes Consistently
+
+**Rule**: All text elements must use the appropriate typography utility class from the design system. Never rely on inherited font sizing when a typography class is specified in the spec.
+**Source**: NavLink was missing the `text-label` class, relying on inherited sizing instead.
+
+### G-14: Mobile-Specific Groups Need Contextual Data
+
+**Rule**: When rendering grouped data with different semantics, ensure group metadata reflects the group's actual context. Don't hardcode values that only apply to some groups.
+**Source**: Mobile guest table hardcoded `totalSeats={8}` for UNASSIGNED group.
+
+---
+
+## Sections to Update in `generated/codebase-context.md`
+
+### 1. Update "Prior Spec Decisions" — Guest List Screen status
+
+Change:
+
+```
+### Spec: Guest List Screen (`spec/guest-list-screen.md`) — Status: Draft
+```
+
+To:
+
+```
+### Spec: Guest List Screen (`spec/guest-list-screen.md`) — Status: Implemented (pass with issues)
+```
+
+### 2. Update "Guardrails and Lessons Learned"
+
+Replace:
+
+```
+See `generated/guardrails.md` for 10 guardrails established from the Nought Cobalt design system implementation, covering Tailwind v4 configuration patterns, CSS variable namespacing, dark mode policy, and migration safety practices.
+```
+
+With:
+
+```
+See `generated/guardrails.md` for 14 guardrails established from the Nought Cobalt design system and Guest List Screen implementations, covering Tailwind v4 configuration patterns, CSS variable namespacing, dark mode policy, migration safety practices, accessibility requirements, and component development patterns.
+
+Key guardrails:
+
+- **G-1**: `@import 'tailwindcss'` must be the very first line of `src/index.css`, top-level, never nested.
+- **G-2**: `@theme` for Tailwind utility generation, `:root` `--nc-*` for direct CSS variables.
+- **G-3**: Always use `var(--nc-*)` in custom CSS, never raw hex or Tailwind's `var(--color-*)`.
+- **G-4**: No light mode — dark only. No `prefers-color-scheme` media queries.
+- **G-5**: Default border radius is 4px.
+- **G-6**: Use `@utility` for multi-property utility classes, not `@layer utilities`.
+- **G-7**: Use `@layer components` for component base styles.
+- **G-8**: `focus-visible` for buttons, `focus` for inputs.
+- **G-9**: Google Fonts must include preconnect links.
+- **G-10**: Grep entire `src/` for old variable names when renaming CSS custom properties.
+- **G-11**: All interactive elements must be keyboard accessible with `cursor-pointer` and `focus-visible`.
+- **G-12**: Review ternary branches for copy-paste errors (identical branches = bug).
+- **G-13**: Use design system typography classes consistently — never rely on inherited sizing.
+- **G-14**: Mobile-specific groups need contextual data, don't hardcode values.
+```
+
+### 3. Update "File organization" in Code Conventions
+
+Replace:
+
+```
+- **File organization**: Flat `src/` directory currently; planned atomic design structure (`src/components/atoms/`, `molecules/`, `organisms/`) per guest-list-screen spec. No barrel `index.ts` files.
+```
+
+With:
+
+```
+- **File organization**: Atomic design structure: `src/components/atoms/` (9 components), `src/components/molecules/` (4 components), `src/components/organisms/` (7 components). Mock data in `src/data/`. No barrel `index.ts` files.
+```
+
+### 4. Update "Structure" in Architectural Patterns
+
+Replace:
+
+```
+- **Structure**: Single-page application (SPA) with React + BrowserRouter. Currently a minimal Vite scaffold — one component (`App.tsx`) with no route definitions. Routing planned via query params (`/?tab=guests`, `/?tab=canvas`) at root `/`.
+```
+
+With:
+
+```
+- **Structure**: Single-page application (SPA) with React + BrowserRouter. App shell with query-param tab routing (`/?tab=guests`, `/?tab=canvas`) at root `/`. Three-panel desktop layout (TopNav, LeftSidebar, main content + optional GuestDetailPanel). Mobile layout with bottom tab bar, FAB, and table-grouped guest list.
+```
+
+### 5. Update "Current CSS Architecture" — App.css
+
+Replace:
+
+```
 **`src/App.css`** (190 lines):
 
 - Component styles using `--nc-*` design tokens exclusively
@@ -35,61 +117,30 @@ Replace the existing "Current CSS Architecture (Important)" section with:
 - Uses native CSS nesting extensively
 - Responsive breakpoints at `max-width: 1024px`
 - Dark mode icon filter applied unconditionally for `#social .button-icon`
-```
 
-### 2. Update "TailwindCSS v4 Configuration" section
-
-Replace with:
-
-```markdown
-### TailwindCSS v4 Configuration
-
-- Uses `@tailwindcss/vite` plugin (CSS-first configuration)
-- **No `tailwind.config.js` file** — configuration is done via `@theme` directive in `src/index.css`
-- `@theme` defines custom gray scale (overrides Tailwind defaults), cobalt accent scale, semantic aliases, font families, and border radii
-- Custom typography utilities defined via `@utility` directive
-- Component base styles defined in `@layer components`
-- Vite config: `plugins: [react(), tailwindcss()]`
-```
-
-### 3. Update "Styling approach" in Architectural Patterns
-
-Replace:
-
-```
-- **Styling approach**: CSS files imported into components. `src/index.css` provides global styles and CSS custom properties. `src/App.css` provides component-specific styles. CSS uses native nesting (`&` syntax). No Tailwind utility classes are used in components yet.
+**Note**: `#root` currently has `width: 1126px` and `text-align: center` — this will need adjustment for full-viewport layouts.
 ```
 
 With:
 
 ```
-- **Styling approach**: Nought Cobalt design system. `src/index.css` provides design tokens via `@theme` (Tailwind utilities) and `:root` (`--nc-*` CSS custom properties), base element styles, typography utilities, and component base styles. `src/App.css` provides component-specific styles using `--nc-*` tokens. CSS uses native nesting (`&` syntax). Tailwind utility classes are available via the `@theme` configuration.
+**`src/App.css`** (0 lines):
+
+- Emptied — all Vite template styles removed. Component styling is done via Tailwind utility classes in JSX.
+
+**`#root`** (line 185): `width: 100%`, `min-height: 100svh`, `display: flex`, `flex-direction: column` — full-viewport layout for the app shell.
 ```
 
-### 4. Add to "Prior Spec Decisions"
-
-Update the status line:
-
-```
-### Spec: Nought Cobalt Design System (`spec/nought-cobalt-design-system.md`) — Status: Implemented ✓
-```
-
-### 5. Update "Guardrails and Lessons Learned"
+### 6. Update "Data fetching" in Architectural Patterns
 
 Replace:
 
 ```
-No `generated/guardrails.md` file exists.
+- **Data fetching**: None currently implemented. Mock data planned in `src/data/mock-guests.ts`.
 ```
 
 With:
 
 ```
-See `generated/guardrails.md` for 10 guardrails established from the Nought Cobalt design system implementation, covering Tailwind v4 configuration patterns, CSS variable namespacing, dark mode policy, and migration safety practices.
-```
-
-### 6. Add to Key Dependencies table
-
-```
-| Space Grotesk (Google Fonts) | CDN | Primary typeface — loaded via `<link>` in `index.html` |
+- **Data fetching**: None (mock data). `src/data/mock-guests.ts` exports typed `Guest` interface, `GuestStatus` type, 6 mock guests, and stat helper functions (`getConfirmedCount`, `getPendingCount`, `getConfirmationRate`, `getDietaryFlagCount`, `getTotalGuests`, `getWaitlistCount`, `getGuestsByTable`).
 ```

@@ -1,120 +1,89 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useSearchParams } from 'react-router'
+import {
+  guests,
+  getConfirmedCount,
+  getPendingCount,
+  getConfirmationRate,
+  getDietaryFlagCount,
+  getTotalGuests,
+  getWaitlistCount,
+} from './data/mock-guests'
+import TopNav from './components/organisms/TopNav'
+import LeftSidebar from './components/organisms/LeftSidebar'
+import GuestListHeader from './components/organisms/GuestListHeader'
+import GuestTable from './components/organisms/GuestTable'
+import GuestListFooterStats from './components/organisms/GuestListFooterStats'
+import GuestDetailPanel from './components/organisms/GuestDetailPanel'
+import BottomTabBar from './components/organisms/BottomTabBar'
+import FAB from './components/atoms/FAB'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const rawTab = searchParams.get('tab') ?? 'guests'
+  const activeTab = ['guests', 'canvas', 'tools', 'more'].includes(rawTab)
+    ? rawTab
+    : 'guests'
+
+  const onTabChange = (tab: string) => {
+    setSearchParams({ tab })
+  }
+
+  const [selectedGuestId, setSelectedGuestId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const onGuestClick = (guestId: string) => {
+    setSelectedGuestId((prev) => (prev === guestId ? null : guestId))
+  }
+
+  const selectedGuest = guests.find((g) => g.id === selectedGuestId) ?? null
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    <div className="flex flex-col h-screen overflow-hidden">
+      <TopNav
+        activeTab={activeTab}
+        onTabChange={onTabChange}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
+      <div className="flex flex-1 overflow-hidden">
+        <LeftSidebar />
+        <main className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0">
+          {activeTab === 'guests' ? (
+            <>
+              <GuestListHeader
+                confirmedCount={getConfirmedCount()}
+                pendingCount={getPendingCount()}
+                totalGuests={getTotalGuests()}
+                waitlistCount={getWaitlistCount()}
+              />
+              <GuestTable
+                guests={guests}
+                selectedGuestId={selectedGuestId}
+                onGuestClick={onGuestClick}
+                searchQuery={searchQuery}
+              />
+              <GuestListFooterStats
+                confirmationRate={getConfirmationRate()}
+                dietaryFlagCount={getDietaryFlagCount()}
+              />
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-foreground-muted text-label tracking-wider">
+              {activeTab.toUpperCase()} // MODULE_OFFLINE
+            </div>
+          )}
+        </main>
+        {selectedGuest && activeTab === 'guests' && (
+          <GuestDetailPanel
+            guest={selectedGuest}
+            onClose={() => setSelectedGuestId(null)}
+          />
+        )}
+      </div>
+      <FAB onClick={() => {}} label="Add guest" />
+      <BottomTabBar activeTab={activeTab} onTabChange={onTabChange} />
+    </div>
   )
 }
 

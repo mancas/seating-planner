@@ -55,3 +55,27 @@ Lessons learned and constraints established from validated specs.
 
 **Rule**: When renaming CSS custom properties, grep the entire `src/` directory for the old variable names to ensure zero references remain. Silent fallback to `initial` can cause hard-to-debug visual regressions.
 **Reason**: CSS custom properties silently fall back to `initial` when undefined, rather than throwing errors. Missed references are invisible without visual inspection or automated checking.
+
+---
+
+## From: Guest List Screen (2026-04-03)
+
+### G-11: All Interactive Elements Must Be Keyboard Accessible
+
+**Rule**: Every clickable element must be keyboard accessible. If using a `<button>`, ensure `cursor-pointer` is set (Tailwind preflight resets it to `default`). If using a `<div onClick>`, add `role="button"`, `tabIndex={0}`, and an `onKeyDown` handler — or refactor to a real `<button>`. All buttons must include `focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2` per guardrail G-8.
+**Reason**: During guest list screen validation, `IconButton` was missing `focus-visible` outline, `NavLink` was missing `cursor-pointer`, and `GuestRow`/`SidebarNavItem` used `<div onClick>` without keyboard support. These are accessibility regressions that affect keyboard-only and assistive technology users.
+
+### G-12: Always Review Ternary Branches for Copy-Paste Errors
+
+**Rule**: When writing conditional expressions (ternaries), verify that the true and false branches produce different outputs. A ternary where both branches return the same value is always a bug.
+**Reason**: A copy-paste error in `GuestDetailPanel` caused `shuttleRequired ? 'SHUTTLE REQUIRED' : 'SHUTTLE REQUIRED'` — both branches were identical, silently producing incorrect UI. TypeScript and ESLint cannot catch semantic duplication in string literals.
+
+### G-13: Use Design System Typography Classes Consistently
+
+**Rule**: All text elements must use the appropriate typography utility class from the design system (`text-label`, `text-caption`, `text-body-sm`, `text-heading-*`, etc.). Never rely on inherited font sizing when a typography class is specified in the spec.
+**Reason**: The `NavLink` component was missing the `text-label` class, causing it to inherit sizing from its parent rather than using the 12px/500/0.8px design system label style. Typography inconsistencies are subtle and easy to miss in reviews.
+
+### G-14: Mobile-Specific Groups Need Contextual Data
+
+**Rule**: When rendering grouped data with different semantics (e.g., assigned vs. unassigned groups), ensure group metadata (like `totalSeats`) reflects the group's actual context. Don't hardcode values that only apply to some groups.
+**Reason**: The mobile guest table hardcoded `totalSeats={8}` for all groups, including UNASSIGNED, which incorrectly showed "2/8 seats" for guests with no table. Group-specific metadata should be derived from the group's context.

@@ -1,41 +1,58 @@
-# Task Report: TASK-003
+# Task Report — TASK-003: Molecule Components
 
-## Task: Migrate `src/App.css` to use `--nc-*` design tokens
+## Status: COMPLETE
 
-## Status: COMPLETED
+## Files Created
 
-## Changes Made
+- `src/components/molecules/GuestRow.tsx`
+- `src/components/molecules/SidebarNavItem.tsx`
+- `src/components/molecules/GuestDetailSection.tsx`
+- `src/components/molecules/TableGroupHeader.tsx`
 
-### File: `src/App.css`
+## Implementation Details
 
-**Variable Replacements Applied:**
+### GuestRow.tsx
 
-| Old Variable           | New Variable                   | Lines Affected             |
-| ---------------------- | ------------------------------ | -------------------------- |
-| `var(--accent)`        | `var(--nc-primary)`            | 5, 15                      |
-| `var(--accent-bg)`     | `var(--nc-cobalt-950)`         | 6                          |
-| `var(--accent-border)` | `var(--nc-cobalt-700)`         | 12                         |
-| `var(--text-h)`        | `var(--nc-foreground-heading)` | 119                        |
-| `var(--border)`        | `var(--nc-border)`             | 75, 99, 103, 158, 178, 182 |
-| `var(--social-bg)`     | `var(--nc-surface-elevated)`   | 122                        |
-| `var(--shadow)`        | Inline shadow value            | 131                        |
+- **Props**: `{ guest: Guest, isSelected: boolean, onClick: () => void }`
+- **Desktop layout** (`hidden md:grid`): 4-column grid with Avatar + name/ID, StatusBadge, table assignment (or "- - -" when null), and IconButton with ellipsis dots
+- **Mobile layout** (`md:hidden flex`): seat number (zero-padded 2-digit), name as `FIRST_LAST` uppercase bold, role below in muted caption, StatusIcon on right
+- **Selected state**: `border-l-2 border-l-primary bg-surface-elevated` on both layouts
+- **Not selected**: `border-l-2 border-l-transparent`
+- **Hover**: `hover:bg-gray-800/50`, cursor pointer, full row clickable via wrapper div
+- Uses atoms: Avatar (sm), StatusBadge, StatusIcon, IconButton
 
-**Note:** `var(--code-bg)` was not present in `App.css` — no replacement needed.
+### SidebarNavItem.tsx
 
-**Additional Changes:**
+- **Props**: `{ label: string, isActive: boolean, onClick?: () => void }`
+- **Active**: `text-primary bg-primary/10 border-l-2 border-l-primary`
+- **Inactive**: `text-foreground-muted hover:text-foreground hover:bg-surface-elevated border-l-2 border-l-transparent`
+- Base: `py-3 px-4 cursor-pointer transition-colors text-body-sm`
 
-1. `.counter` `border-radius` changed from `5px` to `4px` (line 4) to match design system default
-2. Added unconditional dark mode icon filter rule at end of file (lines 188-190):
-   ```css
-   #social .button-icon {
-     filter: invert(1) brightness(2);
-   }
-   ```
+### GuestDetailSection.tsx
 
-## Acceptance Criteria Verification
+- **Props**: `{ title: string, children: ReactNode }`
+- Title: `text-label text-foreground-muted uppercase tracking-wider`
+- Content wrapper: `border-t border-border pt-4 mt-4` with `mt-3` for children spacing
 
-- [x] No references to old variable names remain (`--accent`, `--accent-bg`, `--accent-border`, `--text-h`, `--border`, `--social-bg`, `--shadow`, `--code-bg`)
-- [x] All replacements use correct `--nc-*` equivalents per mapping table
-- [x] `.counter` border-radius is `4px`
-- [x] Dark mode icon filter added unconditionally (not inside media query)
-- [x] Visual styles remain functionally equivalent
+### TableGroupHeader.tsx
+
+- **Props**: `{ location: string, tableName: string, seatCount: number, totalSeats: number }`
+- Mobile only (`md:hidden`)
+- Location: `text-label text-primary tracking-wider uppercase`
+- Row: table name in `text-heading-4 text-foreground-heading` left, seats `text-caption text-foreground-muted` right
+- Bottom separator: `border-b border-border mt-2 mb-2`
+
+## Conventions Followed
+
+- No semicolons
+- Single quotes for imports
+- 2-space indentation
+- `import type { Guest } from '../../data/mock-guests'` (relative paths)
+- Function declarations (not arrow functions)
+- Default exports
+- No barrel/index files
+
+## Verification
+
+- TypeScript compilation: zero errors
+- No LSP diagnostics on any molecule file

@@ -1,224 +1,306 @@
-# Validation Report: Nought Cobalt Design System
-
-## Metadata
-
-- **Spec**: `spec/nought-cobalt-design-system.md`
-- **Date**: 2026-04-03
-- **Validator**: Validator Agent
-- **Iteration**: 1
-
----
-
-## Verdict: APPROVED
-
-**CRITICAL**: 0 | **MAJOR**: 0 | **MINOR**: 3
-
-All 16 acceptance criteria are satisfied. The build succeeds. No CRITICAL or MAJOR issues found.
-
----
-
-## Step 1: Completeness Check (Acceptance Criteria)
-
-| AC#   | Criterion                                              | Status | Evidence                                                                                                                         |
-| ----- | ------------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| AC-1  | `--nc-*` CSS custom properties on `:root`              | PASS   | `src/index.css:57-95` — 20 raw scale tokens + 11 semantic tokens, all `--nc-` prefixed                                           |
-| AC-2  | `bg-background` → `#0E0E0E`                            | PASS   | `@theme` defines `--color-background: var(--color-gray-900)` where `--color-gray-900: #0e0e0e`                                   |
-| AC-3  | `bg-surface` → `#131313`                               | PASS   | `@theme` defines `--color-surface: var(--color-gray-850)` where `--color-gray-850: #131313`                                      |
-| AC-4  | `bg-primary` → `#0057FF`                               | PASS   | `@theme` defines `--color-primary: var(--color-cobalt-600)` where `--color-cobalt-600: #0057ff`                                  |
-| AC-5  | `text-foreground` → `#E0E0E0`                          | PASS   | `@theme` defines `--color-foreground: var(--color-gray-100)` where `--color-gray-100: #e0e0e0`                                   |
-| AC-6  | `text-muted` → `#6B6B6B`                               | PASS   | `@theme` includes `--color-muted: var(--color-gray-500)` alias at line 42                                                        |
-| AC-7  | `border-default` → `rgba(67, 70, 86, 0.15)`            | PASS   | `@theme` includes `--color-default: rgba(67, 70, 86, 0.15)` alias at line 43                                                     |
-| AC-8  | `rounded` (default) → `4px`                            | PASS   | `@theme` defines `--radius: 4px` at line 50                                                                                      |
-| AC-9  | `font-sans` → `'Space Grotesk', system-ui, sans-serif` | PASS   | `@theme` defines `--font-sans` at line 46                                                                                        |
-| AC-10 | `color-scheme: dark` on `:root`                        | PASS   | `:root` block contains `color-scheme: dark` at line 95                                                                           |
-| AC-11 | `text-heading-1` typography utilities                  | PASS   | 12 `@utility` blocks defined (lines 197-280): display, heading-1 through heading-5, body-lg, body, body-sm, caption, label, code |
-| AC-12 | `.btn-primary` component style                         | PASS   | Defined in `@layer components` at lines 283-308, with hover, focus-visible, and active states                                    |
-| AC-13 | `.card` component style                                | PASS   | Defined at lines 361-366 with surface bg, border, radius, padding                                                                |
-| AC-14 | `.input` component style                               | PASS   | Defined at lines 368-388 with surface bg, border, radius, foreground text, placeholder, focus ring                               |
-| AC-15 | Tailwind build succeeds                                | PASS   | `npm run build` completes with 0 errors, producing `dist/assets/index-BqmlimT3.css` (20.81 kB)                                   |
-| AC-16 | Space Grotesk font loaded                              | PASS   | `index.html:9-12` — Google Fonts link with `family=Space+Grotesk:wght@400;500;600;700&display=swap`                              |
-
-**Result**: 16/16 PASS — all acceptance criteria met.
-
----
-
-## Step 2: Convention Compliance
-
-| Convention                                     | Status | Notes                                                                                                                                        |
-| ---------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2-space indentation                            | PASS   | Both CSS files and HTML use consistent 2-space indentation                                                                                   |
-| CSS uses native nesting (`&` syntax)           | PASS   | All component styles in `index.css` and `App.css` use `&:hover`, `&:focus-visible`, `&::placeholder`, etc.                                   |
-| File organization (flat `src/`)                | PASS   | No new files created; only existing files modified                                                                                           |
-| No old variables remain                        | PASS   | Grep confirms zero references to `--text`, `--bg`, `--accent`, `--text-h`, `--border`, `--social-bg`, `--shadow`, `--code-bg` in `src/*.css` |
-| No `prefers-color-scheme` media queries in CSS | PASS   | Only occurrence is in an SVG asset (not CSS)                                                                                                 |
-| HTML 2-space indentation                       | PASS   | `index.html` properly indented                                                                                                               |
-
-**Result**: All conventions followed.
-
----
-
-## Step 3: Best Practices Research (TailwindCSS v4)
-
-Research performed against official Tailwind CSS v4.2 documentation:
-
-### 3.1 `@theme` Directive Usage
-
-- **Best practice**: Define design tokens in `@theme` for utility class generation. Use `:root` for regular CSS variables that shouldn't generate utilities.
-- **Implementation**: Correctly uses `@theme` for Tailwind-utility-generating tokens and `:root` for the `--nc-*` namespace meant for direct CSS usage. This is the exact pattern recommended by the docs: _"Use `@theme` when you want a design token to map directly to a utility class, and use `:root` for defining regular CSS variables that shouldn't have corresponding utility classes."_
-- **Assessment**: CORRECT
-
-### 3.2 `@import 'tailwindcss'` Placement
-
-- **Best practice**: Must be at the top level, never nested.
-- **Implementation**: Line 1, top-level. Correct.
-- **Assessment**: CORRECT
-
-### 3.3 `@utility` for Multi-Property Utilities
-
-- **Best practice**: Tailwind v4 uses `@utility` for custom utilities that work with variants. This replaced the old `@layer utilities` approach for single-utility definitions.
-- **Implementation**: All 12 typography utilities use `@utility` directive correctly.
-- **Assessment**: CORRECT
-
-### 3.4 `@layer components` for Component Styles
-
-- **Best practice**: Use `@layer components` for classes like `card`, `btn`, `badge` that should be overridable by utilities.
-- **Implementation**: All 6 component classes defined in `@layer components`.
-- **Assessment**: CORRECT
-
-### 3.5 Theme Variable Namespaces
-
-- **Best practice**: Colors in `--color-*`, fonts in `--font-*`, radii in `--radius-*`.
-- **Implementation**: All color tokens use `--color-*`, fonts use `--font-*`, radii use `--radius-*`.
-- **Assessment**: CORRECT
-
-### 3.6 Overriding Default Theme Variables
-
-- **Best practice**: Redefine variables within `@theme` to override defaults.
-- **Implementation**: The `--color-gray-*` variables override Tailwind's default gray scale (oklch-based) with the spec's hex values. The `--radius-*` variables override Tailwind's defaults with the design system's values. This is intentional and correct — the project defines its own gray scale.
-- **Assessment**: CORRECT — but see MINOR-1 below regarding potential side effect.
-
-### 3.7 `var()` References in `@theme`
-
-- **Best practice**: The Tailwind docs recommend using `@theme inline` when referencing other CSS variables to avoid unexpected resolution behavior.
-- **Implementation**: Semantic color aliases like `--color-background: var(--color-gray-900)` reference other `@theme` variables directly. Since both the referencing and referenced variables are within the same `@theme` scope and are ultimately resolved as CSS variables on `:root`, this works correctly in practice. The `inline` option is specifically needed when referencing variables _outside_ the `@theme` scope where resolution context matters.
-- **Assessment**: ACCEPTABLE — The referenced variables are defined in the same `@theme` block, so CSS variable resolution is correct. No issue in practice.
-
----
-
-## Step 4: Framework Best Practices Validation
-
-| Practice                                               | Status | Notes                                                                                                                             |
-| ------------------------------------------------------ | ------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| `@import 'tailwindcss'` at top level                   | PASS   | Line 1, not nested                                                                                                                |
-| `@theme` for utility-generating tokens                 | PASS   | Complete color, font, radius configuration                                                                                        |
-| `@utility` for compound utilities                      | PASS   | 12 typography utilities                                                                                                           |
-| `@layer components` for component classes              | PASS   | 6 component classes                                                                                                               |
-| No `tailwind.config.js` (CSS-first approach)           | PASS   | Confirmed via codebase context                                                                                                    |
-| Dark mode via `color-scheme: dark` (not class-based)   | PASS   | Set on `:root`                                                                                                                    |
-| Hex color format for Tailwind opacity modifier support | PASS   | All base colors in hex; `rgba` only for border (documented exception)                                                             |
-| Font fallback chain                                    | PASS   | `'Space Grotesk', system-ui, sans-serif`                                                                                          |
-| `font-display: swap` for FOUT prevention               | PASS   | Google Fonts URL includes `display=swap`                                                                                          |
-| Preconnect hints for Google Fonts                      | PASS   | Both `fonts.googleapis.com` and `fonts.gstatic.com` (with `crossorigin`)                                                          |
-| `focus-visible` over `focus` for buttons               | PASS   | All button components use `:focus-visible`                                                                                        |
-| `.input` uses `:focus` (not `:focus-visible`)          | PASS   | Correct for form inputs — `:focus` is appropriate for inputs as they need focus indication on both keyboard and mouse interaction |
-
----
-
-## Step 5: Code Quality Assessment
-
-### Readability
-
-- **index.css**: Well-organized with clear section separation (Tailwind import → `@theme` → `:root` → base styles → utilities → components). Comments delineate sections. Token naming is semantic and self-documenting.
-- **App.css**: Clean variable migration with consistent use of `--nc-*` tokens.
-- **index.html**: Minimal, clean additions.
-- **Assessment**: GOOD
-
-### Maintainability
-
-- Dual-layer token architecture (`@theme` for Tailwind utilities + `:root` `--nc-*` for direct CSS) provides flexibility. Developers can use either Tailwind utilities or CSS custom properties.
-- Semantic aliases (e.g., `--nc-primary` instead of raw `#0057ff`) enable future palette changes from a single location.
-- **Assessment**: GOOD
-
-### Scalability
-
-- Token scales (12-step gray, 8-step cobalt) provide enough range for future UI needs.
-- Typography scale covers all standard text levels.
-- Component base styles are a solid foundation for composition.
-- **Assessment**: GOOD
-
-### DRY Principle
-
-- Token values are defined once in `@theme` and mirrored in `:root` with `--nc-*` prefix. This is intentional duplication — the two namespaces serve different purposes (`@theme` for Tailwind utility generation, `:root` for direct CSS access). The spec explicitly requires both (DD-1 and DD-7). This is an acceptable architectural trade-off documented in the spec.
-- Component styles share consistent patterns (display, alignment, padding, border-radius, cursor, transition) but don't extract a shared base — acceptable given 6 small components.
-- **Assessment**: ACCEPTABLE
-
-### Simplicity
-
-- No over-engineering. The design system is straightforward CSS with clear purpose for each section.
-- **Assessment**: GOOD
-
----
-
-## Step 6: Findings
-
-### CRITICAL: None
-
-### MAJOR: None
-
-### MINOR
-
-#### MINOR-1: Tailwind Default Gray Scale Override
-
-**File**: `src/index.css:5-16`
-**Description**: The `@theme` block redefines `--color-gray-50` through `--color-gray-950` with hex values, which overrides Tailwind's default oklch-based gray palette. This is intentional per the spec (the project wants its own gray scale), but developers should be aware that Tailwind's default `bg-gray-*` utilities now resolve to the Nought Cobalt values, not Tailwind's standard grays. This is noted as informational — it is correct behavior but worth documenting.
-**Severity**: MINOR (informational)
-**Action**: Note in project docs or as a comment in the CSS. Not blocking.
-
-#### MINOR-2: `h6` Styled But Not Defined in Typography Scale
-
-**File**: `src/index.css:115-123`
-**Description**: The base styles apply heading color/font to `h1, h2, h3, h4, h5, h6` (line 115-123), but the typography scale in the spec (DD-5) only defines sizes for h1–h5. There is no `h6` size definition or `text-heading-6` utility. An `h6` element will inherit the heading color/font but use the browser default font-size. This is consistent with the spec (which only specifies h1-h5), but if `h6` is ever used it will look unstyled in terms of size.
-**Severity**: MINOR (informational)
-**Action**: Acceptable as-is. If `h6` is needed in the future, add sizing then.
-
-#### MINOR-3: `border-radius: 6px` in App.css Deviates From Design System Default
-
-**File**: `src/App.css:121`
-**Description**: The `#next-steps ul a` rule uses `border-radius: 6px` which deviates from the design system's default `4px` radius. This was present in the original code and was not changed during the migration. Since this is a pre-existing deviation and `App.css` migration was only scoped to variable replacement + counter radius fix, this is acceptable.
-**Severity**: MINOR
-**Action**: Consider aligning to `4px` (or the `--radius-md` token) in a follow-up if design consistency is desired.
-
----
-
-## Step 7: Scope Creep Check
-
-No scope creep detected. Changes are limited to:
-
-- `index.html`: Google Fonts links (TASK-001)
-- `src/index.css`: Design system rewrite (TASK-002)
-- `src/App.css`: Variable migration (TASK-003)
-
-No files outside the specified scope were modified.
-
----
-
-## Step 8: Build Verification
-
-```
-npm run build
-> tsc -b && vite build
-✓ 26 modules transformed
-✓ Built in 238ms
-
-Output:
-  dist/assets/index-BqmlimT3.css   20.81 kB │ gzip: 4.82 kB
-  dist/assets/index-DeDd7RsS.js   233.29 kB │ gzip: 74.37 kB
-```
-
-TypeScript compilation and Vite build both pass with zero errors.
+# Validation Report — `guest-list-screen`
+
+**Date**: 2026-04-03
+**Validator**: Validator Agent
+**Build Status**: PASS (`tsc -b && vite build` succeeds)
+**Verdict**: **PASS WITH ISSUES** — 1 critical bug, 4 major issues, 8 minor issues
 
 ---
 
 ## Summary
 
-The Nought Cobalt design system implementation is well-executed and faithful to the spec. All 16 acceptance criteria pass, the build succeeds, code follows project conventions, and TailwindCSS v4 best practices are correctly applied. The three MINOR findings are informational and do not require changes before merge.
+The implementation is comprehensive and well-structured. All 28 acceptance criteria are addressed, the atomic design organization is correct, conventions are largely followed, and responsive layouts are properly implemented. However, there is one critical logic bug in the detail panel, several spec compliance deviations, and a handful of accessibility/quality improvements needed.
+
+---
+
+## CRITICAL Issues
+
+### C-1: Shuttle label shows "SHUTTLE REQUIRED" regardless of shuttle status
+
+**File**: `src/components/organisms/GuestDetailPanel.tsx:119-121`
+**Description**: The ternary for the shuttle label renders `'SHUTTLE REQUIRED'` in both the true and false branches:
+
+```tsx
+{
+  guest.logistics.shuttleRequired ? 'SHUTTLE REQUIRED' : 'SHUTTLE REQUIRED'
+}
+```
+
+Both branches produce the same string. When `shuttleRequired` is `false`, the label should display something like `'NO SHUTTLE'` or `'SHUTTLE: N/A'` to differentiate. The sub-label correctly shows `'N/A'` for the value, but the heading is misleading for guests who don't need a shuttle.
+
+**Impact**: Incorrect information displayed to the user — a guest who does NOT require a shuttle is shown "SHUTTLE REQUIRED". This is a functional bug that could lead to planning errors.
+
+**Spec reference**: AC-13 (detail panel shows logistics), Edge Case 5 (null logistics shows "N/A").
+
+---
+
+## MAJOR Issues
+
+### M-1: `IconButton` missing `focus-visible` outline
+
+**File**: `src/components/atoms/IconButton.tsx:14`
+**Description**: The spec (TASK-002 instruction 7) requires `focus-visible:outline-2 focus-visible:outline-ring` on the IconButton. The current implementation only has hover and transition styles — no focus-visible outline. Guardrail G-8 mandates `focus-visible` for buttons.
+
+```tsx
+className =
+  'p-2 rounded hover:bg-surface-elevated text-foreground-muted hover:text-foreground transition-colors cursor-pointer'
+```
+
+**Missing**: `focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2`
+
+**Impact**: Keyboard users cannot see focus on icon buttons (close panel, settings, row actions). This is an accessibility violation per guardrail G-8.
+
+### M-2: `NavLink` missing `text-label` typography class
+
+**File**: `src/components/atoms/NavLink.tsx:11`
+**Description**: The spec (TASK-002 instruction 8) requires "uppercase text-label typography" on NavLink. The component has `uppercase` but is missing the `text-label` class, so the text will render in whatever inherited font size rather than the design system's 12px/500 weight/0.8px tracking label style.
+
+```tsx
+className={`uppercase ${isActive ? ...`}
+```
+
+**Should include**: `text-label tracking-wider` (the `text-label` custom utility sets font-size, weight, line-height, and letter-spacing per the design system).
+
+**Impact**: NavLink text may not match the design system typography scale. This is a convention/design-system compliance issue.
+
+### M-3: `NavLink` missing `cursor-pointer`
+
+**File**: `src/components/atoms/NavLink.tsx:9-18`
+**Description**: The `NavLink` `<button>` element does not have `cursor-pointer`. Tailwind's preflight resets `cursor` to `default` on buttons, so without `cursor-pointer`, hovering over nav links won't show a pointer cursor — unlike all other clickable elements in the codebase (`SidebarNavItem`, `GuestRow`, `FAB`, `IconButton`, etc.), which all explicitly include `cursor-pointer`.
+
+**Impact**: UX inconsistency — hovering over top nav links won't show pointer cursor.
+
+### M-4: `GuestTable` hardcodes `totalSeats: 8` for UNASSIGNED group on mobile
+
+**File**: `src/components/organisms/GuestTable.tsx:99`
+**Description**: The spec (TASK-007 instruction 4) explicitly states: "UNASSIGNED group: location = 'UNASSIGNED', tableName = 'NO TABLE', seatCount = count, **totalSeats = 0**." The code passes `totalSeats={8}` for all groups, including UNASSIGNED, which displays as e.g., "2 / 8 seats" instead of an appropriate representation for unassigned guests.
+
+```tsx
+<TableGroupHeader
+  location={getLocationLabel(tableKey)}
+  tableName={tableName}
+  seatCount={groupGuests.length}
+  totalSeats={8} // Should be 0 for UNASSIGNED
+/>
+```
+
+**Impact**: Incorrect seat capacity display for the UNASSIGNED group on mobile. Misleading to the user.
+
+---
+
+## MINOR Issues
+
+### m-1: `StatCard` value uses `text-heading-3` — spec says `text-heading-4`
+
+**File**: `src/components/atoms/StatCard.tsx:18`
+**Description**: The spec (TASK-002 instruction 5) says the value should use `text-heading-4 text-foreground-heading`, but the implementation uses `text-heading-3` (24px vs 20px). This makes stat card values larger than specified.
+
+### m-2: `GuestListHeader` titles use `text-heading-1` — spec says `text-heading-3`
+
+**File**: `src/components/organisms/GuestListHeader.tsx:23,35`
+**Description**: The spec (TASK-006 instruction 2-3) specifies `text-heading-3` for the "GUEST_LIST" / "GUEST LIST" title. The implementation uses `text-heading-1` which is significantly larger (32px vs 24px). Semantically using `h1` is fine, but the visual size deviates from the tech plan.
+
+### m-3: `TableGroupHeader` seat display format not zero-padded and lowercase
+
+**File**: `src/components/molecules/TableGroupHeader.tsx:24`
+**Description**: The spec mobile layout example shows "08/08 SEATS" (zero-padded, no spaces around slash, uppercase "SEATS"). The implementation shows `{seatCount} / {totalSeats} seats` (not padded, spaces around slash, lowercase "seats").
+
+**Current**: `2 / 8 seats`
+**Expected**: `02/08 SEATS`
+
+### m-4: `TableGroupHeader` table name uses `text-heading-4` — spec says `text-body font-semibold`
+
+**File**: `src/components/molecules/TableGroupHeader.tsx:20`
+**Description**: TASK-003 instruction 5 specifies `text-body font-semibold text-foreground-heading` for the table name. The implementation uses `text-heading-4` which is 20px/600 vs the expected 16px/600.
+
+### m-5: Mock data names and IDs deviate from spec
+
+**File**: `src/data/mock-guests.ts`
+**Description**: The spec (TASK-001 instructions 6-7) specifies: ALEXANDER VANCE, ELARA SANTOS, MARCUS CHEN, SOPHIA LOWE, JULIAN DRAKE, NOVA REYES with IDs "4492-AX", "3371-BK", "5580-CR", "2218-DL", "6643-EM", "7789-FN". The implementation uses different names (ELARA RIVERA, MARCUS STERLING, SARA MORGAN, JULIAN KANE) and different IDs. Naming is cosmetic, so this is minor.
+
+### m-6: DECLINED guest has `tableAssignment: null` — spec says `TABLE_01`
+
+**File**: `src/data/mock-guests.ts:113`
+**Description**: The spec (TASK-001 instruction 5) puts the DECLINED guest at `TABLE_01` with `seatNumber: 1`. The implementation has this guest with `tableAssignment: null`, `seatNumber: null`. This means there are 2 unassigned guests instead of 1, and TABLE_01 doesn't exist in the data. All required data variations are still covered, but the distribution differs.
+
+### m-7: Missing keyboard accessibility on clickable div elements
+
+**Files**: `src/components/molecules/GuestRow.tsx:22`, `src/components/molecules/SidebarNavItem.tsx:14`
+**Description**: `GuestRow` and `SidebarNavItem` use `<div onClick={...}>` without `role="button"`, `tabIndex={0}`, or `onKeyDown` handlers. These are interactive elements that are only accessible via mouse/touch. For proper a11y, clickable non-button elements should include keyboard support or use `<button>` elements.
+
+### m-8: Implicit `StatusBadge` visibility coupling in `GuestDetailPanel`
+
+**File**: `src/components/organisms/GuestDetailPanel.tsx:55`
+**Description**: `StatusBadge` uses `hidden md:inline-flex` (hidden on mobile, visible on desktop). Since `GuestDetailPanel` is also `hidden md:flex`, the badge is correctly visible in context. However, if the panel were ever made visible on mobile (future spec), the status badge inside would be hidden. This is an architectural coupling note, not a current bug.
+
+---
+
+## Acceptance Criteria Verification
+
+| AC  | Description                                                   | Status  | Notes                                   |
+| --- | ------------------------------------------------------------- | ------- | --------------------------------------- |
+| 1   | App loads at `/` with guest list                              | PASS    | Default tab is `guests`                 |
+| 2   | Three-panel layout visible                                    | PASS    | TopNav + LeftSidebar + main content     |
+| 3   | Top nav: brand, nav links, search, settings, avatar           | PASS    | NavLink missing `text-label` (M-2)      |
+| 4   | Left sidebar: session info, nav items, ADD GUEST, HISTORY     | PASS    | Objects highlighted, ADD GUEST present  |
+| 5   | Header: REGISTRY.SYSTEM_V4, GUEST_LIST, stat cards            | PASS    | Typography size differs from spec (m-2) |
+| 6   | Data table columns: NAME/ID, STATUS, TABLE, ACTIONS           | PASS    |                                         |
+| 7   | Guest row: avatar, name, ID code, status, table               | PASS    |                                         |
+| 8   | CONFIRMED badge: filled cobalt                                | PASS    |                                         |
+| 9   | PENDING badge: outlined cobalt                                | PASS    |                                         |
+| 10  | DECLINED badge: outlined muted red                            | PASS    |                                         |
+| 11  | Bottom stat cards: rate, dietary, RSVP                        | PASS    | Progress bar, URGENT badge present      |
+| 12  | Click row opens detail panel                                  | PASS    |                                         |
+| 13  | Detail panel contents                                         | PARTIAL | Shuttle label bug (C-1)                 |
+| 14  | Close button closes panel                                     | PASS    |                                         |
+| 15  | Search filters by name                                        | PASS    | Case-insensitive substring match        |
+| 16  | ADD GUEST visual feedback                                     | PASS    | Button styled, onClick is no-op         |
+| 17  | `/?tab=canvas` shows canvas placeholder                       | PASS    | Shows "{TAB} // MODULE_OFFLINE"         |
+| 18  | Unrecognized tab defaults to guests                           | PASS    | Validates against allowed list          |
+| 19  | Atomic design, no barrel files                                | PASS    | atoms/molecules/organisms, no index.ts  |
+| 20  | Mobile: single-column, no sidebar, no detail panel            | PASS    |                                         |
+| 21  | Mobile: simplified top bar                                    | PASS    | Brand + cobalt dot + settings + avatar  |
+| 22  | Mobile: header with SYSTEM_LOG, stat cards with cobalt border | PASS    |                                         |
+| 23  | Mobile: guests grouped by table                               | PASS    | UNASSIGNED group totalSeats wrong (M-4) |
+| 24  | Mobile: guest rows with seat, name, role, icon                | PASS    |                                         |
+| 25  | Mobile: bottom tab bar with 4 tabs                            | PASS    |                                         |
+| 26  | Mobile: FAB visible                                           | PASS    | Person-add icon, cobalt, circular       |
+| 27  | Mobile: guest tap highlights, no detail panel                 | PASS    |                                         |
+| 28  | Mobile: tab bar changes query param                           | PASS    |                                         |
+
+## Edge Case Verification
+
+| EC  | Description                                    | Status  | Notes                                          |
+| --- | ---------------------------------------------- | ------- | ---------------------------------------------- |
+| 1   | No guest selected on load — panel hidden       | PASS    | `selectedGuestId` starts null                  |
+| 2   | Search no results — empty state                | PASS    | "NO_RESULTS // QUERY_MISMATCH"                 |
+| 3   | No table assignment — shows "- - -"            | PASS    | Nullish coalescing in GuestRow and DetailPanel |
+| 4   | No dietary — shows NO_RESTRICTIONS             | PASS    | Conditional in GuestDetailPanel                |
+| 5   | No logistics — shows N/A                       | PARTIAL | Value shows N/A but label is wrong (C-1)       |
+| 6   | Click different guest — panel switches         | PASS    | Toggle logic in `onGuestClick`                 |
+| 7   | Click same guest — panel closes                | PASS    | Toggle logic in `onGuestClick`                 |
+| 8   | Search cleared — full list restored            | PASS    | Empty query returns all guests                 |
+| 9   | Unassigned guests in UNASSIGNED group (mobile) | PASS    | Map key "UNASSIGNED", sorted last              |
+| 10  | Resize across breakpoint — layout switches     | PASS    | Tailwind responsive classes, no JS media query |
+
+---
+
+## Convention Compliance
+
+| Convention                             | Status | Notes                                               |
+| -------------------------------------- | ------ | --------------------------------------------------- |
+| No semicolons                          | PASS   | All files checked                                   |
+| Single quotes                          | PASS   | All files checked                                   |
+| 2-space indent                         | PASS   | All files checked                                   |
+| `verbatimModuleSyntax` (`import type`) | PASS   | All type-only imports use `import type`             |
+| PascalCase components                  | PASS   | All component files                                 |
+| Function declarations                  | PASS   | All components use `function Foo()`                 |
+| Default exports                        | PASS   | All components use `export default`                 |
+| No barrel files                        | PASS   | No `index.ts` or `index.tsx` files in any directory |
+| Trailing commas                        | PASS   | Prettier enforced                                   |
+
+---
+
+## Best Practices Assessment
+
+### React 19 + TypeScript
+
+| Practice                               | Status | Notes                                                           |
+| -------------------------------------- | ------ | --------------------------------------------------------------- |
+| Proper key usage in lists              | PASS   | All `.map()` use stable `key={guest.id}`                        |
+| No unnecessary re-renders              | PASS   | State is minimal and local; acceptable for mock data scale      |
+| `import type` for type-only imports    | PASS   | All 9 type imports use `import type { ... }`                    |
+| No `forwardRef` (React 19 ref-as-prop) | N/A    | No refs used                                                    |
+| Controlled inputs                      | PASS   | SearchInput is controlled                                       |
+| Proper event handler patterns          | PASS   | Arrow functions in callbacks, no inline object creation in deps |
+
+### TailwindCSS v4
+
+| Practice                               | Status | Notes                                                              |
+| -------------------------------------- | ------ | ------------------------------------------------------------------ |
+| `@theme` for token definitions         | PASS   | Pre-existing, correctly used                                       |
+| Semantic color classes used            | PASS   | `bg-primary`, `text-foreground-muted`, `bg-surface-elevated`, etc. |
+| Responsive with `md:` prefix           | PASS   | Consistent 768px breakpoint usage                                  |
+| No arbitrary values where tokens exist | PASS   | Uses design system tokens throughout                               |
+| `.card`, `.btn-primary`, etc. reused   | PASS   | Existing component classes leveraged                               |
+
+### Accessibility
+
+| Practice                     | Status  | Notes                                                                              |
+| ---------------------------- | ------- | ---------------------------------------------------------------------------------- |
+| `aria-label` on icon buttons | PARTIAL | `IconButton` and `FAB` have labels; `NavLink` and `TabBarItem` use visible text    |
+| `focus-visible` on buttons   | FAIL    | Missing on `IconButton` (M-1)                                                      |
+| Semantic HTML                | PARTIAL | Uses `<nav>`, `<aside>`, `<main>`, `<header>`; but clickable divs lack roles (m-7) |
+| Keyboard navigation          | PARTIAL | Buttons are keyboard-accessible; clickable divs are not (m-7)                      |
+
+---
+
+## Code Quality Assessment
+
+### Strengths
+
+1. **Clean component boundaries** — Each atom/molecule/organism has a clear, single responsibility
+2. **Correct responsive approach** — Single components with Tailwind responsive utilities, no duplicate mobile/desktop components
+3. **Proper type safety** — `import type` used correctly throughout, `GuestStatus` union type enforced
+4. **Good data layer** — Mock data module with helper functions is clean and easily replaceable
+5. **Correct toggle behavior** — Guest selection with toggle-on-same-click logic is implemented correctly
+6. **Good state management** — Local state with `useState` for selected guest and search, `useSearchParams` for tab routing
+7. **Proper list rendering** — All `.map()` calls use stable `key={guest.id}` props
+8. **Tab validation** — Unrecognized tab values properly default to `guests`
+9. **Search does not affect header stats** — Stats always reflect full dataset (per spec DD-7)
+
+### Observations (not issues)
+
+1. **Stat functions called on every render** — `getConfirmedCount()`, `getPendingCount()`, etc. filter the full array each time. Fine for 6 guests; would benefit from `useMemo` at scale.
+2. **Filtering + grouping computed on every render** in `GuestTable`. Acceptable for mock data.
+3. **`getLocationLabel` uses fragile parseInt** — Maps table number to letter via `String.fromCharCode(64 + parseInt(...))`. Works for current data but would fail for non-numeric table names.
+
+---
+
+## Files Reviewed
+
+| File                                                | Lines | Status     |
+| --------------------------------------------------- | ----- | ---------- |
+| `src/data/mock-guests.ts`                           | 184   | OK         |
+| `src/components/atoms/StatusBadge.tsx`              | 23    | OK         |
+| `src/components/atoms/StatusIcon.tsx`               | 42    | OK         |
+| `src/components/atoms/Avatar.tsx`                   | 25    | OK         |
+| `src/components/atoms/StatCard.tsx`                 | 24    | m-1        |
+| `src/components/atoms/SearchInput.tsx`              | 39    | OK         |
+| `src/components/atoms/IconButton.tsx`               | 21    | M-1        |
+| `src/components/atoms/NavLink.tsx`                  | 22    | M-2, M-3   |
+| `src/components/atoms/FAB.tsx`                      | 32    | OK         |
+| `src/components/atoms/TabBarItem.tsx`               | 34    | OK         |
+| `src/components/molecules/GuestRow.tsx`             | 71    | m-7        |
+| `src/components/molecules/SidebarNavItem.tsx`       | 22    | m-7        |
+| `src/components/molecules/GuestDetailSection.tsx`   | 19    | OK         |
+| `src/components/molecules/TableGroupHeader.tsx`     | 32    | m-3, m-4   |
+| `src/components/organisms/TopNav.tsx`               | 69    | OK         |
+| `src/components/organisms/LeftSidebar.tsx`          | 50    | OK         |
+| `src/components/organisms/GuestTable.tsx`           | 118   | M-4        |
+| `src/components/organisms/GuestDetailPanel.tsx`     | 168   | C-1, m-8   |
+| `src/components/organisms/GuestListHeader.tsx`      | 50    | m-2        |
+| `src/components/organisms/GuestListFooterStats.tsx` | 41    | OK         |
+| `src/components/organisms/BottomTabBar.tsx`         | 88    | OK         |
+| `src/App.tsx`                                       | 90    | OK         |
+| `src/App.css`                                       | 0     | OK (empty) |
+| `src/index.css` (`#root` rule)                      | 6     | OK         |
+
+**Total**: 24 files reviewed, ~1,254 lines of new/modified code
+
+---
+
+## Verdict
+
+**PASS WITH ISSUES** — The feature is substantially complete and the build passes. 27/28 acceptance criteria fully pass, 1 partial (AC-13). 9/10 edge cases fully pass, 1 partial (EC-5). The single critical bug (C-1) is a copy-paste error with a trivial fix.
+
+### Required fixes before merge:
+
+1. **C-1**: Fix shuttle label ternary in `GuestDetailPanel.tsx:119-121` — both branches show "SHUTTLE REQUIRED"
+
+### Strongly recommended fixes:
+
+2. **M-1**: Add `focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2` to `IconButton` (accessibility, guardrail G-8)
+3. **M-2**: Add `text-label tracking-wider` to `NavLink` (design system compliance)
+4. **M-3**: Add `cursor-pointer` to `NavLink` button (UX consistency)
+5. **M-4**: Pass `totalSeats={tableKey === 'UNASSIGNED' ? 0 : 8}` in `GuestTable` mobile view

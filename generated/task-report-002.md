@@ -1,44 +1,56 @@
-# Task Report: TASK-002
+# Task Report: TASK-002 — Atom Components
 
 ## Task
 
-Rewrite `src/index.css` — Tailwind import, design tokens, theme config, base styles, and component styles
+Create all 9 atom components under `src/components/atoms/`.
 
 ## Status: COMPLETED
 
 ## Changes Made
 
-### File: `src/index.css`
+### Directories Created
 
-- **Completely rewrote** the file from 113 lines (old light/dark theme with legacy variables) to the new Nought Cobalt design system
+- `src/components/` (new)
+- `src/components/atoms/` (new)
 
-### Structure (in order):
+### Files Created (9 components)
 
-1. **Line 1**: `@import 'tailwindcss'` — top-level Tailwind v4 import
-2. **Lines 3–55**: `@theme` block — Tailwind v4 CSS-first config with gray scale (12 steps), cobalt accent scale (8 steps), semantic color aliases, font families (`Space Grotesk` sans, monospace stack), and border radius tokens
-3. **Lines 57–96**: `:root` block — NC design tokens (`--nc-*` prefixed) mirroring the theme values for use in component CSS, plus `color-scheme: dark`
-4. **Lines 98–196**: Base element styles — `html` (font, color, background, rendering), `body`, headings (`h1`–`h6`), `p`, `code`, and `#root` container
-5. **Lines 197–280**: Typography `@utility` classes — `text-display`, `text-heading-1` through `text-heading-5`, `text-body-lg`, `text-body`, `text-body-sm`, `text-caption`, `text-label`, `text-code`
-6. **Lines 282–401**: `@layer components` — `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.card`, `.input`, `.badge`
+1. **`src/components/atoms/StatusBadge.tsx`** — Renders GuestStatus as a colored badge. CONFIRMED: filled cobalt, PENDING: outlined cobalt, DECLINED: outlined red. Hidden on mobile (`hidden md:inline-flex`).
 
-## Acceptance Criteria Verification
+2. **`src/components/atoms/StatusIcon.tsx`** — Mobile-only status indicator. CONFIRMED: checkmark circle SVG in cobalt. PENDING/DECLINED: three-dots SVG in muted. Visible only on mobile (`md:hidden`).
 
-| Criterion                                                                  | Status                      |
-| -------------------------------------------------------------------------- | --------------------------- |
-| `@import 'tailwindcss'` on line 1, top-level                               | PASS                        |
-| No `@media (prefers-color-scheme: dark)` blocks                            | PASS                        |
-| No old CSS variable names (`--text`, `--bg`, `--border`, `--accent`, etc.) | PASS                        |
-| `:root` contains all `--nc-*` custom properties                            | PASS (20 raw + 11 semantic) |
-| `:root` has `color-scheme: dark`                                           | PASS                        |
-| `@theme` block defines all colors, fonts, and radii                        | PASS                        |
-| Typography utilities defined via `@utility`                                | PASS (12 utilities)         |
-| Component classes defined in `@layer components`                           | PASS (6 components)         |
-| Base element styles present                                                | PASS                        |
+3. **`src/components/atoms/Avatar.tsx`** — Circular div showing initials from firstName + lastName. Three sizes: sm (32px), md (40px, default), lg (64px). Uses `bg-surface-elevated text-foreground-heading`.
 
-## What Was Removed
+4. **`src/components/atoms/StatCard.tsx`** — Uses the `.card` component class. Displays label (text-label, uppercase, muted) and value (text-heading-3). Optional `mobileBorder` adds left cobalt border. Accepts children.
 
-- Old light theme variables (`--text`, `--bg`, `--border`, `--code-bg`, `--accent`, `--accent-bg`, `--accent-border`, `--social-bg`, `--shadow`)
-- Old font variables (`--sans`, `--heading`, `--mono`)
-- `@media (prefers-color-scheme: dark)` block (which incorrectly contained `@import 'tailwindcss'`)
-- `#social .button-icon` dark mode filter rule
-- `.counter` styles
+5. **`src/components/atoms/SearchInput.tsx`** — Wrapper with magnifying glass SVG icon + input using `.input` class. Default placeholder: "SEARCH_DATABASE". Wrapper styled with `bg-surface-elevated border-border`.
+
+6. **`src/components/atoms/IconButton.tsx`** — Generic icon button with `aria-label`. Hover reveals elevated surface background and brighter text. Accepts children for icon content.
+
+7. **`src/components/atoms/NavLink.tsx`** — Uppercase text button for navigation. Active state: heading color + cobalt bottom border. Inactive: muted text, transparent border, hover brightens.
+
+8. **`src/components/atoms/FAB.tsx`** — Fixed floating action button, mobile only (`md:hidden`). Circular cobalt button with person-add SVG icon. Positioned bottom-right with `z-50`.
+
+9. **`src/components/atoms/TabBarItem.tsx`** — Flex-column button for bottom tab bar. Active: icon in cobalt pill (`rounded-lg px-3 py-1`), label in cobalt. Inactive: muted colors.
+
+## Conventions Verified
+
+| Convention                                  | Status |
+| ------------------------------------------- | ------ |
+| No semicolons                               | PASS   |
+| Single quotes                               | PASS   |
+| 2-space indent                              | PASS   |
+| `import type` for type-only imports         | PASS   |
+| Function declarations (not arrow)           | PASS   |
+| `export default ComponentName` (not inline) | PASS   |
+| No barrel index.ts files                    | PASS   |
+| PascalCase component names                  | PASS   |
+
+## Validation
+
+| Check                  | Result                      |
+| ---------------------- | --------------------------- |
+| `npx tsc --noEmit`     | PASS — zero errors          |
+| `npx prettier --check` | PASS — all files formatted  |
+| `npx eslint`           | PASS — zero warnings/errors |
+| No semicolons (grep)   | PASS — zero matches         |
