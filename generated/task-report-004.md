@@ -1,90 +1,42 @@
 # Task Report: TASK-004
 
-## Task: Create Form Molecule Components
+## Task: Replace SVG in LeftSidebar with LuUserPlus
 
 ## Status: COMPLETED
 
 ## Changes Made
 
-### File: `src/components/molecules/FormField.tsx` (created)
+### File: `src/components/organisms/LeftSidebar.tsx` (modified)
 
-Created the `FormField` molecule component that wraps a form input with a label and error message.
+1. **Added import** for `LuUserPlus` from `react-icons/lu` (line 1)
+2. **Replaced inline SVG** (previously lines 30-43) with `<LuUserPlus size={16} />` (now line 31)
 
-**Props interface:**
+The inline SVG was a 14-line block rendering a user-plus icon (`<circle>` + two `<path>` elements). It has been replaced with a single `<LuUserPlus size={16} />` component that renders the equivalent Lucide icon.
 
-| Prop       | Type        | Description                         |
-| ---------- | ----------- | ----------------------------------- |
-| `label`    | `string`    | Label text displayed above input    |
-| `htmlFor`  | `string?`   | Associates label with input by id   |
-| `required` | `boolean?`  | Shows red asterisk after label      |
-| `error`    | `string?`   | Error message displayed below input |
-| `children` | `ReactNode` | The actual input component          |
+**Before (14 lines):**
 
-**Structure:**
+```tsx
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" ...>
+  <circle cx="6" cy="5" r="2.5" />
+  <path d="M1 14c0-2.76 2.24-5 5-5 .87 0 1.69.22 2.4.62" />
+  <path d="M12.5 10v4M10.5 12h4" />
+</svg>
+```
 
-- Vertical stack (`flex flex-col gap-1`)
-- `<label>` with `text-label text-foreground-muted uppercase tracking-wider`
-- Optional red asterisk `<span className="text-red-400"> *</span>` when `required`
-- `{children}` slot for input
-- `<FormError>` atom for error display
+**After (1 line):**
 
-### File: `src/components/molecules/FormSection.tsx` (created)
+```tsx
+<LuUserPlus size={16} />
+```
 
-Created the `FormSection` molecule component that groups related form fields under a titled section.
-
-**Props interface:**
-
-| Prop       | Type        | Description                    |
-| ---------- | ----------- | ------------------------------ |
-| `title`    | `string`    | Section heading text           |
-| `children` | `ReactNode` | Form fields within the section |
-
-**Structure:**
-
-- Bordered section (`border-t border-border pt-4 mt-6`)
-- `<h3>` with `text-label text-foreground-muted uppercase tracking-wider`
-- Children container (`mt-4 flex flex-col gap-4`)
-
-### File: `src/components/molecules/ConfirmDialog.tsx` (created)
-
-Created the `ConfirmDialog` molecule component for destructive action confirmation.
-
-**Props interface:**
-
-| Prop           | Type         | Description                   |
-| -------------- | ------------ | ----------------------------- |
-| `title`        | `string`     | Dialog heading                |
-| `targetName`   | `string`     | Name of item being acted upon |
-| `message`      | `string`     | Explanatory message           |
-| `confirmLabel` | `string?`    | Custom confirm button text    |
-| `cancelLabel`  | `string?`    | Custom cancel button text     |
-| `onConfirm`    | `() => void` | Confirm callback              |
-| `onCancel`     | `() => void` | Cancel callback               |
-
-**Structure:**
-
-- Fixed overlay (`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm`) with click-to-dismiss
-- Dialog card (`bg-surface border border-border rounded max-w-md`) with `stopPropagation`
-- Warning icon (inline SVG triangle with `!`) + title
-- Target name line and message
-- Button row: secondary cancel button + red confirm button (`bg-red-600 hover:bg-red-700`)
+File reduced from 54 lines to 42 lines.
 
 ## Conventions Verified
 
 - [x] No semicolons
 - [x] Single quotes
 - [x] 2-space indentation
-- [x] Function declarations (not arrow functions)
-- [x] Default exports
-- [x] `Props` interface naming convention
-- [x] `import type` for React types (verbatimModuleSyntax)
-- [x] No barrel file imports
-- [x] Relative imports from `../atoms/FormError`
-
-## Acceptance Criteria Verification
-
-- [x] `src/components/molecules/FormField.tsx` created with correct Props and structure
-- [x] `src/components/molecules/FormSection.tsx` created with correct Props and structure
-- [x] `src/components/molecules/ConfirmDialog.tsx` created with correct Props and structure
-- [x] Full project type-check passes (`tsc --noEmit` — 0 errors for new files)
-- [x] Follows existing molecule patterns from `GuestDetailSection.tsx` and `SidebarNavItem.tsx`
+- [x] Trailing commas not applicable (no new multi-line structures added)
+- [x] Function declaration (not arrow function)
+- [x] Default export
+- [x] Import from `react-icons/lu` (not barrel import)

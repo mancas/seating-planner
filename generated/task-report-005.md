@@ -1,57 +1,35 @@
 # Task Report: TASK-005
 
-## Task: Create EmptyState Organism
+## Task: Replace SVGs in EmptyState with Lucide Icons
 
 ## Status: COMPLETED
 
 ## Changes Made
 
-### File: `src/components/organisms/EmptyState.tsx` (created)
+### File: `src/components/organisms/EmptyState.tsx` (modified)
 
-Created the `EmptyState` organism component that displays a centered empty-state placeholder with a call-to-action button to add the first guest.
+Replaced both inline SVGs with `react-icons/lu` (Lucide) icon components.
 
-**Props:**
+**Changes:**
 
-- `onAddGuest: () => void` — callback triggered when the user clicks the NEW_ENTRY button
+1. **Added import**: `import { LuDiamond, LuPlus } from 'react-icons/lu'`
+2. **Diamond SVG (was lines 8-21)**: Replaced 14-line inline `<svg>` with `<LuDiamond size={40} className="text-foreground-muted mb-4" />`
+3. **Plus SVG (was lines 32-39)**: Replaced 8-line inline `<svg>` with `<LuPlus size={14} />`
 
-**Structure:**
-
-- **Root `<div>`**: `flex-1 flex flex-col items-center justify-center py-16 px-4`
-- **Diamond icon**: Inline SVG (40x40), diamond/rhombus outline via rotated square path, `text-foreground-muted mb-4`
-- **Heading**: `<h3>` with `text-heading-4 text-foreground-heading` — displays "NO_RECORDS // INITIALIZE_DB"
-- **Description**: `<p>` with `text-body-sm text-foreground-muted mt-2 text-center` — displays "Begin population sequence to activate guest matrix"
-- **CTA button**: `<button>` with `btn-primary mt-6 flex items-center gap-2`, fires `onAddGuest` on click
-  - Small inline `+` SVG icon (14x14) using stroke crosshair paths
-  - Text: "NEW_ENTRY"
-
-**SVG icons:**
-
-- Diamond shape: 40x40 viewBox, single `<path>` drawing a diamond outline with `stroke="currentColor"`, `strokeWidth="2"`, `strokeLinejoin="round"`
-- Plus icon: 14x14 viewBox, single `<path>` drawing a cross with `stroke="currentColor"`, `strokeWidth="2"`, `strokeLinecap="round"`
+**Result:** File reduced from 46 lines to 28 lines. Both icons preserve original sizing and styling via props.
 
 ## Conventions Verified
 
 - [x] No semicolons
-- [x] Single quotes (no string literals requiring quotes in this file)
+- [x] Single quotes
 - [x] 2-space indentation
+- [x] Trailing commas (no multi-line structures requiring them)
 - [x] Function declaration (not arrow function)
-- [x] `Props` interface above component
 - [x] Default export
-- [x] PascalCase filename
-- [x] Cyberpunk aesthetic: uppercase text, underscores, technical codes
 
 ## Acceptance Criteria Verification
 
-- [x] `src/components/organisms/EmptyState.tsx` created
-- [x] `Props` interface with `onAddGuest: () => void`
-- [x] Centered container with exact Tailwind classes from spec
-- [x] Diamond/hexagon outline SVG icon (~40x40), `text-foreground-muted mb-4`
-- [x] Heading: "NO_RECORDS // INITIALIZE_DB" with `text-heading-4 text-foreground-heading`
-- [x] Description text with `text-body-sm text-foreground-muted mt-2 text-center`
-- [x] CTA button with `btn-primary mt-6 flex items-center gap-2` and `onClick={onAddGuest}`
-- [x] Small `+` SVG icon inside button alongside "NEW_ENTRY" text
-- [x] `cursor-pointer` inherited from `.btn-primary` class
-
-## Notes
-
-- LSP reports errors in `src/App.tsx` (missing `onAddGuest` prop) and `src/components/organisms/LeftSidebar.tsx` (unused `onAddGuest`). These are outside the scope of this task and relate to how other tasks wire up the EmptyState component.
+- [x] `LuDiamond` replaces diamond inline SVG with `size={40}` and `className="text-foreground-muted mb-4"`
+- [x] `LuPlus` replaces plus inline SVG with `size={14}`
+- [x] Import from `react-icons/lu`
+- [x] No LSP errors in final file

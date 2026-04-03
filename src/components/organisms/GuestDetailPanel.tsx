@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { LuX, LuGift, LuBus, LuHotel } from 'react-icons/lu'
 import type { Guest } from '../../data/mock-guests'
 import Avatar from '../atoms/Avatar'
 import StatusBadge from '../atoms/StatusBadge'
@@ -25,19 +26,7 @@ function GuestDetailPanel({ guest, onClose, onUpdate, onDelete }: Props) {
             GUEST_DETAILS
           </span>
           <IconButton onClick={onClose} label="Close details">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="5" y1="5" x2="15" y2="15" />
-              <line x1="15" y1="5" x2="5" y2="15" />
-            </svg>
+            <LuX size={20} />
           </IconButton>
         </div>
 
@@ -67,19 +56,7 @@ function GuestDetailPanel({ guest, onClose, onUpdate, onDelete }: Props) {
             GUEST_DETAILS
           </span>
           <IconButton onClick={onClose} label="Close details">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="5" y1="5" x2="15" y2="15" />
-              <line x1="15" y1="5" x2="5" y2="15" />
-            </svg>
+            <LuX size={20} />
           </IconButton>
         </div>
 
@@ -183,23 +160,7 @@ function renderContent(guest: Guest) {
         <GuestDetailSection title="GIFT_REGISTRY">
           {guest.gift !== null ? (
             <div className="flex items-center gap-2 py-2">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-foreground-muted shrink-0"
-              >
-                <rect x="2" y="7" width="12" height="7" rx="1" />
-                <path d="M8 7V14" />
-                <path d="M2 9h12" />
-                <path d="M8 7C8 7 6 5 5 4c-1-1-1-2.5 0-3.5s2.5-1 3 0" />
-                <path d="M8 7C8 7 10 5 11 4c1-1 1-2.5 0-3.5s-2.5-1-3 0" />
-              </svg>
+              <LuGift size={16} className="text-foreground-muted shrink-0" />
               <div>
                 <p className="text-body-sm text-foreground">
                   GIFT_VALUE:{' '}
@@ -219,21 +180,7 @@ function renderContent(guest: Guest) {
       <div className="px-4">
         <GuestDetailSection title="LOGISTICS">
           <div className="flex items-center gap-2 py-2">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-foreground-muted shrink-0"
-            >
-              <rect x="1" y="4" width="14" height="8" rx="2" />
-              <circle cx="4.5" cy="12" r="1.5" />
-              <circle cx="11.5" cy="12" r="1.5" />
-            </svg>
+            <LuBus size={16} className="text-foreground-muted shrink-0" />
             <div>
               <p className="text-body-sm text-foreground">
                 {guest.logistics.shuttleRequired
@@ -248,22 +195,7 @@ function renderContent(guest: Guest) {
             </div>
           </div>
           <div className="flex items-center gap-2 py-2">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-foreground-muted shrink-0"
-            >
-              <path d="M2 14V4l6-2 6 2v10" />
-              <path d="M2 14h12" />
-              <rect x="5" y="7" width="2" height="3" />
-              <rect x="9" y="7" width="2" height="3" />
-            </svg>
+            <LuHotel size={16} className="text-foreground-muted shrink-0" />
             <div>
               <p className="text-body-sm text-foreground">LODGING BOOKED</p>
               <p className="text-caption text-foreground-muted">

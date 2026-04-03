@@ -1,57 +1,39 @@
-# Task Report — TASK-010: Update GuestDetailPanel with `onUpdate` and `onDelete` Callbacks
+# Task Report — TASK-010: Replace SVG in SearchInput
 
 ## Status: DONE
 
 ## File Modified
 
-- `src/components/organisms/GuestDetailPanel.tsx`
+- `src/components/atoms/SearchInput.tsx`
 
-## Implementation Details
+## Changes
 
-### New Imports
-
-- `useState` from `react`
-- `ConfirmDialog` from `../molecules/ConfirmDialog`
-
-### Updated Props Interface
+### Import Added
 
 ```typescript
-interface Props {
-  guest: Guest
-  onClose: () => void
-  onUpdate: () => void
-  onDelete: () => void
-}
+import { LuSearch } from 'react-icons/lu'
 ```
 
-### Component State
+### SVG Replaced
 
-- `showDeleteDialog` — boolean state controlling visibility of the delete confirmation dialog
+The inline SVG block (14 lines) was replaced with a single `LuSearch` icon component:
 
-### Button Changes (both mobile and desktop)
+```tsx
+<LuSearch size={16} className="text-foreground-muted" />
+```
 
-Three buttons now rendered in each action bar:
+The `size={16}` and `className="text-foreground-muted"` props preserve the same dimensions and color styling as the original SVG.
 
-| Button  | Style           | Behavior                                              |
-| ------- | --------------- | ----------------------------------------------------- |
-| CONTACT | `btn-secondary` | Non-functional (unchanged, out of scope)              |
-| DELETE  | `bg-red-600`    | Opens `ConfirmDialog` via `setShowDeleteDialog(true)` |
-| UPDATE  | `btn-primary`   | Calls `onUpdate` prop                                 |
+### Before → After Summary
 
-- DELETE button uses `type="button"` and full Tailwind classes: `bg-red-600 hover:bg-red-700 text-white flex-1 px-5 py-2.5 rounded font-semibold text-sm cursor-pointer focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2`
-- Button order: CONTACT, DELETE, UPDATE
+| Aspect     | Before                                               | After                                        |
+| ---------- | ---------------------------------------------------- | -------------------------------------------- |
+| Element    | Inline `<svg>` with `<circle>` and `<path>` children | `<LuSearch>` component from `react-icons/lu` |
+| Size       | `width="16" height="16"`                             | `size={16}`                                  |
+| Color      | `className="text-foreground-muted"`                  | `className="text-foreground-muted"`          |
+| Line count | 14 lines (SVG block)                                 | 1 line                                       |
 
-### ConfirmDialog Integration
-
-Rendered conditionally at the end of the component JSX (inside the fragment, after `</aside>`):
-
-- `title="CONFIRM_DELETION"`
-- `targetName` composed from `guest.firstName` and `guest.lastName`
-- `message` warns about irreversible deletion
-- `onConfirm` wired to `onDelete` prop
-- `onCancel` hides the dialog via `setShowDeleteDialog(false)`
-
-### Conventions Followed
+## Conventions Followed
 
 - No semicolons
 - Single quotes
@@ -61,6 +43,5 @@ Rendered conditionally at the end of the component JSX (inside the fragment, aft
 
 ## Verification
 
-- TypeScript compilation passes with zero errors (`npx tsc --noEmit`)
-- Both mobile and desktop button sections updated identically
-- ConfirmDialog import resolves (TASK-004 dependency already complete)
+- No LSP/TypeScript errors in the modified file
+- Visual appearance preserved (same size and color class)

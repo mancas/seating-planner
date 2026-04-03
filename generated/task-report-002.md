@@ -1,45 +1,30 @@
-# Task Report: TASK-002 — Create Guest Store
-
-## Task
-
-Create the localStorage-backed data layer (`src/data/guest-store.ts`) that replaces direct consumption of `mock-guests.ts`. Exports CRUD functions and stat helpers.
+# Task Report: TASK-002
 
 ## Status: COMPLETED
 
 ## Changes Made
 
-### Files Created
+| File                                            | Action   | Description                                                                                                                   |
+| ----------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `src/components/organisms/GuestDetailPanel.tsx` | Modified | Added `import { LuX, LuGift, LuBus, LuHotel } from 'react-icons/lu'`                                                          |
+| `src/components/organisms/GuestDetailPanel.tsx` | Modified | Replaced mobile close button inline SVG (line 28-40) with `<LuX size={20} />`                                                 |
+| `src/components/organisms/GuestDetailPanel.tsx` | Modified | Replaced desktop close button inline SVG (line 70-82) with `<LuX size={20} />`                                                |
+| `src/components/organisms/GuestDetailPanel.tsx` | Modified | Replaced gift icon inline SVG (line 186-202) with `<LuGift size={16} className="text-foreground-muted shrink-0" />`           |
+| `src/components/organisms/GuestDetailPanel.tsx` | Modified | Replaced shuttle/bus icon inline SVG (line 222-236) with `<LuBus size={16} className="text-foreground-muted shrink-0" />`     |
+| `src/components/organisms/GuestDetailPanel.tsx` | Modified | Replaced lodging/hotel icon inline SVG (line 251-266) with `<LuHotel size={16} className="text-foreground-muted shrink-0" />` |
 
-1. **`src/data/guest-store.ts`** (new) — localStorage-backed guest data store with:
-   - Type re-exports: `Guest`, `GuestStatus` (using `import type`)
-   - Storage key: `seating-plan:guests`
-   - Internal helpers: `readFromStorage()` and `writeToStorage()` with in-memory fallback
-   - CRUD operations: `getGuests`, `getGuestById`, `addGuest`, `updateGuest`, `deleteGuest`
-   - Stat helpers: `getConfirmedCount`, `getPendingCount`, `getConfirmationRate`, `getDietaryFlagCount`, `getTotalGuests`, `getWaitlistCount`, `getGuestsByTable`
+## Acceptance Criteria
 
-### Implementation Details
+| Criterion                                                     | Status |
+| ------------------------------------------------------------- | ------ |
+| All 5 inline SVGs replaced with react-icons Lucide components | PASS   |
+| Import statement added for LuX, LuGift, LuBus, LuHotel        | PASS   |
+| No semicolons, single quotes, trailing commas, 2-space indent | PASS   |
+| TypeScript compiles with zero errors (`npx tsc --noEmit`)     | PASS   |
+| File reduced from 282 lines to 214 lines (68 lines removed)   | PASS   |
 
-- **UUID generation**: Uses `v4` from `uuid` package for new guest IDs
-- **Deep merge**: `updateGuest` performs nested spread for `dietary` and `logistics` objects to avoid overwriting unspecified nested fields
-- **Division-by-zero guard**: `getConfirmationRate` returns `0` when there are no guests
-- **In-memory fallback**: When `localStorage` is unavailable (SSR, quota exceeded), falls back to an in-memory `Guest[]` array
-- **All named exports**: No default export; all functions and types are named exports
+## Notes
 
-## Conventions Verified
-
-| Convention                          | Status |
-| ----------------------------------- | ------ |
-| No semicolons                       | PASS   |
-| Single quotes                       | PASS   |
-| Trailing commas                     | PASS   |
-| 2-space indent                      | PASS   |
-| `import type` for type-only imports | PASS   |
-| Named exports only (no default)     | PASS   |
-| Explicit return types               | PASS   |
-
-## Validation
-
-| Check              | Result                                                                 |
-| ------------------ | ---------------------------------------------------------------------- |
-| `npx tsc --noEmit` | PASS — zero errors                                                     |
-| Scope isolation    | PASS — only `src/data/guest-store.ts` created; no other files modified |
+- The file was reduced by 68 lines (282 -> 214) by replacing verbose inline SVG markup with concise react-icons components.
+- Both mobile and desktop close buttons share the same `LuX` component.
+- Icon sizing preserved: close buttons use `size={20}`, detail icons use `size={16}` with `text-foreground-muted shrink-0` classes.

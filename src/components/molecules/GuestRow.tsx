@@ -1,3 +1,4 @@
+import { LuEllipsis } from 'react-icons/lu'
 import type { Guest } from '../../data/mock-guests'
 import Avatar from '../atoms/Avatar'
 import StatusBadge from '../atoms/StatusBadge'
@@ -43,11 +44,7 @@ function GuestRow({ guest, isSelected, onClick }: Props) {
           {guest.tableAssignment ?? '- - -'}
         </span>
         <IconButton label="Actions">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <circle cx="4" cy="8" r="1.5" />
-            <circle cx="8" cy="8" r="1.5" />
-            <circle cx="12" cy="8" r="1.5" />
-          </svg>
+          <LuEllipsis size={16} />
         </IconButton>
       </div>
 

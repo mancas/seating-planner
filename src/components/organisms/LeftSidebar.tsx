@@ -1,3 +1,4 @@
+import { LuUserPlus } from 'react-icons/lu'
 import SidebarNavItem from '../molecules/SidebarNavItem'
 
 interface Props {
@@ -27,20 +28,7 @@ function LeftSidebar({ onAddGuest }: Props) {
           className="btn-primary w-full flex items-center justify-center gap-2"
           onClick={onAddGuest}
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="6" cy="5" r="2.5" />
-            <path d="M1 14c0-2.76 2.24-5 5-5 .87 0 1.69.22 2.4.62" />
-            <path d="M12.5 10v4M10.5 12h4" />
-          </svg>
+          <LuUserPlus size={16} />
           ADD GUEST
         </button>
         <p className="text-caption text-foreground-muted hover:text-foreground cursor-pointer mt-3 text-center">

@@ -1,3 +1,4 @@
+import { LuSettings } from 'react-icons/lu'
 import NavLink from '../atoms/NavLink'
 import SearchInput from '../atoms/SearchInput'
 import IconButton from '../atoms/IconButton'
@@ -46,19 +47,7 @@ function TopNav({
           <SearchInput value={searchQuery} onChange={onSearchChange} />
         </div>
         <IconButton label="Settings">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="10" cy="10" r="3" />
-            <path d="M10 1.5v2M10 16.5v2M18.5 10h-2M3.5 10h-2M15.95 4.05l-1.41 1.41M5.46 14.54l-1.41 1.41M15.95 15.95l-1.41-1.41M5.46 5.46L4.05 4.05" />
-          </svg>
+          <LuSettings size={20} />
         </IconButton>
         <Avatar firstName="John" lastName="Doe" size="sm" />
       </div>

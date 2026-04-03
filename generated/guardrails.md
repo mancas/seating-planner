@@ -108,3 +108,22 @@ Lessons learned and constraints established from validated specs.
 
 **Rule**: Custom modal/dialog components must include: `role="alertdialog"` or `role="dialog"`, `aria-modal="true"`, `aria-labelledby` pointing to the title element, an `onKeyDown` handler for Escape key to close, and ideally focus trapping.
 **Reason**: The `ConfirmDialog` component lacked these standard accessibility patterns. While not flagged as blocking for the initial implementation, these are important for WCAG compliance and should be added for any production modal.
+
+---
+
+## From: Replace Icons with react-icons (2026-04-03)
+
+### G-20: Use a Single Icon Family for Consistency
+
+**Rule**: All icons must come from a single `react-icons` sub-package (currently `react-icons/lu` — Lucide). Do not mix icon families (e.g., don't use `ri` icons alongside `lu` icons) unless there is an explicit design justification.
+**Reason**: Mixing icon families produces inconsistent stroke widths, corner radii, and visual weight across the UI. The Nought Cobalt design system uses a clean, stroke-based aesthetic that aligns well with Lucide's consistent 2px stroke style.
+
+### G-21: Verify Icon Export Names Against the Actual Package
+
+**Rule**: Before specifying an icon component name in a spec or task, verify the export exists in the target `react-icons` sub-package by checking the library's documentation or source. Icon names may differ between the upstream icon library and the `react-icons` export (e.g., Lucide's `square-pen` is exported as `LuSquarePen`, not `LuPenSquare`).
+**Reason**: The spec's icon mapping listed `LuPenSquare` which does not exist in `react-icons/lu`. The developer correctly used `LuSquarePen` instead, but the discrepancy between spec and implementation creates confusion for future reviewers.
+
+### G-22: Use `size` Prop for Icon Dimensions, Not CSS Width/Height
+
+**Rule**: Set icon dimensions via the `size` prop on `react-icons` components (e.g., `<LuX size={20} />`), not via CSS `w-*`/`h-*` classes. Only fall back to CSS sizing when matching an existing pattern that already uses CSS classes for the same element.
+**Reason**: The `size` prop directly sets the SVG's `width` and `height` attributes, which is the canonical react-icons API. Using CSS classes introduces an indirection layer and may conflict with the component's default `1em` sizing.

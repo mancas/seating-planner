@@ -1,33 +1,31 @@
-# Task Report — TASK-009: Update LeftSidebar with `onAddGuest` Callback
+# Task Report — TASK-009: Replace SVG in FAB
 
 ## Status: COMPLETE
 
 ## Summary
 
-Modified `LeftSidebar` to accept an `onAddGuest` callback prop and wire it to the ADD GUEST button, replacing the previous no-op `onClick` handler.
+Replaced the inline add-user SVG icon in `FAB.tsx` with the `LuUserPlus` icon from `react-icons/lu`.
 
 ## File Modified
 
-- `src/components/organisms/LeftSidebar.tsx`
+- `src/components/atoms/FAB.tsx`
 
 ## Changes Made
 
-1. Added `Props` interface with `onAddGuest: () => void`
-2. Updated function signature to destructure `{ onAddGuest }` from `Props`
-3. Replaced `onClick={() => {}}` with `onClick={onAddGuest}` on the ADD GUEST button
+1. Added import: `import { LuUserPlus } from 'react-icons/lu'`
+2. Replaced the 15-line inline `<svg>` block (user-plus icon) with `<LuUserPlus size={24} />`
+3. File reduced from 32 lines to 20 lines
 
 ## Conventions Followed
 
 - No semicolons
 - Single quotes for imports
 - 2-space indentation
-- `Props` interface declared above function declaration
-- Props destructured in function parameters
 - Function declaration (not arrow)
 - Default export
 
 ## Verification
 
 - No LSP errors in modified file
-- All existing styling, icon SVG, and button text preserved unchanged
-- Only the specified changes were made — no other modifications
+- Icon size preserved at 24px via `size` prop
+- All existing button styling, aria-label, and onClick handler preserved unchanged

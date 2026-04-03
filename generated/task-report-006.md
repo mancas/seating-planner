@@ -1,62 +1,39 @@
-# Task Report — TASK-006: Create GuestForm Organism
+# Task Report — TASK-006: Replace SVGs in BottomTabBar
 
 ## Status: COMPLETE
 
-## File Created
+## File Modified
 
-- `src/components/organisms/GuestForm.tsx`
+- `src/components/organisms/BottomTabBar.tsx`
 
 ## Implementation Summary
 
-Created the `GuestForm` organism component — a full add/edit guest form with react-hook-form integration, five form sections, conditional fields, and action buttons.
+Replaced all 4 inline SVGs in `BottomTabBar` with Lucide icons from `react-icons/lu`.
 
-### Props
+### Changes
 
-| Prop       | Type                                | Description                        |
-| ---------- | ----------------------------------- | ---------------------------------- |
-| `guest`    | `Guest \| undefined`                | Guest to edit (undefined for add)  |
-| `onSubmit` | `(data: Omit<Guest, 'id'>) => void` | Called with transformed guest data |
-| `onDelete` | `(id: string) => void \| undefined` | Called to delete guest (edit only) |
-| `onCancel` | `() => void`                        | Called when cancel button clicked  |
+| Tab    | Before (inline SVG)     | After                       |
+| ------ | ----------------------- | --------------------------- |
+| Canvas | 13-line edit-square SVG | `<LuSquarePen size={16} />` |
+| Guests | 13-line user SVG        | `<LuUser size={16} />`      |
+| Tools  | 12-line wrench SVG      | `<LuWrench size={16} />`    |
+| More   | 5-line ellipsis SVG     | `<LuEllipsis size={16} />`  |
 
-### Form Structure
+### Import Added
 
-- **Mode detection**: `isEdit = !!guest` determines add vs edit mode
-- **react-hook-form**: `useForm<GuestFormValues>` with `register`, `handleSubmit`, `watch`, `setValue`, `formState: { errors }`
-- **Default values**: Flattened from `Guest` type for edit mode, empty strings/false/PENDING for add mode
+```tsx
+import { LuSquarePen, LuUser, LuWrench, LuEllipsis } from 'react-icons/lu'
+```
 
-### Form Sections
+### Note on Icon Name
 
-1. **IDENTITY_MATRIX** — firstName (required), lastName (required), role
-2. **STATUS_CLASSIFICATION** — status (select, required), accessLevel
-3. **SEATING_ALLOCATION** — tableAssignment, seatNumber (number input)
-4. **DIETARY_PROTOCOL** — dietaryType, dietaryNotes (textarea)
-5. **LOGISTICS_CONFIG** — shuttleRequired (Toggle), shuttleFrom (conditional), lodgingBooked (Toggle), lodgingVenue (conditional)
+The task specified `LuPenSquare` but this export does not exist in `react-icons/lu`. The correct export name is `LuSquarePen`, which renders the same pen-in-square (edit) icon. Used `LuSquarePen` instead.
 
-### Conditional Fields
+### File Size Reduction
 
-- `shuttleFrom` input shown only when `shuttleRequired` is true (via `watch`)
-- `lodgingVenue` input shown only when `lodgingBooked` is true (via `watch`)
-
-### Submit Handler
-
-Transforms flat `GuestFormValues` into nested `Omit<Guest, 'id'>` structure:
-
-- Empty strings converted to `null` for optional fields
-- `seatNumber` parsed from string to `number | null` via `parseInt`
-- Nested `dietary` and `logistics` objects reconstructed
-
-### Action Buttons
-
-- CANCEL — calls `onCancel`
-- DELETE — shown only in edit mode, opens `ConfirmDialog`
-- SAVE_ENTRY — submits the form
-
-### Delete Confirmation
-
-- Uses `ConfirmDialog` molecule with `showDeleteDialog` state
-- Displays guest full name as target
-- Calls `onDelete?.(guest!.id)` on confirm
+- Before: 88 lines (with verbose inline SVGs)
+- After: 42 lines (with icon components)
+- Reduction: 46 lines (52%)
 
 ## Conventions Followed
 
@@ -64,12 +41,9 @@ Transforms flat `GuestFormValues` into nested `Omit<Guest, 'id'>` structure:
 - Single quotes
 - 2-space indentation
 - Trailing commas
-- Function declaration (`function GuestForm`)
-- Default export (`export default GuestForm`)
-- No barrel files
-- Relative imports for all local modules
+- Function declaration (`function BottomTabBar`)
+- Default export (`export default BottomTabBar`)
 
 ## Verification
 
-- TypeScript type-check (`tsc --noEmit`): **PASS** — zero GuestForm-specific errors
-- Pre-existing LSP errors in `App.tsx` are unrelated to this task
+- TypeScript type-check (`tsc --noEmit`): **PASS** — zero errors
