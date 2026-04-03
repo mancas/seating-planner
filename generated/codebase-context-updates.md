@@ -1,176 +1,87 @@
 # Codebase Context Updates
 
-Updates to `generated/codebase-context.md` based on the validated Guest CRUD Flow implementation.
+Updates to `generated/codebase-context.md` based on validated implementations.
 
 ---
 
-## New Guardrails Added (G-15 through G-19)
+## From: Guest CRUD Flow (2026-04-03) — APPROVED
 
-### G-15: Form Inputs with Validation Must Include `aria-invalid`
+### New Guardrails Added (G-15 through G-19)
 
-**Rule**: Any form input with validation must include `aria-invalid`. Error message elements must use `role="alert"`.
-**Source**: GuestForm's firstName/lastName inputs lacked `aria-invalid`; FormError lacked `role="alert"`.
-
-### G-16: Avoid `setState` Inside `useEffect` — Use Synchronous State Adjustment
-
-**Rule**: Prefer the "adjusting state during render" pattern over `useEffect` with `setState` for state derived from navigation/props.
-**Source**: `setSelectedGuestId` inside `useEffect` in App.tsx caused ESLint error and cascading renders.
-
-### G-17: Single Source of Truth for Data Transformations
-
-**Rule**: Filtering/sorting should happen in exactly one place. Don't duplicate transformations across parent and child.
-**Source**: Search filtering was applied in both App.tsx and GuestTable.tsx.
-
-### G-18: Delete Unused Component Files
-
-**Rule**: If a component is created but never imported, delete it. Dead code increases cognitive load.
-**Source**: SelectInput.tsx and TextareaInput.tsx were created but never used.
-
-### G-19: Custom Modal Dialogs Need Keyboard and ARIA Support
-
-**Rule**: Modals must include `role="alertdialog"`, `aria-modal="true"`, `aria-labelledby`, and Escape key handling.
-**Source**: ConfirmDialog lacked standard modal accessibility patterns.
+- **G-15**: Form inputs with validation must include `aria-invalid`. Error messages use `role="alert"`.
+- **G-16**: Avoid `setState` inside `useEffect` — use synchronous state adjustment during render.
+- **G-17**: Single source of truth for data transformations.
+- **G-18**: Delete unused component files.
+- **G-19**: Custom modal dialogs need keyboard and ARIA support.
 
 ---
 
-## Sections to Update in `generated/codebase-context.md`
+## From: Replace Icons with react-icons (2026-04-03) — APPROVED
 
-### 1. Update Key Dependencies table
+### New Guardrails Added (G-20 through G-22)
 
-Add these new entries:
+- **G-20**: Use a single icon family (Lucide `react-icons/lu`).
+- **G-21**: Verify icon export names against actual package.
+- **G-22**: Use `size` prop for icon dimensions.
 
-| Library         | Version | Purpose                                       |
-| --------------- | ------- | --------------------------------------------- |
-| react-hook-form | ^7.x    | Form state management, validation, submission |
-| uuid            | ^11.x   | UUID v4 generation for guest IDs              |
-| @types/uuid     | ^10.x   | TypeScript types for uuid (devDependency)     |
+---
 
-### 2. Update "Prior Spec Decisions" — Guest CRUD Flow status
+## From: Seating Canvas (2026-04-03) — CHANGES_REQUESTED (Iteration 1)
 
-Change:
+### New Guardrails Added (G-23 through G-26)
 
-```
-### Spec: Guest CRUD Flow (`spec/guest-crud-flow.md`) — Status: Draft (Confirmed, awaiting implementation)
-```
+- **G-23**: Data store function signatures must match their intended contract. Use `Partial<Pick<T, ...>>` to be explicit.
+- **G-24**: Spec is the authoritative reference for literal values. Do not substitute alternatives.
+- **G-25**: G-16 applies even when `useEffect` seems justified — the ESLint rule blocks regardless.
+- **G-26**: Collapse identical conditional branches, even if functionally correct due to aliasing.
 
-To:
+### Key Dependencies to Add
 
-```
-### Spec: Guest CRUD Flow (`spec/guest-crud-flow.md`) — Status: In Progress (Iteration 1 — CHANGES_REQUESTED)
-```
+| Library              | Version | Purpose                                                                |
+| -------------------- | ------- | ---------------------------------------------------------------------- |
+| @dnd-kit/react       | ^0.3.2  | Drag-and-drop for guest assignment, seat swapping, table repositioning |
+| react-zoom-pan-pinch | ^3.7.0  | Canvas pan and zoom with TransformWrapper/TransformComponent           |
 
-### 3. Update "Data fetching" in Architectural Patterns
-
-Replace:
-
-```
-- **Data fetching**: None (mock data). `src/data/mock-guests.ts` exports typed `Guest` interface, `GuestStatus` type, 6 mock guests, and stat helper functions...
-```
-
-With:
-
-```
-- **Data fetching**: localStorage-backed persistence. `src/data/guest-store.ts` provides CRUD operations (`getGuests`, `getGuestById`, `addGuest`, `updateGuest`, `deleteGuest`) and stat helpers. Reads/writes `Guest[]` to localStorage under key `"seating-plan:guests"`. In-memory fallback if localStorage unavailable. Type definitions remain in `src/data/mock-guests.ts`. App starts with empty guest list (no mock data seeding).
-```
-
-### 4. Update "Routing Architecture"
-
-Replace:
-
-```
-- `main.tsx` wraps `<App />` in `<BrowserRouter>` from `react-router`
-- `App.tsx` uses `useSearchParams` for tab switching at root `/`
-- Supported tabs: `guests` (default), `canvas`, `tools`, `more`
-- Invalid tab values fall back to `guests`
-- No sub-route definitions currently exist — the entire app renders at `/`
-```
-
-With:
-
-```
-- `main.tsx` defines route tree: `<BrowserRouter>` wraps `<Routes>` with `<App />` as layout route
-- Routes: index (`/`), `/guests/new` (AddGuestPage), `/guests/:id/edit` (EditGuestPage)
-- `App.tsx` is the layout component using `<Outlet />` for child routes
-- `App.tsx` uses `useSearchParams` for tab switching at root `/`
-- Supported tabs: `guests` (default), `canvas`, `tools`, `more`
-- Invalid tab values fall back to `guests`
-- Child route data passed via Outlet context (`guests`, `onAdd`, `onUpdate`, `onDelete`, `onCancel`)
-- Page components in `src/pages/` directory (new convention for route-level components)
-```
-
-### 5. Update "State management" in Architectural Patterns
-
-Replace:
-
-```
-- **State management**: Local component state via `useState` in `App.tsx`. No global state library. `App` owns `selectedGuestId`, `searchQuery`, and `activeTab` (via `useSearchParams`). Data and callbacks passed down as props.
-```
-
-With:
-
-```
-- **State management**: Local component state via `useState` in `App.tsx`. No global state library. `App` owns `guests` (synced with localStorage via guest-store), `selectedGuestId`, `searchQuery`, and `activeTab` (via `useSearchParams`). CRUD operations update both localStorage and React state. Data and callbacks passed down as props (direct children) and Outlet context (route children).
-```
-
-### 6. Update "Current File Structure"
-
-Add new files to the structure:
+### New Files Added
 
 ```
 src/
-├── App.css                    (empty)
-├── App.tsx                    (layout route, tab routing, state management, CRUD callbacks)
-├── index.css                  (design system: tokens, theme, base styles, utilities, components)
-├── main.tsx                   (entry point: StrictMode + BrowserRouter + Routes + layout route)
 ├── data/
-│   ├── mock-guests.ts         (Guest/GuestStatus types, mock data array, stat helpers — types only used)
-│   └── guest-store.ts         (NEW: localStorage CRUD, stat helpers, in-memory fallback)
-├── pages/
-│   ├── AddGuestPage.tsx       (NEW: thin wrapper for add guest route)
-│   └── EditGuestPage.tsx      (NEW: thin wrapper for edit guest route with redirect)
+│   ├── table-types.ts          (NEW: FloorTable, SeatAssignment, TableShape, sizing functions, NATO labels)
+│   ├── table-store.ts          (NEW: localStorage CRUD for tables, assignment, swap, clear)
+│   └── dnd-types.ts            (NEW: drag/drop type discriminators, coordinate conversion utility)
+├── hooks/
+│   └── useTableState.ts        (NEW: custom hook extracting table state management from App)
 └── components/
     ├── atoms/
-    │   ├── Avatar.tsx
-    │   ├── FAB.tsx
-    │   ├── FormError.tsx       (NEW: inline validation error message)
-    │   ├── IconButton.tsx
-    │   ├── NavLink.tsx
-    │   ├── SearchInput.tsx
-    │   ├── StatCard.tsx
-    │   ├── StatusBadge.tsx
-    │   ├── StatusIcon.tsx
-    │   ├── TabBarItem.tsx
-    │   └── Toggle.tsx          (NEW: on/off toggle switch)
+    │   ├── SeatIndicator.tsx    (NEW: seat dot — empty/occupied/selected/drop-target/swap-target)
+    │   ├── ShapeToggle.tsx      (NEW: RECTANGULAR/CIRCULAR toggle button group)
+    │   └── CanvasStatusBar.tsx  (NEW: static ZOOM/LAYER display)
     ├── molecules/
-    │   ├── ConfirmDialog.tsx   (NEW: modal confirmation dialog)
-    │   ├── FormField.tsx       (NEW: label + input + error stack)
-    │   ├── FormSection.tsx     (NEW: section heading + grouped fields)
-    │   ├── GuestDetailSection.tsx
-    │   ├── GuestRow.tsx
-    │   ├── SidebarNavItem.tsx
-    │   └── TableGroupHeader.tsx
+    │   ├── CanvasToolbar.tsx    (NEW: floating 4-tool toolbar with select/pan/add-circle/add-rect)
+    │   ├── CanvasTable.tsx      (NEW: table rendering — shape, badge, label, guest count, seats, rotation)
+    │   └── SeatAssignmentPopover.tsx (NEW: assign/unassign guest popover anchored to seat)
     └── organisms/
-        ├── BottomTabBar.tsx
-        ├── EmptyState.tsx      (NEW: empty guest list placeholder)
-        ├── GuestDetailPanel.tsx (MODIFIED: onUpdate/onDelete props, DELETE button)
-        ├── GuestForm.tsx       (NEW: add/edit form with react-hook-form)
-        ├── GuestListFooterStats.tsx
-        ├── GuestListHeader.tsx
-        ├── GuestTable.tsx
-        ├── LeftSidebar.tsx     (MODIFIED: onAddGuest callback prop)
-        └── TopNav.tsx
+        ├── SeatingCanvas.tsx    (NEW: main canvas with TransformWrapper, DnD context, tool state)
+        └── CanvasPropertiesPanel.tsx (NEW: right sidebar for table properties — label, shape, seats, rotation)
 ```
 
-### 7. Update "Guardrails and Lessons Learned"
+### Modified Files
 
-Replace:
+- `src/App.tsx` — Added table state via `useTableState` hook, SeatingCanvas rendering for canvas tab, CanvasPropertiesPanel, guest deletion cascade to table assignments, sidebar context props
+- `src/components/organisms/LeftSidebar.tsx` — Added `activeTab` prop, conditional LAYOUT/OBJECTS active state, ADD TABLE button, unassigned guests list
+
+### Update "Prior Spec Decisions" — Seating Canvas Status
+
+Change status from "Draft" to "In Progress":
 
 ```
-See `generated/guardrails.md` for 14 guardrails established from the Nought Cobalt design system and Guest List Screen implementations...
+### Spec: Seating Canvas — Status: In Progress (2026-04-03)
 ```
 
-With:
+### Architectural Patterns — New Patterns
 
-```
-See `generated/guardrails.md` for 19 guardrails established from the Nought Cobalt design system, Guest List Screen, and Guest CRUD Flow implementations, covering Tailwind v4 configuration, CSS variable namespacing, dark mode policy, migration safety, accessibility requirements, component development patterns, form validation accessibility, state management patterns, data transformation ownership, dead code prevention, and modal dialog accessibility.
-```
+- **Custom hooks**: `useTableState` extracts table CRUD logic from `App.tsx` to reduce component complexity. Returns state + wrapped callbacks.
+- **Table data layer**: `table-store.ts` follows the `guest-store.ts` pattern (G-17 compliant). Separate localStorage keys: `seating-plan:tables` and `seating-plan:table-counter`.
+- **Coordinate conversion**: `dnd-types.ts` provides `screenToCanvas()` to translate viewport coordinates to canvas coordinates accounting for pan/zoom transform.
+- **Canvas interaction model**: Tool-based state machine (`select`/`pan`/`add-circle`/`add-rectangle`). DnD and table interaction gated on `select` tool. Auto-revert to `select` after table placement.

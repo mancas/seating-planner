@@ -127,3 +127,27 @@ Lessons learned and constraints established from validated specs.
 
 **Rule**: Set icon dimensions via the `size` prop on `react-icons` components (e.g., `<LuX size={20} />`), not via CSS `w-*`/`h-*` classes. Only fall back to CSS sizing when matching an existing pattern that already uses CSS classes for the same element.
 **Reason**: The `size` prop directly sets the SVG's `width` and `height` attributes, which is the canonical react-icons API. Using CSS classes introduces an indirection layer and may conflict with the component's default `1em` sizing.
+
+---
+
+## From: Seating Canvas (2026-04-03)
+
+### G-23: Data Store Function Signatures Must Match Their Intended Contract
+
+**Rule**: When a data store function is designed to accept certain fields for updates, the TypeScript type signature must accurately reflect which fields are accepted. Do not use `Omit` to accidentally exclude fields that should be updatable. Prefer `Partial<Pick<T, ...>>` to be explicit about which fields are accepted.
+**Reason**: `table-store.ts` `updateTable` used `Omit<FloorTable, 'id' | 'badgeId' | 'label'>` which excluded `label` from the type. The function worked at runtime (JavaScript ignores TypeScript types), but the type contract told consumers `label` was not updatable — contradicting the spec. Always verify that `Omit` and `Pick` types include/exclude exactly the intended fields.
+
+### G-24: Spec Is the Authoritative Reference for Literal Values
+
+**Rule**: When the spec defines specific literal values (string constants, padding numbers, default counts), use those exact values. Do not substitute alternatives — even technically correct ones — without explicit spec amendment.
+**Reason**: The implementation used `'ALFA'` (correct NATO spelling) instead of the spec's `'ALPHA'`, `padStart(3, '0')` instead of `padStart(2, '0')`, and default `seatCount: 6` instead of `8`. Each deviation was individually small but collectively undermined spec compliance. The spec is the contract.
+
+### G-25: G-16 Applies Even When `useEffect` Seems Justified
+
+**Rule**: The `react-hooks/set-state-in-effect` ESLint rule will block the pre-commit hook for ANY synchronous `setState` inside `useEffect`, regardless of justification. Always use the synchronous "adjusting state during render" pattern instead, even for resetting form state when a prop (like `table.id`) changes.
+**Reason**: `CanvasPropertiesPanel` used `useEffect` to reset form state when the selected table changed, with a comment explaining why it was acceptable. The ESLint rule still flagged it as an error, blocking commits. The "adjusting state during render" pattern (tracking `prevTableId` in state, comparing during render) achieves the same result without triggering the rule.
+
+### G-26: Collapse Identical Conditional Branches
+
+**Rule**: Extends G-12. When an if/else or ternary has identical branches, collapse them into a single unconditional block — even if the code is functionally correct due to aliasing or side effects. Identical branches confuse reviewers and suggest incomplete implementation.
+**Reason**: `swapSeats` had identical if/else branches with a comment "Re-read target table in case source and target are the same table." While the aliasing made both branches functionally correct, the identical code violated G-12 and was misleading.

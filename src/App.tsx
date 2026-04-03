@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useSearchParams, useNavigate, useLocation, Outlet } from 'react-router'
+import { DragDropProvider } from '@dnd-kit/react'
 import {
   getGuests,
   addGuest as storeAddGuest,
@@ -7,6 +8,16 @@ import {
   deleteGuest as storeDeleteGuest,
 } from './data/guest-store'
 import type { Guest } from './data/mock-guests'
+import { DRAG_TYPE_GUEST, DRAG_TYPE_SEAT } from './data/dnd-types'
+import type {
+  DragGuestData,
+  DragSeatData,
+  DropSeatData,
+  DropTableData,
+} from './data/dnd-types'
+import SeatingCanvas from './components/organisms/SeatingCanvas'
+import CanvasPropertiesPanel from './components/organisms/CanvasPropertiesPanel'
+import { useTableState } from './hooks/useTableState'
 import TopNav from './components/organisms/TopNav'
 import LeftSidebar from './components/organisms/LeftSidebar'
 import GuestListHeader from './components/organisms/GuestListHeader'
@@ -45,6 +56,19 @@ function App() {
     window.history.replaceState({}, '')
   }
 
+  const {
+    tables,
+    selectedTableId: selectedCanvasTableId,
+    setSelectedTableId: setSelectedCanvasTableId,
+    handleAddTable,
+    handleUpdateTable,
+    handleDeleteTable,
+    handleAssignGuest,
+    handleUnassignSeat,
+    handleSwapSeats,
+    handleClearGuestAssignments,
+  } = useTableState()
+
   const handleAddGuest = useCallback(
     (data: Omit<Guest, 'id'>) => {
       storeAddGuest(data)
@@ -65,12 +89,13 @@ function App() {
 
   const handleDeleteGuest = useCallback(
     (id: string) => {
+      handleClearGuestAssignments(id)
       storeDeleteGuest(id)
       setGuests(getGuests())
       setSelectedGuestId(null)
       navigate('/?tab=guests', { replace: true })
     },
-    [navigate],
+    [navigate, handleClearGuestAssignments],
   )
 
   const handleNavigateToAdd = useCallback(() => {
@@ -103,6 +128,168 @@ function App() {
     return fullName.includes(searchQuery.toLowerCase())
   })
 
+  const selectedCanvasTable =
+    tables.find((t) => t.id === selectedCanvasTableId) ?? null
+
+  const handleSidebarAddTable = useCallback(() => {
+    handleAddTable({ shape: 'rectangular', seatCount: 8, x: 400, y: 300 })
+  }, [handleAddTable])
+
+  // DnD drag-end handler (lifted here so sidebar + canvas share the same DragDropProvider)
+  const handleDragEnd = useCallback(
+    (event: {
+      operation: {
+        source: { data: Record<string, unknown> } | null
+        target: { data: Record<string, unknown> } | null
+      }
+    }) => {
+      const { source, target } = event.operation
+      if (!source || !target) return
+
+      const sourceData = source.data as Record<string, unknown>
+      const targetData = target.data as Record<string, unknown>
+
+      if (sourceData.type === DRAG_TYPE_GUEST && 'seatIndex' in targetData) {
+        // Guest dropped on a seat
+        const guestData = sourceData as unknown as DragGuestData
+        const seatData = targetData as unknown as DropSeatData
+        handleAssignGuest(
+          seatData.tableId,
+          seatData.seatIndex,
+          guestData.guestId,
+        )
+      } else if (
+        sourceData.type === DRAG_TYPE_SEAT &&
+        'seatIndex' in targetData
+      ) {
+        // Seat dropped on another seat — swap
+        const seatSrc = sourceData as unknown as DragSeatData
+        const seatTgt = targetData as unknown as DropSeatData
+        handleSwapSeats(
+          seatSrc.tableId,
+          seatSrc.seatIndex,
+          seatTgt.tableId,
+          seatTgt.seatIndex,
+        )
+      } else if (
+        sourceData.type === DRAG_TYPE_GUEST &&
+        'tableId' in targetData &&
+        !('seatIndex' in targetData)
+      ) {
+        // Guest dropped on table body — find first empty seat
+        const guestData = sourceData as unknown as DragGuestData
+        const tableData = targetData as unknown as DropTableData
+        const table = tables.find((t) => t.id === tableData.tableId)
+        if (table) {
+          const occupiedSeats = new Set(table.seats.map((s) => s.seatIndex))
+          for (let i = 0; i < table.seatCount; i++) {
+            if (!occupiedSeats.has(i)) {
+              handleAssignGuest(tableData.tableId, i, guestData.guestId)
+              break
+            }
+          }
+        }
+      }
+    },
+    [tables, handleAssignGuest, handleSwapSeats],
+  )
+
+  const canvasContent = (
+    <>
+      <LeftSidebar
+        activeTab={activeTab}
+        onAddGuest={handleNavigateToAdd}
+        onAddTable={handleSidebarAddTable}
+        guests={guests}
+        tables={tables}
+      />
+      <main
+        className={`flex-1 flex flex-col ${activeTab === 'canvas' ? 'overflow-hidden' : 'overflow-y-auto'} pb-16 md:pb-0`}
+      >
+        <SeatingCanvas
+          tables={tables}
+          guests={guests}
+          selectedTableId={selectedCanvasTableId}
+          onSelectTable={setSelectedCanvasTableId}
+          onAddTable={handleAddTable}
+          onUpdateTable={handleUpdateTable}
+          onDeleteTable={handleDeleteTable}
+          onAssignGuest={handleAssignGuest}
+          onUnassignSeat={handleUnassignSeat}
+          onSwapSeats={handleSwapSeats}
+        />
+      </main>
+      {selectedCanvasTable && !isChildRoute && (
+        <CanvasPropertiesPanel
+          table={selectedCanvasTable}
+          onUpdate={(data) => handleUpdateTable(selectedCanvasTable.id, data)}
+          onDelete={() => handleDeleteTable(selectedCanvasTable.id)}
+          onClose={() => setSelectedCanvasTableId(null)}
+        />
+      )}
+    </>
+  )
+
+  const defaultContent = (
+    <>
+      <LeftSidebar
+        activeTab={activeTab}
+        onAddGuest={handleNavigateToAdd}
+        onAddTable={handleSidebarAddTable}
+        guests={guests}
+        tables={tables}
+      />
+      <main className={`flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0`}>
+        {isChildRoute ? (
+          <Outlet
+            context={{
+              guests,
+              onAdd: handleAddGuest,
+              onUpdate: handleUpdateGuest,
+              onDelete: handleDeleteGuest,
+              onCancel: () => navigate(-1),
+            }}
+          />
+        ) : activeTab === 'guests' ? (
+          guests.length === 0 ? (
+            <EmptyState onAddGuest={handleNavigateToAdd} />
+          ) : (
+            <>
+              <GuestListHeader
+                confirmedCount={confirmedCount}
+                pendingCount={pendingCount}
+                totalGuests={totalGuests}
+                waitlistCount={waitlistCount}
+              />
+              <GuestTable
+                guests={filteredGuests}
+                selectedGuestId={selectedGuestId}
+                onGuestClick={onGuestClick}
+                searchQuery={searchQuery}
+              />
+              <GuestListFooterStats
+                confirmationRate={confirmationRate}
+                dietaryFlagCount={dietaryFlagCount}
+              />
+            </>
+          )
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-foreground-muted text-label tracking-wider">
+            {activeTab.toUpperCase()} // MODULE_OFFLINE
+          </div>
+        )}
+      </main>
+      {selectedGuest && activeTab === 'guests' && !isChildRoute && (
+        <GuestDetailPanel
+          guest={selectedGuest}
+          onClose={() => setSelectedGuestId(null)}
+          onUpdate={() => handleNavigateToEdit(selectedGuest.id)}
+          onDelete={() => handleDeleteGuest(selectedGuest.id)}
+        />
+      )}
+    </>
+  )
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <TopNav
@@ -112,54 +299,12 @@ function App() {
         onSearchChange={setSearchQuery}
       />
       <div className="flex flex-1 overflow-hidden">
-        <LeftSidebar onAddGuest={handleNavigateToAdd} />
-        <main className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0">
-          {isChildRoute ? (
-            <Outlet
-              context={{
-                guests,
-                onAdd: handleAddGuest,
-                onUpdate: handleUpdateGuest,
-                onDelete: handleDeleteGuest,
-                onCancel: () => navigate(-1),
-              }}
-            />
-          ) : activeTab === 'guests' ? (
-            guests.length === 0 ? (
-              <EmptyState onAddGuest={handleNavigateToAdd} />
-            ) : (
-              <>
-                <GuestListHeader
-                  confirmedCount={confirmedCount}
-                  pendingCount={pendingCount}
-                  totalGuests={totalGuests}
-                  waitlistCount={waitlistCount}
-                />
-                <GuestTable
-                  guests={filteredGuests}
-                  selectedGuestId={selectedGuestId}
-                  onGuestClick={onGuestClick}
-                  searchQuery={searchQuery}
-                />
-                <GuestListFooterStats
-                  confirmationRate={confirmationRate}
-                  dietaryFlagCount={dietaryFlagCount}
-                />
-              </>
-            )
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-foreground-muted text-label tracking-wider">
-              {activeTab.toUpperCase()} // MODULE_OFFLINE
-            </div>
-          )}
-        </main>
-        {selectedGuest && activeTab === 'guests' && !isChildRoute && (
-          <GuestDetailPanel
-            guest={selectedGuest}
-            onClose={() => setSelectedGuestId(null)}
-            onUpdate={() => handleNavigateToEdit(selectedGuest.id)}
-            onDelete={() => handleDeleteGuest(selectedGuest.id)}
-          />
+        {activeTab === 'canvas' && !isChildRoute ? (
+          <DragDropProvider onDragEnd={handleDragEnd}>
+            {canvasContent}
+          </DragDropProvider>
+        ) : (
+          defaultContent
         )}
       </div>
       {!isChildRoute && <FAB onClick={handleNavigateToAdd} label="Add guest" />}

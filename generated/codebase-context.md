@@ -4,7 +4,7 @@
 
 - **Language(s)**: TypeScript ~5.9.3 (strict mode, ES2023 target)
 - **Framework**: React ^19.2.4
-- **Runtime**: Node.js v22.14.0 (ESM, `"type": "module"`)
+- **Runtime**: Node.js (ESM, `"type": "module"`)
 - **Build Tool**: Vite ^8.0.1
 - **CSS Framework**: TailwindCSS ^4.2.2 (CSS-first config via `@tailwindcss/vite` plugin, no `tailwind.config.js`)
 - **Routing**: React Router ^7.14.0 (BrowserRouter, nested routes + `useSearchParams` for tab switching)
@@ -18,6 +18,7 @@
 | react-dom                    | ^19.2.4  | React DOM rendering                                                 |
 | react-router                 | ^7.14.0  | Client-side routing (BrowserRouter, nested routes, useSearchParams) |
 | react-hook-form              | ^7.72.1  | Form state management and validation for guest CRUD                 |
+| react-icons                  | ^5.6.0   | Icon library (Lucide `lu` family used exclusively)                  |
 | uuid                         | ^13.0.0  | UUID v4 generation for guest IDs                                    |
 | tailwindcss                  | ^4.2.2   | Utility-first CSS framework (v4 CSS-first config)                   |
 | @tailwindcss/vite            | ^4.2.2   | Vite plugin for TailwindCSS v4                                      |
@@ -40,13 +41,14 @@
 - **File organization**: Atomic design structure: `src/components/atoms/` (11 components), `src/components/molecules/` (7 components), `src/components/organisms/` (9 components). Pages in `src/pages/`. Data layer in `src/data/`. No barrel `index.ts` files.
 - **Import style**: Relative imports (`../../data/mock-guests`, `../atoms/Avatar`); no path aliases configured
 - **Type imports**: `import type { X }` required by `verbatimModuleSyntax`
-- **Component style**: Function declarations (`function App()`) with default exports
+- **Component style**: Function declarations (`function App()`) with default exports. No arrow function components.
 - **Semicolons**: None (Prettier `semi: false`)
 - **Quotes**: Single quotes (Prettier `singleQuote: true`)
 - **Trailing commas**: All (Prettier `trailingComma: "all"`)
 - **Print width**: 80 characters
 - **Tab width**: 2 spaces
 - **Prop interfaces**: Named `Props` (local to file), defined above the component function
+- **Icons**: All from `react-icons/lu` (Lucide). Use `size` prop for dimensions. No mixing icon families.
 
 ### Linter/Formatter
 
@@ -68,7 +70,7 @@
 
 - **Structure**: Single-page application (SPA) with React + BrowserRouter. App shell with nested route layout: `<App>` is a layout route rendering `<Outlet>` for child routes (`/guests/new`, `/guests/:id/edit`). Query-param tab switching at root `/` (`/?tab=guests`, `/?tab=canvas`, `/?tab=tools`, `/?tab=more`). Three-panel desktop layout (TopNav, LeftSidebar, main content + optional GuestDetailPanel). Mobile layout with bottom tab bar, FAB, and table-grouped guest list. Responsive breakpoint at 768px (`md:` Tailwind prefix).
 - **State management**: Local component state via `useState` in `App.tsx`. No global state library. `App` owns `guests` (read from localStorage on mount), `selectedGuestId`, `searchQuery`, and `activeTab` (via `useSearchParams`). Data and callbacks passed down as props. Child routes receive data via `useOutletContext`.
-- **Data layer**: `src/data/guest-store.ts` — localStorage-backed CRUD module. Reads/writes `Guest[]` under key `"seating-plan:guests"`. Exports `getGuests`, `getGuestById`, `addGuest`, `updateGuest`, `deleteGuest`, and stat helper functions. Uses `uuid` v4 for ID generation. Has in-memory fallback if localStorage is unavailable. `src/data/mock-guests.ts` retains the `Guest` interface, `GuestStatus` type, and mock data array (used as reference data, not consumed at runtime).
+- **Data layer**: `src/data/guest-store.ts` — localStorage-backed CRUD module. Reads/writes `Guest[]` under key `"seating-plan:guests"`. Exports `getGuests`, `getGuestById`, `addGuest`, `updateGuest`, `deleteGuest`, and stat helper functions (`getConfirmedCount`, `getPendingCount`, `getConfirmationRate`, `getDietaryFlagCount`, `getTotalGuests`, `getWaitlistCount`, `getGuestsByTable`). Uses `uuid` v4 for ID generation. Has in-memory fallback (`memoryFallback`) if localStorage is unavailable. Types (`Guest`, `GuestStatus`) defined in `mock-guests.ts` and re-exported from `guest-store.ts`.
 - **Data fetching**: None — client-only with localStorage persistence.
 - **Error handling**: Minimal. localStorage read/write wrapped in try/catch with silent fallback. No global error boundary. No error reporting.
 - **Styling approach**: Nought Cobalt design system. Tailwind utility classes in JSX for all component styling. `src/index.css` provides design tokens via `@theme` (Tailwind utilities) and `:root` (`--nc-*` CSS custom properties), base element styles, typography `@utility` classes, and component base styles in `@layer components`. `src/App.css` is empty.
@@ -94,34 +96,34 @@ src/
 └── components/
     ├── atoms/
     │   ├── Avatar.tsx          (circular initials, sm/md/lg sizes)
-    │   ├── FAB.tsx             (floating action button, mobile-only)
-    │   ├── FormError.tsx       (form validation error message)
-    │   ├── IconButton.tsx      (icon-only button with a11y)
-    │   ├── NavLink.tsx         (top nav link with active underline)
-    │   ├── SearchInput.tsx     (search input with icon)
+    │   ├── FAB.tsx             (floating action button, mobile-only, LuUserPlus icon)
+    │   ├── FormError.tsx       (form validation error message, role="alert")
+    │   ├── IconButton.tsx      (icon-only button with aria-label, focus-visible)
+    │   ├── NavLink.tsx         (top nav link with active cobalt underline)
+    │   ├── SearchInput.tsx     (search input with LuSearch icon)
     │   ├── StatCard.tsx        (label + value card, optional mobile border)
-    │   ├── StatusBadge.tsx     (CONFIRMED/PENDING/DECLINED text badge)
-    │   ├── StatusIcon.tsx      (checkmark/ellipsis icon, mobile-only)
+    │   ├── StatusBadge.tsx     (CONFIRMED/PENDING/DECLINED text badge with variant classes)
+    │   ├── StatusIcon.tsx      (LuCircleCheck/LuEllipsis icon, mobile-only)
     │   ├── TabBarItem.tsx      (bottom tab bar item with icon + label)
-    │   └── Toggle.tsx          (toggle switch for boolean form fields)
+    │   └── Toggle.tsx          (toggle switch, role="switch", aria-checked)
     ├── molecules/
-    │   ├── ConfirmDialog.tsx   (delete confirmation modal with dark overlay)
-    │   ├── FormField.tsx       (label + input wrapper for forms)
-    │   ├── FormSection.tsx     (section heading + children for form grouping)
-    │   ├── GuestDetailSection.tsx (labeled section in detail panel)
-    │   ├── GuestRow.tsx        (dual-layout: desktop table row / mobile compact row)
-    │   ├── SidebarNavItem.tsx  (sidebar nav item with active highlight)
+    │   ├── ConfirmDialog.tsx   (delete confirmation modal, LuTriangleAlert, dark overlay + backdrop-blur)
+    │   ├── FormField.tsx       (label + input wrapper + FormError for forms)
+    │   ├── FormSection.tsx     (bordered section heading + children for form grouping)
+    │   ├── GuestDetailSection.tsx (labeled section in detail panel, border-t divider)
+    │   ├── GuestRow.tsx        (dual-layout: desktop grid row / mobile compact row)
+    │   ├── SidebarNavItem.tsx  (sidebar nav item with active cobalt highlight + border-l)
     │   └── TableGroupHeader.tsx (location + table name + seats, mobile-only)
     └── organisms/
-        ├── BottomTabBar.tsx    (4-tab mobile nav bar, fixed bottom)
-        ├── EmptyState.tsx      (empty guest list with CTA to add)
-        ├── GuestDetailPanel.tsx (right detail panel, desktop + mobile overlay)
-        ├── GuestForm.tsx       (add/edit form with react-hook-form, all guest fields)
-        ├── GuestListFooterStats.tsx (3 stat cards, desktop-only)
-        ├── GuestListHeader.tsx (title + summary stats, responsive)
-        ├── GuestTable.tsx      (flat table desktop / grouped mobile)
-        ├── LeftSidebar.tsx     (nav items + ADD GUEST button, desktop-only)
-        └── TopNav.tsx          (brand + nav links + search + settings + avatar)
+        ├── BottomTabBar.tsx    (4-tab mobile nav bar, fixed bottom, Lucide icons)
+        ├── EmptyState.tsx      (empty guest list with LuDiamond + CTA to add)
+        ├── GuestDetailPanel.tsx (right detail panel, desktop aside + mobile full-screen overlay)
+        ├── GuestForm.tsx       (add/edit form with react-hook-form, all guest fields, delete dialog)
+        ├── GuestListFooterStats.tsx (3 stat cards with progress bar, desktop-only)
+        ├── GuestListHeader.tsx (title + summary stats, responsive desktop/mobile layouts)
+        ├── GuestTable.tsx      (flat table desktop / grouped mobile, search empty state)
+        ├── LeftSidebar.tsx     (nav items + ADD GUEST button, desktop-only, LuUserPlus icon)
+        └── TopNav.tsx          (brand + nav links + search + LuSettings + avatar)
 ```
 
 ### Routing Architecture
@@ -140,18 +142,31 @@ src/
 
 **`src/index.css`** (398 lines):
 
-- Line 1: `@import 'tailwindcss'` — top-level Tailwind v4 import
-- Lines 3–55: `@theme` block — gray scale (12 steps), cobalt accent scale (8 steps), semantic color aliases, font families, border radii
-- Lines 57–96: `:root` block — `--nc-*` namespaced CSS custom properties + `color-scheme: dark`
+- Line 1: `@import 'tailwindcss'` — top-level Tailwind v4 import (must stay first — G-1)
+- Lines 3–55: `@theme` block — gray scale (12 steps), cobalt accent scale (8 steps), semantic color aliases (`background`, `surface`, `surface-elevated`, `foreground`, `foreground-muted`, `foreground-heading`, `border`, `primary`, `primary-hover`, `primary-foreground`, `ring`, `muted`, `default`), font families, border radii
+- Lines 57–96: `:root` block — `--nc-*` namespaced CSS custom properties (parallel to `@theme` tokens) + `color-scheme: dark`
 - Lines 98–191: Base element styles — `html`, `body`, `h1`–`h5`, `p`, `code`, `#root`
-- Lines 193–276: Typography `@utility` classes — 12 utilities (`text-display` through `text-code`)
+- Lines 193–276: Typography `@utility` classes — 12 utilities (`text-display`, `text-heading-1` through `text-heading-5`, `text-body-lg`, `text-body`, `text-body-sm`, `text-caption`, `text-label`, `text-code`)
 - Lines 278–398: `@layer components` — 6 component base styles (`.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.card`, `.input`, `.badge`)
 
 ### Icons
 
-- Components currently use **inline `<svg>` elements** for all icons (18 total across 10 components)
-- `public/icons.svg` exists as a sprite file but is not referenced by any component
-- A confirmed spec (`replace-icons-with-react-icons`) plans to replace all inline SVGs with `react-icons` library components
+- All icons use **`react-icons/lu` (Lucide)** family exclusively
+- Icons used: `LuSearch`, `LuSettings`, `LuUserPlus`, `LuX`, `LuGift`, `LuBus`, `LuHotel`, `LuTriangleAlert`, `LuDiamond`, `LuPlus`, `LuSquarePen`, `LuUser`, `LuWrench`, `LuEllipsis`, `LuCircleCheck`
+- Sizing via `size` prop (not CSS width/height)
+- Color via Tailwind `className` (e.g., `text-foreground-muted`, `text-primary`)
+
+### Data Layer Pattern (Canonical: `guest-store.ts`)
+
+New stores should follow this pattern:
+
+1. Module-level `STORAGE_KEY` constant with namespaced key (`"seating-plan:<entity>"`)
+2. Private `readFromStorage()` / `writeToStorage()` functions with try/catch and memory fallback
+3. Exported CRUD functions: `getAll()`, `getById(id)`, `add(data)`, `update(id, data)`, `delete(id)`
+4. Exported stat/query helpers as needed
+5. Types defined separately (in a types file or co-located) and re-exported
+6. UUID v4 for ID generation
+7. No class — pure functional module
 
 ## Test Conventions
 
@@ -166,13 +181,20 @@ src/
 - **Pre-commit enforcement**: Prettier format check + ESLint run via Husky pre-commit hook
 - **No test suite**: No tests exist or are required by the pre-commit hook
 - **Entry point**: `index.html` → `src/main.tsx` → `App.tsx`
-- **Static assets**: SVG icons sprite at `public/icons.svg` (unused), favicon at `public/favicon.svg`
+- **Static assets**: `public/favicon.svg`
 - **Font loading**: Google Fonts preconnect + stylesheet links in `index.html` `<head>` for Space Grotesk (400, 500, 600, 700)
-- **Cyberpunk aesthetic**: All UI labels use uppercase, underscores, and technical-sounding codes (e.g., `REGISTRY.SYSTEM_V4`, `SEATING_01`, `PLANNER_V1.0`, `IDENTITY_MATRIX`, `STATUS_CLASSIFICATION`)
+- **Cyberpunk aesthetic**: All UI labels use uppercase, underscores, and technical-sounding codes (e.g., `REGISTRY.SYSTEM_V4`, `SEATING_01`, `PLANNER_V1.0`, `IDENTITY_MATRIX`, `STATUS_CLASSIFICATION`, `NO_RECORDS // INITIALIZE_DB`)
 - **Responsive pattern**: Single components adapt via Tailwind responsive utilities (`hidden md:block`, `md:hidden`, `md:flex`, etc.) — no separate mobile/desktop component files
-- **Form patterns**: `react-hook-form` with `register` + built-in validation (required, no schema library). `aria-invalid` on validated inputs. `role="alert"` on error messages.
-- **Data persistence**: localStorage under `"seating-plan:guests"` key. Empty list on fresh install (no mock data seeding).
-- **ID generation**: UUID v4 via `uuid` package for all guest records.
+- **Form patterns**: `react-hook-form` with `register` + built-in validation (required, no schema library). `aria-invalid` on validated inputs. `role="alert"` on error messages. Toggle for booleans with conditional child fields.
+- **Data persistence**: localStorage under namespaced keys (e.g., `"seating-plan:guests"`). Empty list on fresh install (no mock data seeding).
+- **ID generation**: UUID v4 via `uuid` package for all entity records.
+- **Component patterns observed**:
+  - Props interface named `Props`, always above the function
+  - No destructuring in function signature for simple components; destructured params for complex ones
+  - Variant styling via `Record<EnumType, string>` maps (see `StatusBadge.tsx`)
+  - Conditional CSS classes via template literals with ternaries
+  - `renderContent()` helper functions extracted for large JSX blocks within same file (see `GuestDetailPanel.tsx`)
+  - Dual mobile/desktop rendering within single component using `md:hidden` / `hidden md:block`
 
 ## Prior Spec Decisions
 
@@ -219,22 +241,37 @@ Key architectural decisions:
 3. **DD-3: localStorage data layer** — `src/data/guest-store.ts` with CRUD operations.
 4. **DD-4: localStorage key** — `"seating-plan:guests"`. JSON-serialized `Guest[]`.
 5. **DD-5: UUID v4 guest IDs** — Via `uuid` package.
-6. **DD-6: React state + localStorage sync** — App reads from store, CRUD updates both.
+6. **DD-6: React state + localStorage sync** — App reads from store, CRUD updates both (`setGuests(getGuests())`).
 7. **DD-7: Custom delete confirmation dialog** — Dark overlay modal. Red confirm button (exception to cobalt-only accent).
 8. **DD-8: Form field sections** — Cyberpunk section headings (IDENTITY_MATRIX, STATUS_CLASSIFICATION, etc.).
 9. **DD-9: Navigation after submission** — Add: `navigate('/?tab=guests', { replace: true })`. Edit: `navigate('/?tab=guests', { state: { selectedGuestId: id } })`.
-10. **DD-10: Empty state** — "NO_RECORDS // INITIALIZE_DATABASE" with CTA to `/guests/new`.
+10. **DD-10: Empty state** — "NO_RECORDS // INITIALIZE_DB" with CTA to `/guests/new`.
 11. **DD-11: Outlet context** — `App` passes `{ guests, onAdd, onUpdate, onDelete, onCancel }` via `<Outlet context>`.
 12. **DD-12: Single GuestForm** — Handles add (no `guest` prop) and edit (with `guest` prop, shows delete) modes.
 
-### Spec: Replace Icons with react-icons — Status: Confirmed (2026-04-03)
+### Spec: Replace Icons with react-icons — Status: Completed (2026-04-03)
 
-Planned changes (not yet implemented):
+Key decisions:
 
-1. Install `react-icons` as dependency.
-2. Replace all 18 inline `<svg>` elements across 10 components with `react-icons` equivalents.
-3. Target icon sets: Remix Icon (`ri`), Ionicons 5 (`io5`), Lucide (`lu`).
-4. Affected components: GuestDetailPanel (4 icons), ConfirmDialog (1), LeftSidebar (1), EmptyState (2), BottomTabBar (4), GuestRow (1), TopNav (2), FAB (1), SearchInput (1), GuestForm (1).
+1. **DD-1: Lucide icon family** — All icons use `react-icons/lu` (Lucide) exclusively for consistent 2px stroke style.
+2. **DD-2: `size` prop for dimensions** — Icon dimensions set via `size` prop, not CSS classes.
+3. **DD-3: Color via className** — Icon colors set via Tailwind `text-*` classes on the icon component.
+
+### Spec: Seating Canvas — Status: Draft (2026-04-03)
+
+Planned feature (not yet implemented):
+
+1. Interactive 2D floor plan editor for the Canvas tab (`/?tab=canvas`).
+2. Add/drag/select/delete rectangular and circular tables.
+3. Auto-sizing tables based on seat count (no manual resize handles).
+4. Guest assignment to seats via popover and drag-and-drop.
+5. Table rotation (0-359 degrees).
+6. Seat swapping via drag.
+7. Properties panel for editing selected table (label, shape, seat count).
+8. Toolbar with 4 tools: select, pan, add circle table, add rectangle table.
+9. Canvas panning via pan tool.
+10. New `src/data/table-store.ts` following `guest-store.ts` pattern with `"seating-plan:tables"` localStorage key.
+11. Canvas rendered via SVG (tables, seats, labels) with HTML overlay for toolbar and properties panel.
 
 ## Guardrails and Lessons Learned
 
@@ -300,3 +337,14 @@ If a component is created but never imported anywhere, delete it.
 
 **G-19: Custom Modal Dialogs Need Keyboard and ARIA Support**
 Modals must include: `role="alertdialog"` or `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, Escape key handler, and ideally focus trapping.
+
+### From: Replace Icons with react-icons (2026-04-03)
+
+**G-20: Use a Single Icon Family for Consistency**
+All icons must come from `react-icons/lu` (Lucide). Do not mix icon families unless there is an explicit design justification.
+
+**G-21: Verify Icon Export Names Against the Actual Package**
+Before specifying an icon component name, verify the export exists in the target `react-icons` sub-package.
+
+**G-22: Use `size` Prop for Icon Dimensions, Not CSS Width/Height**
+Set icon dimensions via the `size` prop on `react-icons` components, not via CSS `w-*`/`h-*` classes.
