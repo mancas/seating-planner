@@ -1,11 +1,25 @@
-import { LuUserPlus, LuPlus, LuGripVertical, LuUpload } from 'react-icons/lu'
+import { useState, useRef } from 'react'
+import {
+  LuUserPlus,
+  LuPlus,
+  LuGripVertical,
+  LuUpload,
+  LuDownload,
+} from 'react-icons/lu'
 import { useDraggable } from '@dnd-kit/react'
 import { useLocation, useNavigate } from 'react-router'
 import SidebarNavItem from '../molecules/SidebarNavItem'
+import ConfirmDialog from '../molecules/ConfirmDialog'
 import type { Guest } from '../../data/guest-types'
 import type { FloorTable } from '../../data/table-types'
 import { getUnassignedGuests } from '../../data/guest-utils'
 import { DRAG_TYPE_GUEST } from '../../data/dnd-types'
+import {
+  downloadProjectExport,
+  validateProjectImport,
+  applyProjectImport,
+} from '../../utils/project-export'
+import type { ProjectExport } from '../../utils/project-export'
 
 interface Props {
   onAddGuest: () => void
@@ -49,6 +63,56 @@ function LeftSidebar({
   const isCanvasView = location.pathname === '/seating-plan'
 
   const unassignedGuests = getUnassignedGuests(guests, tables)
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [importError, setImportError] = useState<string | null>(null)
+  const [pendingImport, setPendingImport] = useState<ProjectExport | null>(null)
+
+  function handleExport() {
+    downloadProjectExport()
+  }
+
+  function handleImportClick() {
+    setImportError(null)
+    fileInputRef.current?.click()
+  }
+
+  function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const content = reader.result as string
+      const parsed = validateProjectImport(content)
+      if (!parsed) {
+        setImportError(
+          'INVALID_FILE // THE SELECTED FILE IS NOT A VALID PROJECT EXPORT',
+        )
+        return
+      }
+      setImportError(null)
+      setPendingImport(parsed)
+    }
+    reader.onerror = () => {
+      setImportError(
+        'INVALID_FILE // THE SELECTED FILE IS NOT A VALID PROJECT EXPORT',
+      )
+    }
+    reader.readAsText(file)
+  }
+
+  function handleConfirmImport() {
+    if (!pendingImport) return
+    applyProjectImport(pendingImport)
+    setPendingImport(null)
+    window.location.reload()
+  }
+
+  function handleCancelImport() {
+    setPendingImport(null)
+  }
 
   return (
     <aside className="hidden md:flex flex-col min-w-55 bg-surface border-r border-border">
@@ -116,7 +180,48 @@ function LeftSidebar({
             )}
           </>
         )}
+
+        {/* Project actions separator */}
+        <div className="border-t border-border my-3" />
+
+        <button
+          className="btn-secondary w-full flex items-center justify-center gap-2"
+          onClick={handleExport}
+        >
+          <LuDownload size={16} />
+          EXPORT_PROJECT
+        </button>
+        <button
+          className="btn-secondary w-full flex items-center justify-center gap-2 mt-2"
+          onClick={handleImportClick}
+        >
+          <LuUpload size={16} />
+          IMPORT_PROJECT
+        </button>
+        {importError && (
+          <p className="text-caption text-red-400 mt-1">{importError}</p>
+        )}
       </div>
+
+      {pendingImport && (
+        <ConfirmDialog
+          title="IMPORT_PROJECT"
+          targetName="PROJECT_DATA"
+          message="This will replace all current data including guests, tables, and seating assignments. This action cannot be undone."
+          confirmLabel="CONFIRM_IMPORT"
+          cancelLabel="CANCEL"
+          onConfirm={handleConfirmImport}
+          onCancel={handleCancelImport}
+        />
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        className="hidden"
+        onChange={handleFileSelected}
+      />
     </aside>
   )
 }

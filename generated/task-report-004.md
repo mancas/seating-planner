@@ -1,38 +1,39 @@
-# Task Report — TASK-004: Create ImportGuestsView page + wire route in main.tsx
+# Task Report — TASK-004: Create ProjectActionsSheet Component
 
 ## Status: COMPLETE
 
 ## Files Created
 
-- `src/pages/ImportGuestsView.tsx` — New route-level page component for guest CSV import
-
-## Files Modified
-
-- `src/main.tsx` — Added import for `ImportGuestsView` and new route `guests/import`
+- `src/components/organisms/ProjectActionsSheet.tsx` — New vaul Drawer bottom sheet for project export/import actions
 
 ## Changes Made
 
-### `src/pages/ImportGuestsView.tsx` (CREATED)
+### `src/components/organisms/ProjectActionsSheet.tsx` (CREATED)
 
-- Created route-level view component following the same pattern as `GuestListView` and `SeatingPlanView`
-- Renders `LeftSidebar` with `onAddGuest` (navigates to `/guests/new`), `onAddTable` (navigates to `/seating-plan`), `guests`, and `tables` props
-- Renders `ImportGuestsPage` inside a `<main>` element with classes `flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0` (matching GuestListView)
-- Uses `useState(() => getGuests())` pattern (G-39) for guest state initialization
-- `onImportComplete` callback refreshes guest state via `setGuests(getGuests())`
-- Uses `import type` for type-only imports (`Guest`)
-- All callbacks wrapped in `useCallback` per project conventions
-
-### `src/main.tsx` (MODIFIED)
-
-- Added `import ImportGuestsView from './pages/ImportGuestsView.tsx'`
-- Added `<Route path="guests/import" element={<ImportGuestsView />} />` as a child of the `<App />` layout route, placed before the `GuestListView` layout route
-- No existing routes were modified
+- Created mobile bottom sheet component following the exact vaul Drawer pattern from `MobilePropertiesSheet` and `MobileGuestsSheet`
+- Uses same overlay (`z-40 bg-black/40`), content (`z-50 bg-surface rounded-t-2xl border-t border-border`), drag handle, and header with close button pattern
+- **State**: `importError` (string | null), `pendingImport` (ProjectExport | null)
+- **Ref**: `fileInputRef` for hidden file input element
+- **Handlers**:
+  - `handleExport`: calls `downloadProjectExport()` then `onClose()`
+  - `handleImportClick`: triggers `fileInputRef.current?.click()` without closing the sheet first
+  - `handleFileSelected`: reads file via FileReader, validates with `validateProjectImport()`, sets `pendingImport` on success or `importError` on failure, then closes sheet
+  - `handleConfirmImport`: calls `applyProjectImport(pendingImport)` then `window.location.reload()`
+  - `handleCancelImport`: clears `pendingImport` state
+- Renders two action buttons: "EXPORT_PROJECT" with `LuDownload` icon and "IMPORT_PROJECT" with `LuUpload` icon
+- Hidden file input placed outside `Drawer.Root` (outside the portal) so it persists when sheet closes
+- `ConfirmDialog` for import confirmation rendered when `pendingImport` is set
+- `ConfirmDialog` for error display rendered when `importError` is set
+- File input resets via `e.target.value = ''` so the same file can be re-selected
+- No semicolons, single quotes, 2-space indent per Prettier config
+- Default export per component convention
 
 ## Acceptance Criteria Verification
 
-- [x] Navigating to `/guests/import` renders ImportGuestsPage within the app shell
-- [x] The sidebar shows navigation items and the ADD GUEST button
-- [x] After successful import, sidebar data refreshes (via `setGuests(getGuests())` in `onImportComplete`)
-- [x] Existing routes (`/`, `/guests/new`, `/guests/:id/edit`, `/seating-plan`) unchanged
-- [x] The `main` area uses the same layout classes as GuestListView
-- [x] Files compile with `tsc -b` — verified, zero errors
+- [x] Sheet opens with drag handle, "PROJECT" header, close button
+- [x] "EXPORT_PROJECT" button triggers download and closes sheet
+- [x] "IMPORT_PROJECT" button opens file picker (without closing sheet first)
+- [x] Valid file shows ConfirmDialog; confirming writes to localStorage and reloads
+- [x] Invalid file shows error ConfirmDialog with "CLOSE" button
+- [x] Cancel/close dismisses without changes
+- [x] TypeScript compiles with zero errors in this file (`tsc --noEmit` verified)

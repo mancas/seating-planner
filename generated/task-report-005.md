@@ -1,37 +1,45 @@
 # Task Report: TASK-005
 
-## Task: Update `BottomTabBar` — route-based navigation
+## Task: Wire Up Mobile Project Actions in `App.tsx`
 
 ## Status: COMPLETED
 
 ## Changes Made
 
-### File: `src/components/organisms/BottomTabBar.tsx` (modified)
+### File: `src/App.tsx` (modified)
 
-Replaced prop-based tab switching with internal route-based navigation using React Router hooks.
+Added state management for the mobile project actions sheet, passed the callback to `TopNav`, and rendered `ProjectActionsSheet` conditionally behind an `isMobile` guard.
 
-**Removed:**
+**Added imports:**
 
-- `Props` interface (`activeTab: string`, `onTabChange: (tab: string) => void`)
-- Props from function signature
+- `useState` from `react`
+- `ProjectActionsSheet` from `./components/organisms/ProjectActionsSheet`
+- `useIsMobile` from `./hooks/useIsMobile`
 
-**Added:**
+**Added state (2 lines):**
 
-- Import `useLocation` and `useNavigate` from `react-router`
-- Derived `isCanvasView` from `location.pathname === '/seating-plan'`
+- `const [isProjectSheetOpen, setIsProjectSheetOpen] = useState(false)`
+- `const isMobile = useIsMobile()`
 
-**Updated TabBarItems:**
+**Updated `TopNav` invocation:**
 
-- CANVAS: `isActive={isCanvasView}`, `onClick={() => navigate('/seating-plan')}`
-- GUESTS: `isActive={!isCanvasView}`, `onClick={() => navigate('/')}`
-- TOOLS: `isActive={false}`, `onClick={() => {}}` (non-functional placeholder)
-- MORE: `isActive={false}`, `onClick={() => {}}` (non-functional placeholder)
+- `<TopNav onOpenProjectMenu={() => setIsProjectSheetOpen(true)} />`
+
+**Added conditional render after `<BottomTabBar />`:**
+
+```tsx
+{
+  isMobile && isProjectSheetOpen && (
+    <ProjectActionsSheet onClose={() => setIsProjectSheetOpen(false)} />
+  )
+}
+```
 
 ## Verification
 
 - [x] `npx tsc --noEmit` — passes with zero errors
-- [x] No `activeTab` or `onTabChange` props remain
-- [x] CANVAS tab navigates to `/seating-plan` and is active on that route
-- [x] GUESTS tab navigates to `/` and is active on all non-canvas routes
-- [x] TOOLS and MORE are always inactive with no-op click handlers
-- [x] Component is now self-contained with no external props
+- [x] On mobile, tapping the TopNav overflow icon opens `ProjectActionsSheet`
+- [x] Closing the sheet sets `isProjectSheetOpen` to `false`
+- [x] On desktop, the sheet is never rendered (`isMobile` guard)
+- [x] `App.tsx` remains concise — only 2 lines of state and 1 conditional render added, no business logic
+- [x] Code style: no semicolons, single quotes, 2-space indent

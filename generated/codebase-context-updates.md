@@ -1,79 +1,65 @@
-# Codebase Context Updates — Import Guests
+# Codebase Context Updates — Export & Import Project
 
-Updates to project structure and patterns based on the import-guests spec implementation (validation iteration 1).
+Updates to project structure and patterns based on the export-import-project spec implementation (validation iteration 1).
 
 ---
-
-## Route Architecture Update
-
-```
-<Route element={<App />}>                    ← layout: TopNav + Outlet + BottomTabBar
-  <Route path="guests/import" ... />         ← ImportGuestsView (NEW — standalone, sibling of GuestListView)
-  <Route element={<GuestListView />}>        ← layout: LeftSidebar + main + detail panel
-    <Route index element={null} />           ← guest list (rendered by GuestListView)
-    <Route path="guests/new" ... />          ← AddGuestPage (via Outlet context)
-    <Route path="guests/:id/edit" ... />     ← EditGuestPage (via Outlet context)
-  </Route>
-  <Route path="seating-plan" ... />          ← SeatingPlanView (standalone)
-</Route>
-```
-
-The `guests/import` route is placed **before** the `GuestListView` layout route so the static segment matches before the layout route's children. `ImportGuestsView` is a sibling of `GuestListView`, not a child, because it does not use `GuestListView`'s `OutletContext`.
 
 ## New Files
 
 ### Utility Module
 
-| File                                  | Purpose                                                                                                                                                                                                                                     |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/utils/csv-import.ts` (240 lines) | Pure TypeScript CSV template generation, parsing, and validation. Zero React dependencies. Exports: `generateTemplate()`, `parseCSV()`, `validateGuestRows()`, interfaces `ParsedRow`, `ImportError`, `GuestImportData`, `ValidationResult` |
+| File                                     | Purpose                                                                                                                                                                                       |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/utils/project-export.ts` (83 lines) | Pure TypeScript module for project export/import. Exports: `generateProjectExport()`, `validateProjectImport()`, `applyProjectImport()`, `downloadProjectExport()`, interface `ProjectExport` |
 
-**Note**: This is the first file in the new `src/utils/` directory, establishing it as the home for non-data utility modules (vs `src/data/` for data-layer utilities).
+Follows the same pure utility pattern as `csv-import.ts` — no React dependencies, named exports, `import type` for type-only imports.
 
 ### Components
 
-| File                                                        | Level    | Purpose                                                                                                                              |
-| ----------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `src/components/molecules/FileDropZone.tsx` (119 lines)     | Molecule | Generic drag-and-drop + click-to-select file upload area. Props: `onFileSelect`, `accept`, `selectedFileName`, `hasError`, `onReset` |
-| `src/components/organisms/ImportGuestsPage.tsx` (259 lines) | Organism | Full import workflow: template download, file upload via FileDropZone, CSV parsing/validation, guest creation, error/success display |
-| `src/pages/ImportGuestsView.tsx` (42 lines)                 | Page     | Route-level wrapper rendering LeftSidebar + ImportGuestsPage. Owns guest state for sidebar data refresh after import                 |
+| File                                                           | Level    | Purpose                                                                                                             |
+| -------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------- |
+| `src/components/organisms/ProjectActionsSheet.tsx` (143 lines) | Organism | Mobile vaul Drawer bottom sheet with export/import buttons. Follows MobilePropertiesSheet/MobileGuestsSheet pattern |
 
 ## Modified Files
 
-| File           | Change                                                                                                   |
-| -------------- | -------------------------------------------------------------------------------------------------------- |
-| `src/main.tsx` | Added import for `ImportGuestsView` and `<Route path="guests/import">` as first child of `<App />` route |
+| File                                       | Change                                                                                                                       |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `src/components/organisms/LeftSidebar.tsx` | Added export/import buttons, hidden file input, ConfirmDialog, inline error display. Self-contained import/export logic      |
+| `src/components/organisms/TopNav.tsx`      | Added optional `onOpenProjectMenu` prop, renders mobile-only overflow menu icon (`LuEllipsisVertical`) via `md:hidden`       |
+| `src/App.tsx`                              | Added `isProjectSheetOpen` state, `useIsMobile()` hook, passes callback to TopNav, conditionally renders ProjectActionsSheet |
 
-## New Patterns Established
+## Architecture Notes
 
-### Discriminated Union State Machine
+### Desktop vs Mobile Entry Points — Shared Utility
 
-`ImportGuestsPage` uses a discriminated union type (`ImportState`) with phases `idle`, `error`, and `success` to model the import workflow. Each phase carries its own data shape. This pattern is recommended for components with distinct UI phases.
+The export/import business logic lives entirely in `project-export.ts`. Both the desktop entry point (LeftSidebar) and mobile entry point (ProjectActionsSheet) call the same utility functions. No logic duplication.
 
-### Pure Utility Module Pattern
+### App.tsx State Addition
 
-`csv-import.ts` in `src/utils/` demonstrates the pure utility module pattern: exported functions with no React imports, no side effects, type-safe interfaces. This is the recommended pattern for business logic that should be independently testable.
+`App.tsx` now has 2 lines of UI state (`isProjectSheetOpen`, `isMobile`) and 1 conditional render. This is acceptable per G-40 (thin layout shell) since it's purely UI coordination state, not business logic. The App grew from 17 lines to 26 lines.
 
-### Blob Download Pattern
+### File Input Pattern
 
-The template download uses: generate string → `new Blob([csv], { type: 'text/csv' })` → `URL.createObjectURL()` → programmatic `<a>` click with `download` attribute → cleanup with `URL.revokeObjectURL()`. This is the standard client-side file download approach.
+Both LeftSidebar and ProjectActionsSheet use a hidden `<input type="file" accept=".json">` triggered programmatically. The input in ProjectActionsSheet is placed outside the `Drawer.Portal` to ensure it persists when the drawer closes.
 
 ## Component Counts Update
 
-- **Atoms**: 12 (unchanged)
-- **Molecules**: 11 (+1: FileDropZone)
-- **Organisms**: 16 (+1: ImportGuestsPage)
-- **Pages**: 5 (+1: ImportGuestsView)
-- **Utility modules**: 1 in `src/utils/` (csv-import.ts), 5 in `src/data/`
+- **Atoms**: 11 (unchanged)
+- **Molecules**: 11 (unchanged)
+- **Organisms**: 17 (+1: ProjectActionsSheet)
+- **Pages**: 5 (unchanged)
+- **Utility modules**: 2 in `src/utils/` (csv-import.ts, project-export.ts)
 
 ## New Guardrails
 
-- **G-42**: Always handle promise rejections from File API reads (`.catch()` on `file.text()`)
-- **G-43**: Interactive `<div>` elements need full keyboard support checklist: `tabIndex`, `role`, `onKeyDown`, `focus-visible` outline
+- **G-44**: Do not unmount components that own pending dialog state — parent must keep component mounted until dialogs complete
+- **G-45**: Use function declarations (not arrow expressions) for component handlers — consistency across all organisms
+- **G-46**: Always set `reader.onerror` alongside `reader.onload` when using FileReader (extends G-42)
 
 ## Validation Status
 
-**CHANGES_REQUESTED** — 2 MAJOR findings pending resolution:
+**CHANGES_REQUESTED** — 3 MAJOR findings pending resolution:
 
-1. M-1: Missing `.catch()` on `file.text().then()` (`ImportGuestsPage.tsx:73`)
-2. M-2: Missing keyboard accessibility on FileDropZone container (`FileDropZone.tsx:56-69`)
+1. MAJOR-1: ProjectActionsSheet unmounts before confirm/error dialogs render (mobile import broken)
+2. MAJOR-2: Missing `reader.onerror` handler in ProjectActionsSheet (G-42/G-46 violation)
+3. MAJOR-3: Arrow function handlers instead of function declarations (convention violation)

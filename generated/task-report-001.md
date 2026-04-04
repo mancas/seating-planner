@@ -1,40 +1,57 @@
-# Task Report: TASK-001 — Replace dietaryFlagCount with totalGifts and giftCount
+# Task Report: TASK-001 — Create `src/utils/project-export.ts`
 
 ## Status: COMPLETED
 
 ## Summary
 
-Modified `src/hooks/useGuestStats.ts` to remove the `dietaryFlagCount` computation and replace it with two new gift-related stats: `totalGifts` (sum of non-null gifts) and `giftCount` (count of non-null gifts).
+Created a pure utility module for project export/import functionality. The module handles generating export JSON from localStorage, validating imported file content, applying imported data back to localStorage, and triggering a browser file download.
 
-## File Modified
+## File Created
 
-- `src/hooks/useGuestStats.ts`
+- `src/utils/project-export.ts`
 
-## What Changed
+## What Was Implemented
 
-### Removed
+### Interface: `ProjectExport`
 
-- `dietaryFlagCount` computation: `guests.filter((g) => g.dietary.type !== null).length`
-- `dietaryFlagCount` from the return object
+- Exported interface with `version` (number), `exportedAt` (string), and `data` containing `guests` (Guest[]), `tables` (FloorTable[]), and `tableCounter` (number)
+- Uses `import type` for `Guest` and `FloorTable` per `verbatimModuleSyntax`
 
-### Added
+### Function: `generateProjectExport(): string`
 
-- `totalGifts` (line 11): `guests.reduce((sum, g) => sum + (g.gift ?? 0), 0)` — sums all non-null `gift` values using nullish coalescing
-- `giftCount` (line 12): `guests.filter((g) => g.gift !== null).length` — counts guests with a non-null gift
+- Reads three localStorage keys (`seating-plan:guests`, `seating-plan:tables`, `seating-plan:table-counter`)
+- Parses each or defaults to `[]`/`0`
+- Builds a `ProjectExport` object with `version: 1` and ISO timestamp
+- Returns pretty-printed JSON (`JSON.stringify` with 2-space indent)
 
-### Return object updated
+### Function: `validateProjectImport(content: string): ProjectExport | null`
 
-- Removed `dietaryFlagCount`
-- Added `totalGifts` and `giftCount`
+- Wraps `JSON.parse` in try/catch — returns `null` on parse failure
+- Validates `version === 1`, `data` is an object, `guests` and `tables` are arrays, `tableCounter` is a number
+- Returns the parsed `ProjectExport` if all checks pass, otherwise `null`
+
+### Function: `applyProjectImport(data: ProjectExport): void`
+
+- Writes all three localStorage keys from the provided `ProjectExport` data
+
+### Function: `downloadProjectExport(): void`
+
+- Calls `generateProjectExport()` to get JSON
+- Creates a Blob with `application/json` type
+- Generates filename in format `seating-plan-YYYY-MM-DD.json`
+- Creates temporary `<a>` element, triggers click download, cleans up
 
 ## Verification
 
-- `npx tsc --noEmit --strict src/hooks/useGuestStats.ts` — zero type errors
+- `npx tsc --noEmit --pretty src/utils/project-export.ts` — zero type errors
+- No LSP errors in the created file (pre-existing `role` errors in other files are unrelated)
 
 ## Acceptance Criteria Checklist
 
-- [x] `useGuestStats` no longer returns `dietaryFlagCount`
-- [x] `useGuestStats` returns `totalGifts` as a number (sum of non-null gifts)
-- [x] `useGuestStats` returns `giftCount` as a number (count of non-null gifts)
-- [x] Code compiles with TypeScript strict mode
-- [x] Code style: no semicolons, single quotes, arrow functions, trailing commas
+- [x] `generateProjectExport()` returns valid JSON string with `version: 1`, `exportedAt` ISO timestamp, and `data` containing guests/tables/tableCounter from localStorage
+- [x] `validateProjectImport()` returns `null` for invalid JSON, missing fields, wrong version, non-array guests/tables, non-number tableCounter
+- [x] `validateProjectImport()` returns the parsed `ProjectExport` for valid content
+- [x] `applyProjectImport()` writes all three localStorage keys
+- [x] `downloadProjectExport()` triggers a file download with the correct filename format
+- [x] Code style: no semicolons, single quotes, 2-space indent, `import type`, named exports only
+- [x] Pure utility module — no React dependencies

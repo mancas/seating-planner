@@ -1,36 +1,44 @@
-# Task Report — TASK-003: Wire totalGifts and giftCount through GuestListView
+# Task Report — TASK-003: Add Mobile Overflow Menu to TopNav
 
 ## Status: COMPLETE
 
 ## File Modified
 
-- `src/pages/GuestListView.tsx`
+- `src/components/organisms/TopNav.tsx`
 
 ## Changes Made
 
-### 1. Updated `useGuestStats` destructuring (lines 97-105)
+### 1. Added imports (lines 1-2)
 
-- Removed `dietaryFlagCount` from destructured properties
-- Added `totalGifts` and `giftCount` to destructured properties
+- Imported `LuEllipsisVertical` icon from `react-icons/lu`
+- Imported `IconButton` atom from `../atoms/IconButton`
 
-### 2. Updated `<GuestListFooterStats>` props (lines 151-155)
+### 2. Added `Props` interface and component parameter (lines 4-8)
 
-- Removed `dietaryFlagCount={dietaryFlagCount}` prop
-- Added `totalGifts={totalGifts}` prop
-- Added `giftCount={giftCount}` prop
+- Defined `Props` interface with optional `onOpenProjectMenu?: () => void` callback
+- Updated function signature from `TopNav()` to `TopNav({ onOpenProjectMenu }: Props)`
+
+### 3. Added overflow menu button in right section (lines 20-27)
+
+- Conditionally renders when `onOpenProjectMenu` is provided (backward compatible)
+- Wrapped in `<div className="md:hidden">` to hide on desktop (≥768px)
+- Uses `IconButton` with `label="Project menu"` for accessibility
+- Renders `LuEllipsisVertical` icon at `size={20}`
 
 ## Acceptance Criteria Verification
 
-| Criteria                                                           | Status |
-| ------------------------------------------------------------------ | ------ |
-| `dietaryFlagCount` is no longer destructured or referenced         | PASS   |
-| `totalGifts` and `giftCount` are destructured from `useGuestStats` | PASS   |
-| Both values are passed to `GuestListFooterStats`                   | PASS   |
-| No other references to `dietaryFlagCount` remain in file           | PASS   |
+| Criteria                                                              | Status |
+| --------------------------------------------------------------------- | ------ |
+| Overflow menu icon visible on mobile (<768px) via `md:hidden` wrapper | PASS   |
+| Icon hidden on desktop (≥768px) via `md:hidden`                       | PASS   |
+| Clicking icon calls `onOpenProjectMenu` callback                      | PASS   |
+| Icon not rendered when `onOpenProjectMenu` is not provided            | PASS   |
+| TypeScript compiles with no errors                                    | PASS   |
 
 ## Conventions Followed
 
 - No semicolons
 - Single quotes
 - 2-space indentation
-- Trailing commas
+- Default export
+- Function declaration (not arrow function)

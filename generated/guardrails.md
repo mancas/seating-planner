@@ -256,3 +256,22 @@ Lessons learned and constraints established from validated specs.
 
 **Rule**: When a `<div>` has `onClick` and `cursor-pointer` (acting as an interactive element), it must also have: `tabIndex={0}`, `role="button"`, an `onKeyDown` handler for Enter and Space keys, and `focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2` styling. This extends G-11 with a concrete checklist for non-semantic interactive elements.
 **Reason**: The `FileDropZone` component's outer `<div>` had `onClick` and `cursor-pointer` but no keyboard support. Keyboard-only users could not focus or activate the drop zone. While inner buttons (SELECT_FILE) were accessible, the primary interaction surface was not. Per G-8 and G-11, all interactive elements must be keyboard accessible with visible focus indicators.
+
+---
+
+## From: Export & Import Project (2026-04-04)
+
+### G-44: Do Not Unmount Components That Own Pending Dialog State
+
+**Rule**: If a component manages state for dialogs (confirmation, error, etc.) that must render after an async operation (e.g., file read), the parent must not unmount the component before those dialogs have been shown and dismissed. Conditionally rendering a component with `{condition && <Component />}` will destroy all its internal state when `condition` becomes `false`.
+**Reason**: `ProjectActionsSheet` called `onClose()` inside `handleFileSelected`, which unmounted the component in the parent via `isProjectSheetOpen = false`. The `pendingImport` and `importError` state set moments before was lost, and the `ConfirmDialog` instances never rendered. The mobile import flow was completely broken. The fix is to either: (a) use a local `drawerOpen` state to close the visual drawer while keeping the component mounted until dialogs complete, or (b) lift dialog state to the parent.
+
+### G-45: Consistent Function Declaration Style for Component Handlers
+
+**Rule**: Inside React component functions, use **function declarations** (`function handleClick() { ... }`) for event handlers and callbacks, not arrow function expressions (`const handleClick = () => { ... }`). This applies to all organisms, molecules, and atoms.
+**Reason**: `ProjectActionsSheet` used arrow function expressions for all handlers while every other organism in the codebase uses function declarations. The inconsistency confuses developers working across components and violates the project's implicit convention. When the same feature is implemented in two components (LeftSidebar + ProjectActionsSheet), handler style should match.
+
+### G-46: Always Set `reader.onerror` When Using FileReader (extends G-42)
+
+**Rule**: When using `FileReader.readAsText()` (or similar methods), always set both `reader.onload` and `reader.onerror`. This extends G-42 (which covers Promise-based File APIs) to the callback-based `FileReader` API.
+**Reason**: `ProjectActionsSheet` set `reader.onload` but not `reader.onerror`, leaving the user with no feedback if the file read fails. The identical operation in `LeftSidebar` correctly set both handlers. Always handle both success and error paths for file I/O operations.
