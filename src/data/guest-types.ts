@@ -4,7 +4,6 @@ export interface Guest {
   id: string
   firstName: string
   lastName: string
-  role: string
   status: GuestStatus
   accessLevel: string
   tableAssignment: string | null

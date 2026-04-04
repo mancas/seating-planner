@@ -13,7 +13,6 @@ export interface ImportError {
 export interface GuestImportData {
   firstName: string
   lastName: string
-  role: string
   status: GuestStatus
   dietary: {
     type: string | null
@@ -33,7 +32,6 @@ const VALID_STATUSES: readonly string[] = ['CONFIRMED', 'PENDING', 'DECLINED']
 const EXPECTED_HEADERS: Record<string, string> = {
   firstname: 'firstName',
   lastname: 'lastName',
-  role: 'role',
   status: 'status',
   dietarytype: 'dietaryType',
   dietarynotes: 'dietaryNotes',
@@ -41,7 +39,7 @@ const EXPECTED_HEADERS: Record<string, string> = {
 }
 
 export function generateTemplate(): string {
-  return 'firstName,lastName,role,status,dietaryType,dietaryNotes,gift\nJane,Doe,PRIORITY VIP,CONFIRMED,VEGAN,Severe nut allergy,250\n'
+  return 'firstName,lastName,status,dietaryType,dietaryNotes,gift\nJane,Doe,CONFIRMED,VEGAN,Severe nut allergy,250\n'
 }
 
 function splitCSVLine(line: string): string[] {
@@ -170,7 +168,6 @@ export function validateGuestRows(
     const lastName = (row['lastName'] ?? '').trim()
     const statusRaw = (row['status'] ?? '').trim()
     const giftRaw = (row['gift'] ?? '').trim()
-    const role = (row['role'] ?? '').trim()
     const dietaryType = (row['dietaryType'] ?? '').trim()
     const dietaryNotes = (row['dietaryNotes'] ?? '').trim()
 
@@ -222,7 +219,6 @@ export function validateGuestRows(
     guests.push({
       firstName,
       lastName,
-      role,
       status,
       dietary: {
         type: dietaryType === '' ? null : dietaryType,

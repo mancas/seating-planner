@@ -66,7 +66,6 @@ function renderContent(guest: Guest) {
         <h2 className="text-heading-4 text-foreground-heading">
           {guest.firstName} {guest.lastName}
         </h2>
-        <p className="text-body-sm text-foreground-muted mt-1">{guest.role}</p>
       </div>
 
       {/* Core Metadata */}

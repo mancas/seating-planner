@@ -9,7 +9,6 @@ import Toggle from '../atoms/Toggle'
 interface GuestFormValues {
   firstName: string
   lastName: string
-  role: string
   status: GuestStatus
   accessLevel: string
   tableAssignment: string
@@ -44,7 +43,6 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
       ? {
           firstName: guest.firstName,
           lastName: guest.lastName,
-          role: guest.role,
           status: guest.status,
           accessLevel: guest.accessLevel,
           tableAssignment: guest.tableAssignment ?? '',
@@ -60,7 +58,6 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
       : {
           firstName: '',
           lastName: '',
-          role: '',
           status: 'PENDING' as GuestStatus,
           accessLevel: '',
           tableAssignment: '',
@@ -84,7 +81,6 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
     const guestData: Omit<Guest, 'id'> = {
       firstName: values.firstName,
       lastName: values.lastName,
-      role: values.role || '',
       status: values.status,
       accessLevel: values.accessLevel || '',
       tableAssignment: values.tableAssignment || null,
@@ -160,14 +156,6 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
                   errors.lastName ? 'lastName-error' : undefined
                 }
                 {...register('lastName', { required: true })}
-              />
-            </FormField>
-            <FormField label="ROLE_DESIGNATION" htmlFor="role">
-              <input
-                id="role"
-                className="input w-full"
-                placeholder="E.G. PRIORITY VIP..."
-                {...register('role')}
               />
             </FormField>
           </FormSection>

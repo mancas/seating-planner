@@ -89,7 +89,6 @@ function ImportGuestsPage({ onImportComplete }: Props) {
             addGuest({
               firstName: guest.firstName,
               lastName: guest.lastName,
-              role: guest.role,
               status: guest.status,
               accessLevel: '',
               tableAssignment: null,
@@ -164,7 +163,7 @@ function ImportGuestsPage({ onImportComplete }: Props) {
               Download the CSV template, fill in guest data, then upload.
             </p>
             <p className="text-caption text-foreground-muted mt-3">
-              Columns: firstName, lastName, role, status, dietaryType,
+              Columns: firstName, lastName, status, dietaryType,
               dietaryNotes, gift
             </p>
             <button

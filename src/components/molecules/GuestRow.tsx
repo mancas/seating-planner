@@ -28,7 +28,6 @@ function GuestRowMobile({ guest, isSelected, onClick }: Props) {
           <p className="text-body-sm font-semibold text-foreground-heading uppercase">
             {guest.firstName}_{guest.lastName}
           </p>
-          <p className="text-caption text-foreground-muted">{guest.role}</p>
         </div>
         <StatusIcon status={guest.status} />
       </div>
