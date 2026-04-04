@@ -99,7 +99,8 @@ function GuestListView() {
     pendingCount,
     totalGuests,
     confirmationRate,
-    dietaryFlagCount,
+    totalGifts,
+    giftCount,
     waitlistCount,
   } = useGuestStats(guests)
 
@@ -149,7 +150,8 @@ function GuestListView() {
             />
             <GuestListFooterStats
               confirmationRate={confirmationRate}
-              dietaryFlagCount={dietaryFlagCount}
+              totalGifts={totalGifts}
+              giftCount={giftCount}
             />
           </>
         )}

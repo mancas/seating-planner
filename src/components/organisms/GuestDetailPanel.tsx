@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { LuX, LuGift, LuBus, LuHotel } from 'react-icons/lu'
+import { LuBus, LuGift, LuHotel, LuX } from 'react-icons/lu'
 import type { Guest } from '../../data/guest-types'
-import StatusBadge from '../atoms/StatusBadge'
 import IconButton from '../atoms/IconButton'
-import GuestDetailSection from '../molecules/GuestDetailSection'
+import StatusBadge from '../atoms/StatusBadge'
 import ConfirmDialog from '../molecules/ConfirmDialog'
+import GuestDetailSection from '../molecules/GuestDetailSection'
 
 interface Props {
   guest: Guest
@@ -32,7 +32,6 @@ function GuestDetailPanel({ guest, onClose, onUpdate, onDelete }: Props) {
 
         {/* Action buttons */}
         <div className="px-4 py-4 mt-auto border-t border-border flex gap-3 shrink-0">
-          <button className="btn-secondary flex-1">CONTACT</button>
           <button
             type="button"
             className="btn-destructive flex-1"

@@ -8,16 +8,16 @@ export function useGuestStats(guests: Guest[]) {
     const totalGuests = guests.length
     const confirmationRate =
       totalGuests > 0 ? Math.round((confirmedCount / totalGuests) * 100) : 0
-    const dietaryFlagCount = guests.filter(
-      (g) => g.dietary.type !== null,
-    ).length
+    const totalGifts = guests.reduce((sum, g) => sum + (g.gift ?? 0), 0)
+    const giftCount = guests.filter((g) => g.gift !== null).length
     const waitlistCount = pendingCount
     return {
       confirmedCount,
       pendingCount,
       totalGuests,
       confirmationRate,
-      dietaryFlagCount,
+      totalGifts,
+      giftCount,
       waitlistCount,
     }
   }, [guests])

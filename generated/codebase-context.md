@@ -379,7 +379,7 @@ Both must pass before commits are accepted.
 | `replace-icons-with-react-icons`     | All icons from `react-icons/lu` (Lucide); `size` prop for dimensions                                                                                                                               |
 | `import-guests` (confirmed, pending) | Dedicated route `/guests/import`; client-side CSV parsing (no external lib); all-or-nothing validation; `src/utils/csv-import.ts` utility module; FileDropZone molecule; ImportGuestsPage organism |
 
-## Guardrails (G-1 through G-41)
+## Guardrails (G-1 through G-43)
 
 Full guardrails documented in `generated/guardrails.md`. Summary by category:
 
@@ -436,3 +436,67 @@ Full guardrails documented in `generated/guardrails.md`. Summary by category:
 - **G-23**: Store function signatures must match intended contract
 - **G-24**: Spec is authoritative for literal values
 - **G-34**: Touch event listeners must accompany mouse listeners
+
+### File Hygiene
+
+- **G-42**: Handle Promise rejections from File API reads
+- **G-43**: Interactive `<div>` elements must have full keyboard support
+
+---
+
+## Feature-Specific Context: Replace DIETARY FLAGS with TOTAL GIFTS
+
+### Guest Model (`src/data/guest-types.ts`)
+
+The `Guest` interface includes a `gift: number | null` field — this is the value to aggregate for the new TOTAL GIFTS stat.
+
+### Current Stats Hook (`src/hooks/useGuestStats.ts`)
+
+Returns a memoized object with: `{ confirmedCount, pendingCount, totalGuests, confirmationRate, dietaryFlagCount, waitlistCount }`.
+
+- `dietaryFlagCount` = `guests.filter(g => g.dietary.type !== null).length`
+- **No `totalGifts` stat exists yet.**
+- The hook accepts `guests: Guest[]` and wraps computation in `useMemo`.
+
+### Current Footer Stats (`src/components/organisms/GuestListFooterStats.tsx`)
+
+Renders 3 `StatCard` components in a desktop-only grid (`hidden md:grid grid-cols-3`):
+
+1. **CONFIRMATION RATE** — progress bar + percentage
+2. **DIETARY FLAGS** — count + "Requires Action" caption ← **to be replaced with TOTAL GIFTS**
+3. **RSVP DEADLINE** — hardcoded `T-08D` + URGENT badge
+
+Props interface: `{ confirmationRate: number, dietaryFlagCount: number }`
+
+### StatCard Atom (`src/components/atoms/StatCard.tsx`)
+
+Props: `{ label: string, value: string | number, mobileBorder?: boolean, children?: ReactNode }`
+
+Renders a `.card` with label (uppercase, muted text-label), value (text-heading-3), and optional children slot.
+
+### Wiring in GuestListView (`src/pages/GuestListView.tsx`)
+
+- Calls `useGuestStats(guests)` at lines 97–104, destructuring all 6 stats.
+- Passes `confirmationRate` and `dietaryFlagCount` to `<GuestListFooterStats>` at lines 150–153.
+
+### Files to Modify
+
+| File                                                | Change                                                                                                        |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `src/hooks/useGuestStats.ts`                        | Add `totalGifts` computation (sum of non-null `gift` values); remove `dietaryFlagCount` if no other consumers |
+| `src/components/organisms/GuestListFooterStats.tsx` | Replace DIETARY FLAGS `StatCard` with TOTAL GIFTS; update Props interface (`dietaryFlagCount` → `totalGifts`) |
+| `src/pages/GuestListView.tsx`                       | Pass `totalGifts` instead of `dietaryFlagCount` to `<GuestListFooterStats>`                                   |
+
+### Consumer Analysis for `dietaryFlagCount`
+
+`dietaryFlagCount` is only consumed in `GuestListFooterStats` (passed from `GuestListView`). No other files reference it. Safe to remove from the hook return value and all prop interfaces per G-37 (remove dead exports after creating replacements) and G-29 (clean up vestigial props).
+
+### Relevant Guardrails
+
+| ID   | Rule                                             | Relevance                                                                        |
+| ---- | ------------------------------------------------ | -------------------------------------------------------------------------------- |
+| G-37 | Remove dead exports after creating replacements  | Remove `dietaryFlagCount` from `useGuestStats` return if fully replaced          |
+| G-29 | Clean up vestigial props after interface changes | Remove `dietaryFlagCount` prop from `GuestListFooterStats`                       |
+| G-17 | Single source of truth for data transformations  | Gift aggregation must happen in `useGuestStats`, not inline in the component     |
+| G-13 | Use design system typography classes             | Use `text-caption`, `text-heading-3`, `text-label` for the new stat card content |
+| G-4  | Dark mode only                                   | No light mode considerations                                                     |

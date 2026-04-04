@@ -2,10 +2,15 @@ import StatCard from '../atoms/StatCard'
 
 interface Props {
   confirmationRate: number
-  dietaryFlagCount: number
+  totalGifts: number
+  giftCount: number
 }
 
-function GuestListFooterStats({ confirmationRate, dietaryFlagCount }: Props) {
+function GuestListFooterStats({
+  confirmationRate,
+  totalGifts,
+  giftCount,
+}: Props) {
   return (
     <div className="hidden md:grid grid-cols-3 gap-4 px-6 py-4 mt-auto border-t border-border">
       <StatCard label="CONFIRMATION RATE" value={`${confirmationRate}%`}>
@@ -25,9 +30,12 @@ function GuestListFooterStats({ confirmationRate, dietaryFlagCount }: Props) {
         </div>
       </StatCard>
 
-      <StatCard label="DIETARY FLAGS" value={dietaryFlagCount}>
+      <StatCard
+        label="TOTAL GIFTS"
+        value={`€${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(totalGifts)}`}
+      >
         <p className="text-caption text-foreground-muted mt-1">
-          Requires Action
+          {giftCount > 0 ? `${giftCount} GIFTS RECEIVED` : 'NO_GIFTS_RECEIVED'}
         </p>
       </StatCard>
 
