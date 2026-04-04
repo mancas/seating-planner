@@ -1,24 +1,18 @@
-import { useParams, useOutletContext, useNavigate } from 'react-router'
-import { useEffect } from 'react'
-import type { OutletContext } from '../data/outlet-context'
+import { Navigate, useOutletContext, useParams } from 'react-router'
 import GuestForm from '../components/organisms/GuestForm'
+import type { OutletContext } from '../data/outlet-context'
 
 function EditGuestPage() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const { guests, onUpdate, onDelete, onCancel } =
     useOutletContext<OutletContext>()
 
   const guest = guests.find((g) => g.id === id)
 
   // Edge case: invalid/non-existent guest ID → silent redirect
-  useEffect(() => {
-    if (!guest) {
-      navigate('/', { replace: true })
-    }
-  }, [guest, navigate])
-
-  if (!guest) return null
+  if (!guest) {
+    return <Navigate to="/" replace />
+  }
 
   return (
     <GuestForm
