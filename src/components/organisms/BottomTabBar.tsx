@@ -1,4 +1,4 @@
-import { LuSquarePen, LuUser, LuWrench, LuEllipsis } from 'react-icons/lu'
+import { LuSquarePen, LuUser } from 'react-icons/lu'
 import { useLocation, useNavigate } from 'react-router'
 import TabBarItem from '../atoms/TabBarItem'
 
@@ -21,18 +21,6 @@ function BottomTabBar() {
           label="GUESTS"
           isActive={!isCanvasView}
           onClick={() => navigate('/')}
-        />
-        <TabBarItem
-          icon={<LuWrench size={16} />}
-          label="TOOLS"
-          isActive={false}
-          onClick={() => {}}
-        />
-        <TabBarItem
-          icon={<LuEllipsis size={16} />}
-          label="MORE"
-          isActive={false}
-          onClick={() => {}}
         />
       </div>
     </nav>

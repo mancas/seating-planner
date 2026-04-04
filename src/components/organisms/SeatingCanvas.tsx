@@ -1,17 +1,17 @@
-import { useState, useRef, useMemo } from 'react'
-import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import type { ReactZoomPanPinchContentRef } from 'react-zoom-pan-pinch'
-import type { FloorTable, TableShape } from '../../data/table-types'
+import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
+import { screenToCanvas } from '../../data/canvas-utils'
 import type { Guest } from '../../data/guest-types'
 import { getUnassignedGuests } from '../../data/guest-utils'
-import { screenToCanvas } from '../../data/canvas-utils'
-import CanvasToolbar from '../molecules/CanvasToolbar'
-import type { CanvasTool } from '../molecules/CanvasToolbar'
-import CanvasTable from '../molecules/CanvasTable'
+import type { FloorTable, TableShape } from '../../data/table-types'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import CanvasStatusBar from '../atoms/CanvasStatusBar'
+import CanvasTable from '../molecules/CanvasTable'
+import type { CanvasTool } from '../molecules/CanvasToolbar'
+import CanvasToolbar from '../molecules/CanvasToolbar'
 import SeatAssignmentPopover from '../molecules/SeatAssignmentPopover'
 import MobileSeatAssignmentSheet from './MobileSeatAssignmentSheet'
-import { useIsMobile } from '../../hooks/useIsMobile'
 
 interface Props {
   tables: FloorTable[]
@@ -81,6 +81,10 @@ function SeatingCanvas({
   // Table drag state (mouse-based repositioning)
   const [dragState, setDragState] = useState<DragState | null>(null)
   const hasDragged = useRef(false)
+
+  // Refs for stable callbacks (avoid re-creating per-table closures)
+  const tablesRef = useRef(tables)
+  const activeToolRef = useRef(activeTool)
 
   // Compute unassigned guests
   const unassignedGuests = useMemo(
@@ -159,16 +163,47 @@ function SeatingCanvas({
   }
 
   // Seat click handler
-  function handleSeatClick(
-    tableId: string,
-    seatIndex: number,
-    anchorRect: DOMRect,
-  ) {
-    if (isMobile) {
-      onSelectTable(null) // Close MobilePropertiesSheet (DD-F3)
-    }
-    setActiveSeat({ tableId, seatIndex, anchorRect })
-  }
+  const handleSeatClick = useCallback(
+    (tableId: string, seatIndex: number, anchorRect: DOMRect) => {
+      if (isMobile) {
+        onSelectTable(null) // Close MobilePropertiesSheet (DD-F3)
+      }
+      setActiveSeat({ tableId, seatIndex, anchorRect })
+    },
+    [isMobile, onSelectTable],
+  )
+
+  // Stable table mouse-down handler (for desktop drag)
+  const handleTableMouseDown = useCallback(
+    (tableId: string, e: React.MouseEvent) => {
+      if (activeToolRef.current !== 'select') return
+      hasDragged.current = false
+      const t = tablesRef.current.find((tbl) => tbl.id === tableId)
+      if (!t) return
+      setDragState({
+        tableId,
+        startX: e.clientX,
+        startY: e.clientY,
+        origX: t.x,
+        origY: t.y,
+      })
+    },
+    [],
+  )
+
+  // Stable touch-drag handler
+  const handleTableTouchDrag = useCallback(
+    (tableId: string, canvasDx: number, canvasDy: number) => {
+      const t = tablesRef.current.find((tbl) => tbl.id === tableId)
+      if (t) {
+        onUpdateTable(tableId, {
+          x: t.x + canvasDx,
+          y: t.y + canvasDy,
+        })
+      }
+    },
+    [onUpdateTable],
+  )
 
   // Find data for active seat popover
   const activeSeatTable = activeSeat
@@ -231,38 +266,18 @@ function SeatingCanvas({
                   table={table}
                   isSelected={selectedTableId === table.id}
                   guests={guests}
-                  onSelect={() => onSelectTable(table.id)}
-                  onSeatClick={(seatIndex, anchorRect) =>
-                    handleSeatClick(table.id, seatIndex, anchorRect)
-                  }
+                  onSelectTable={onSelectTable}
+                  onSeatClick={handleSeatClick}
                   activeSeatIndex={
                     activeSeat?.tableId === table.id
                       ? activeSeat.seatIndex
                       : null
                   }
-                  onTableMouseDown={(e) => {
-                    if (activeTool !== 'select') return
-                    hasDragged.current = false
-                    setDragState({
-                      tableId: table.id,
-                      startX: e.clientX,
-                      startY: e.clientY,
-                      origX: table.x,
-                      origY: table.y,
-                    })
-                  }}
+                  onTableMouseDown={handleTableMouseDown}
                   isMobile={isMobile}
                   activeTool={activeTool}
                   scale={currentZoom}
-                  onTableTouchDrag={(tableId, canvasDx, canvasDy) => {
-                    const t = tables.find((tbl) => tbl.id === tableId)
-                    if (t) {
-                      onUpdateTable(tableId, {
-                        x: t.x + canvasDx,
-                        y: t.y + canvasDy,
-                      })
-                    }
-                  }}
+                  onTableTouchDrag={handleTableTouchDrag}
                 />
               ))}
             </div>

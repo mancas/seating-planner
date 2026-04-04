@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useReducer } from 'react'
 import { useNavigate } from 'react-router'
 import { DragDropProvider } from '@dnd-kit/react'
 import { getGuests } from '../data/guest-store'
@@ -12,13 +12,37 @@ import CanvasPropertiesPanel from '../components/organisms/CanvasPropertiesPanel
 import LeftSidebar from '../components/organisms/LeftSidebar'
 import MobilePropertiesSheet from '../components/organisms/MobilePropertiesSheet'
 import MobileGuestsSheet from '../components/organisms/MobileGuestsSheet'
-import { LuUsers } from 'react-icons/lu'
+import { LuUsers, LuSettings2 } from 'react-icons/lu'
+
+/* ─── Mobile UI state machine ─── */
+type MobileSheet = 'none' | 'properties' | 'guests'
+
+type MobileUIAction =
+  | { type: 'OPEN_PROPERTIES' }
+  | { type: 'OPEN_GUESTS' }
+  | { type: 'CLOSE_SHEET' }
+  | { type: 'TABLE_DESELECTED' }
+
+function mobileUIReducer(
+  _state: MobileSheet,
+  action: MobileUIAction,
+): MobileSheet {
+  switch (action.type) {
+    case 'OPEN_PROPERTIES':
+      return 'properties'
+    case 'OPEN_GUESTS':
+      return 'guests'
+    case 'CLOSE_SHEET':
+    case 'TABLE_DESELECTED':
+      return 'none'
+  }
+}
 
 function SeatingPlanView() {
   const navigate = useNavigate()
   const isMobile = useIsMobile()
   const [guests] = useState<Guest[]>(() => getGuests())
-  const [showMobileGuests, setShowMobileGuests] = useState(false)
+  const [mobileSheet, dispatchSheet] = useReducer(mobileUIReducer, 'none')
 
   const {
     tables,
@@ -47,6 +71,14 @@ function SeatingPlanView() {
     handleAddTable({ shape: 'rectangular', seatCount: 8, x: 400, y: 300 })
   }, [handleAddTable])
 
+  const handleSelectTable = useCallback(
+    (id: string | null) => {
+      setSelectedCanvasTableId(id)
+      if (!id) dispatchSheet({ type: 'TABLE_DESELECTED' })
+    },
+    [setSelectedCanvasTableId],
+  )
+
   const selectedCanvasTable =
     tables.find((t) => t.id === selectedCanvasTableId) ?? null
 
@@ -65,7 +97,7 @@ function SeatingPlanView() {
           tables={tables}
           guests={guests}
           selectedTableId={selectedCanvasTableId}
-          onSelectTable={setSelectedCanvasTableId}
+          onSelectTable={handleSelectTable}
           onAddTable={handleAddTable}
           onUpdateTable={handleUpdateTable}
           onDeleteTable={handleDeleteTable}
@@ -80,17 +112,31 @@ function SeatingPlanView() {
           table={selectedCanvasTable}
           onUpdate={(data) => handleUpdateTable(selectedCanvasTable.id, data)}
           onDelete={() => handleDeleteTable(selectedCanvasTable.id)}
-          onClose={() => setSelectedCanvasTableId(null)}
+          onClose={() => handleSelectTable(null)}
         />
       )}
 
-      {/* Mobile properties sheet */}
-      {isMobile && selectedCanvasTable && (
+      {/* Mobile table info FAB — opens properties sheet on demand */}
+      {isMobile && selectedCanvasTable && mobileSheet !== 'properties' && (
+        <button
+          className="md:hidden fixed bottom-[140px] left-4 z-30 h-10 pl-3 pr-3.5 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform animate-[fadeSlideUp_200ms_ease-out]"
+          onClick={() => dispatchSheet({ type: 'OPEN_PROPERTIES' })}
+          aria-label={`Open properties for ${selectedCanvasTable.label}`}
+        >
+          <LuSettings2 size={16} />
+          <span className="text-body-sm font-medium max-w-[100px] truncate">
+            {selectedCanvasTable.label}
+          </span>
+        </button>
+      )}
+
+      {/* Mobile properties sheet — now opened explicitly */}
+      {isMobile && selectedCanvasTable && mobileSheet === 'properties' && (
         <MobilePropertiesSheet
           table={selectedCanvasTable}
           onUpdate={(data) => handleUpdateTable(selectedCanvasTable.id, data)}
           onDelete={() => handleDeleteTable(selectedCanvasTable.id)}
-          onClose={() => setSelectedCanvasTableId(null)}
+          onClose={() => dispatchSheet({ type: 'CLOSE_SHEET' })}
         />
       )}
 
@@ -98,7 +144,7 @@ function SeatingPlanView() {
       {isMobile && unassignedGuests.length > 0 && (
         <button
           className="md:hidden fixed bottom-[140px] right-4 z-30 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center cursor-pointer"
-          onClick={() => setShowMobileGuests(true)}
+          onClick={() => dispatchSheet({ type: 'OPEN_GUESTS' })}
           aria-label="View unassigned guests"
         >
           <LuUsers size={20} />
@@ -109,10 +155,10 @@ function SeatingPlanView() {
       )}
 
       {/* Mobile unassigned guests sheet */}
-      {isMobile && showMobileGuests && (
+      {isMobile && mobileSheet === 'guests' && (
         <MobileGuestsSheet
           guests={unassignedGuests}
-          onClose={() => setShowMobileGuests(false)}
+          onClose={() => dispatchSheet({ type: 'CLOSE_SHEET' })}
         />
       )}
     </DragDropProvider>

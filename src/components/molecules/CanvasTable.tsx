@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, memo } from 'react'
 import { useDraggable, useDroppable } from '@dnd-kit/react'
 import type { FloorTable, SeatAssignment } from '../../data/table-types'
 import type { Guest } from '../../data/guest-types'
@@ -23,10 +23,10 @@ interface Props {
   table: FloorTable
   isSelected: boolean
   guests: Guest[]
-  onSelect: () => void
-  onSeatClick: (seatIndex: number, anchorRect: DOMRect) => void
+  onSelectTable: (id: string) => void
+  onSeatClick: (tableId: string, seatIndex: number, anchorRect: DOMRect) => void
   activeSeatIndex: number | null
-  onTableMouseDown?: (e: React.MouseEvent) => void
+  onTableMouseDown?: (tableId: string, e: React.MouseEvent) => void
   isMobile?: boolean
   activeTool?: string
   scale?: number
@@ -49,7 +49,7 @@ function SeatSlot({
   assignment: SeatAssignment | undefined
   guest: Guest | undefined
   activeSeatIndex: number | null
-  onSeatClick: (seatIndex: number, anchorRect: DOMRect) => void
+  onSeatClick: (tableId: string, seatIndex: number, anchorRect: DOMRect) => void
   isMobile?: boolean
   activeTool?: string
 }) {
@@ -88,7 +88,7 @@ function SeatSlot({
             const rect = (
               e.currentTarget as HTMLElement
             ).getBoundingClientRect()
-            onSeatClick(seatIndex, rect)
+            onSeatClick(tableId, seatIndex, rect)
           }}
           onMobileTap={
             isMobile && activeTool === 'select'
@@ -97,7 +97,7 @@ function SeatSlot({
                   const rect = (
                     e.currentTarget as HTMLElement
                   ).getBoundingClientRect()
-                  onSeatClick(seatIndex, rect)
+                  onSeatClick(tableId, seatIndex, rect)
                 }
               : undefined
           }
@@ -111,7 +111,7 @@ function CanvasTable({
   table,
   isSelected,
   guests,
-  onSelect,
+  onSelectTable,
   onSeatClick,
   activeSeatIndex,
   onTableMouseDown,
@@ -148,8 +148,8 @@ function CanvasTable({
 
   function handleMouseDown(e: React.MouseEvent) {
     e.stopPropagation()
-    onSelect()
-    onTableMouseDown?.(e)
+    onSelectTable(table.id)
+    onTableMouseDown?.(table.id, e)
   }
 
   const touchStartPos = useRef<{ x: number; y: number } | null>(null)
@@ -231,7 +231,7 @@ function CanvasTable({
           dragAccumRef.current = { x: 0, y: 0 }
         } else if (isMobile && activeTool === 'select' && !touchMoved.current) {
           // Tap detected in select mode → select table
-          onSelect()
+          onSelectTable(table.id)
         }
         touchStartPos.current = null
         touchMoved.current = false
@@ -303,4 +303,4 @@ function CanvasTable({
   )
 }
 
-export default CanvasTable
+export default memo(CanvasTable)
