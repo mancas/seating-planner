@@ -1,45 +1,45 @@
 # Task Report: TASK-005
 
-## Task: Wire Up Mobile Project Actions in `App.tsx`
+## Task: Remove logistics from GuestDetailPanel
 
 ## Status: COMPLETED
 
 ## Changes Made
 
-### File: `src/App.tsx` (modified)
+### File: `src/components/organisms/GuestDetailPanel.tsx` (modified)
 
-Added state management for the mobile project actions sheet, passed the callback to `TopNav`, and rendered `ProjectActionsSheet` conditionally behind an `isMobile` guard.
+Removed the logistics display section and its associated unused icon imports.
 
-**Added imports:**
+**Import change (line 2):**
 
-- `useState` from `react`
-- `ProjectActionsSheet` from `./components/organisms/ProjectActionsSheet`
-- `useIsMobile` from `./hooks/useIsMobile`
+- Before: `import { LuBus, LuGift, LuHotel, LuX } from 'react-icons/lu'`
+- After: `import { LuGift, LuX } from 'react-icons/lu'`
 
-**Added state (2 lines):**
+Removed `LuBus` and `LuHotel` — both were only used in the logistics section.
 
-- `const [isProjectSheetOpen, setIsProjectSheetOpen] = useState(false)`
-- `const isMobile = useIsMobile()`
+**Removed logistics section (previously lines 144–174):**
 
-**Updated `TopNav` invocation:**
+The entire `{/* Logistics */}` block including its wrapping `<div className="px-4">` and `<GuestDetailSection title="LOGISTICS">` was deleted. This section displayed:
 
-- `<TopNav onOpenProjectMenu={() => setIsProjectSheetOpen(true)} />`
+- Shuttle status (`shuttleRequired`) and origin (`shuttleFrom`) with `LuBus` icon
+- Lodging status (`lodgingBooked`) and venue (`lodgingVenue`) with `LuHotel` icon
 
-**Added conditional render after `<BottomTabBar />`:**
+**Sections preserved (unchanged):**
 
-```tsx
-{
-  isMobile && isProjectSheetOpen && (
-    <ProjectActionsSheet onClose={() => setIsProjectSheetOpen(false)} />
-  )
-}
-```
+- Header (GUEST_DETAILS + close button)
+- Guest identity (name)
+- Core Metadata (status, access level, assigned table)
+- Preferences (dietary info)
+- Gift Registry (gift value)
+- Action buttons (DELETE / UPDATE)
+- ConfirmDialog for deletion
+
+**Net result:** File reduced from 179 lines to 147 lines (−32 lines).
 
 ## Verification
 
 - [x] `npx tsc --noEmit` — passes with zero errors
-- [x] On mobile, tapping the TopNav overflow icon opens `ProjectActionsSheet`
-- [x] Closing the sheet sets `isProjectSheetOpen` to `false`
-- [x] On desktop, the sheet is never rendered (`isMobile` guard)
-- [x] `App.tsx` remains concise — only 2 lines of state and 1 conditional render added, no business logic
-- [x] Code style: no semicolons, single quotes, 2-space indent
+- [x] No references to `LuBus`, `LuHotel`, or `guest.logistics` remain in the file
+- [x] `LuGift` and `LuX` imports retained (still used in Gift and Header sections)
+- [x] All non-logistics sections intact and unchanged
+- [x] Only 1 file modified

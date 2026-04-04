@@ -1,57 +1,57 @@
-# Task Report: TASK-001 — Create `src/utils/project-export.ts`
+# Task Report: TASK-001 — Make Action Bar Sticky in GuestForm
 
 ## Status: COMPLETED
 
 ## Summary
 
-Created a pure utility module for project export/import functionality. The module handles generating export JSON from localStorage, validating imported file content, applying imported data back to localStorage, and triggering a browser file download.
+Modified the action bar in `GuestForm.tsx` to use sticky positioning so it remains visible at the bottom of the viewport while scrolling the form. Added opaque background and top border for visual separation.
 
-## File Created
+## File Modified
 
-- `src/utils/project-export.ts`
+- `src/components/organisms/GuestForm.tsx`
 
-## What Was Implemented
+## Changes Made
 
-### Interface: `ProjectExport`
+### 1. Form content area padding (line 117)
 
-- Exported interface with `version` (number), `exportedAt` (string), and `data` containing `guests` (Guest[]), `tables` (FloorTable[]), and `tableCounter` (number)
-- Uses `import type` for `Guest` and `FloorTable` per `verbatimModuleSyntax`
+Changed `pb-6` to `pb-24` to add bottom padding that prevents the last form section from being hidden behind the sticky action bar.
 
-### Function: `generateProjectExport(): string`
+```diff
+- <div className="px-4 md:px-6 pb-6">
++ <div className="px-4 md:px-6 pb-24">
+```
 
-- Reads three localStorage keys (`seating-plan:guests`, `seating-plan:tables`, `seating-plan:table-counter`)
-- Parses each or defaults to `[]`/`0`
-- Builds a `ProjectExport` object with `version: 1` and ISO timestamp
-- Returns pretty-printed JSON (`JSON.stringify` with 2-space indent)
+### 2. Action bar sticky positioning (line 273)
 
-### Function: `validateProjectImport(content: string): ProjectExport | null`
+Replaced the static action bar with sticky positioning and visual treatment:
 
-- Wraps `JSON.parse` in try/catch — returns `null` on parse failure
-- Validates `version === 1`, `data` is an object, `guests` and `tables` are arrays, `tableCounter` is a number
-- Returns the parsed `ProjectExport` if all checks pass, otherwise `null`
+```diff
+- <div className="flex justify-end gap-3 mt-8 px-4 md:px-6 pb-6">
++ <div className="sticky bottom-0 flex justify-end gap-3 px-4 md:px-6 py-4 bg-background border-t border-border">
+```
 
-### Function: `applyProjectImport(data: ProjectExport): void`
+Changes:
 
-- Writes all three localStorage keys from the provided `ProjectExport` data
+- `sticky bottom-0` — pins the bar to the bottom of the scroll container
+- Replaced `mt-8 pb-6` with `py-4` — balanced vertical padding for the sticky bar
+- `bg-background` — opaque background prevents content from showing through
+- `border-t border-border` — visual separator from scrollable content
 
-### Function: `downloadProjectExport(): void`
+## Acceptance Criteria Verification
 
-- Calls `generateProjectExport()` to get JSON
-- Creates a Blob with `application/json` type
-- Generates filename in format `seating-plan-YYYY-MM-DD.json`
-- Creates temporary `<a>` element, triggers click download, cleans up
+- [x] Action bar stays visible at the bottom of the viewport when scrolling the form
+- [x] Action bar has opaque background (no content bleeding through) via `bg-background`
+- [x] Action bar has a top border for visual separation via `border-t border-border`
+- [x] On mobile, action bar does not overlap with BottomTabBar (sticky within the form's scroll container)
+- [x] On desktop, action bar pins at the bottom of the main content area
+- [x] When form content fits without scrolling, the action bar appears at its natural position (sticky behavior)
+- [x] All buttons (CANCEL, DELETE in edit mode, SAVE_ENTRY) remain functional (no changes to button markup or handlers)
+- [x] TypeScript compiles without errors (`npm run build` passed)
 
-## Verification
+## Build Output
 
-- `npx tsc --noEmit --pretty src/utils/project-export.ts` — zero type errors
-- No LSP errors in the created file (pre-existing `role` errors in other files are unrelated)
-
-## Acceptance Criteria Checklist
-
-- [x] `generateProjectExport()` returns valid JSON string with `version: 1`, `exportedAt` ISO timestamp, and `data` containing guests/tables/tableCounter from localStorage
-- [x] `validateProjectImport()` returns `null` for invalid JSON, missing fields, wrong version, non-array guests/tables, non-number tableCounter
-- [x] `validateProjectImport()` returns the parsed `ProjectExport` for valid content
-- [x] `applyProjectImport()` writes all three localStorage keys
-- [x] `downloadProjectExport()` triggers a file download with the correct filename format
-- [x] Code style: no semicolons, single quotes, 2-space indent, `import type`, named exports only
-- [x] Pure utility module — no React dependencies
+```
+tsc -b && vite build — completed successfully
+✓ 174 modules transformed
+✓ built in 311ms
+```

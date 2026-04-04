@@ -1,25 +1,19 @@
-import { useForm, useWatch } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { useState } from 'react'
 import type { Guest, GuestStatus } from '../../data/guest-types'
 import FormField from '../molecules/FormField'
 import FormSection from '../molecules/FormSection'
 import ConfirmDialog from '../molecules/ConfirmDialog'
-import Toggle from '../atoms/Toggle'
 
 interface GuestFormValues {
   firstName: string
   lastName: string
   status: GuestStatus
-  accessLevel: string
   tableAssignment: string
   seatNumber: string
   dietaryType: string
   dietaryNotes: string
   gift: string
-  shuttleRequired: boolean
-  shuttleFrom: string
-  lodgingBooked: boolean
-  lodgingVenue: string
 }
 
 interface Props {
@@ -35,8 +29,6 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
   const {
     register,
     handleSubmit,
-    control,
-    setValue,
     formState: { errors },
   } = useForm<GuestFormValues>({
     defaultValues: isEdit
@@ -44,36 +36,23 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
           firstName: guest.firstName,
           lastName: guest.lastName,
           status: guest.status,
-          accessLevel: guest.accessLevel,
           tableAssignment: guest.tableAssignment ?? '',
           seatNumber: guest.seatNumber?.toString() ?? '',
           dietaryType: guest.dietary.type ?? '',
           dietaryNotes: guest.dietary.notes ?? '',
           gift: guest.gift?.toString() ?? '',
-          shuttleRequired: guest.logistics.shuttleRequired,
-          shuttleFrom: guest.logistics.shuttleFrom ?? '',
-          lodgingBooked: guest.logistics.lodgingBooked,
-          lodgingVenue: guest.logistics.lodgingVenue ?? '',
         }
       : {
           firstName: '',
           lastName: '',
           status: 'PENDING' as GuestStatus,
-          accessLevel: '',
           tableAssignment: '',
           seatNumber: '',
           dietaryType: '',
           dietaryNotes: '',
           gift: '',
-          shuttleRequired: false,
-          shuttleFrom: '',
-          lodgingBooked: false,
-          lodgingVenue: '',
         },
   })
-
-  const shuttleRequired = useWatch({ control, name: 'shuttleRequired' })
-  const lodgingBooked = useWatch({ control, name: 'lodgingBooked' })
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
@@ -82,19 +61,12 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
       firstName: values.firstName,
       lastName: values.lastName,
       status: values.status,
-      accessLevel: values.accessLevel || '',
       tableAssignment: values.tableAssignment || null,
       seatNumber: values.seatNumber ? parseInt(values.seatNumber, 10) : null,
       gift: values.gift ? parseFloat(values.gift) : null,
       dietary: {
         type: values.dietaryType || null,
         notes: values.dietaryNotes || null,
-      },
-      logistics: {
-        shuttleRequired: values.shuttleRequired,
-        shuttleFrom: values.shuttleFrom || null,
-        lodgingBooked: values.lodgingBooked,
-        lodgingVenue: values.lodgingVenue || null,
       },
     }
     onSubmit(guestData)
@@ -114,7 +86,7 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
           </h1>
         </div>
 
-        <div className="px-4 md:px-6 pb-6">
+        <div className="px-4 md:px-6 pb-24">
           <FormSection title="IDENTITY_MATRIX">
             <FormField
               label="FIRST_NAME"
@@ -172,14 +144,6 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
                 <option value="DECLINED">DECLINED</option>
               </select>
             </FormField>
-            <FormField label="ACCESS_LEVEL" htmlFor="accessLevel">
-              <input
-                id="accessLevel"
-                className="input w-full"
-                placeholder="E.G. TIER_01..."
-                {...register('accessLevel')}
-              />
-            </FormField>
           </FormSection>
 
           <FormSection title="SEATING_ALLOCATION">
@@ -233,44 +197,9 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
               />
             </FormField>
           </FormSection>
-
-          <FormSection title="LOGISTICS_CONFIG">
-            <FormField label="SHUTTLE_REQUIRED">
-              <Toggle
-                checked={shuttleRequired}
-                onChange={(val) => setValue('shuttleRequired', val)}
-              />
-            </FormField>
-            {shuttleRequired && (
-              <FormField label="SHUTTLE_ORIGIN" htmlFor="shuttleFrom">
-                <input
-                  id="shuttleFrom"
-                  className="input w-full"
-                  placeholder="ORIGIN_POINT..."
-                  {...register('shuttleFrom')}
-                />
-              </FormField>
-            )}
-            <FormField label="LODGING_STATUS">
-              <Toggle
-                checked={lodgingBooked}
-                onChange={(val) => setValue('lodgingBooked', val)}
-              />
-            </FormField>
-            {lodgingBooked && (
-              <FormField label="LODGING_VENUE" htmlFor="lodgingVenue">
-                <input
-                  id="lodgingVenue"
-                  className="input w-full"
-                  placeholder="VENUE_NAME..."
-                  {...register('lodgingVenue')}
-                />
-              </FormField>
-            )}
-          </FormSection>
         </div>
 
-        <div className="flex justify-end gap-3 mt-8 px-4 md:px-6 pb-6">
+        <div className="sticky bottom-0 flex justify-end gap-3 px-4 md:px-6 py-4 bg-background border-t border-border">
           <button type="button" className="btn-secondary" onClick={onCancel}>
             CANCEL
           </button>

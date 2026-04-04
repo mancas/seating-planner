@@ -34,7 +34,6 @@ export function updateGuest(
     ...existing,
     ...data,
     dietary: { ...existing.dietary, ...data.dietary },
-    logistics: { ...existing.logistics, ...data.logistics },
   }
   guests[index] = updated
   storage.write(guests)

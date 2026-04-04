@@ -1,27 +1,25 @@
-# Task Report — TASK-008: Replace SVG in TopNav
+# Task Report — TASK-008: Remove accessLevel from GuestForm
 
 ## Status: COMPLETE
 
-## Files Modified
+## File Modified
 
-- `src/components/organisms/TopNav.tsx`
+- `src/components/organisms/GuestForm.tsx`
 
 ## Changes Made
 
-### `src/components/organisms/TopNav.tsx`
+### `src/components/organisms/GuestForm.tsx`
 
-1. **Added import**: `import { LuSettings } from 'react-icons/lu'` (line 1)
-2. **Replaced inline SVG** (formerly lines 49-61) with `<LuSettings size={20} />` (now line 50)
-   - Removed 13-line `<svg>` block containing a `<circle>` and `<path>` for a gear icon
-   - Replaced with single `<LuSettings size={20} />` component call
-   - Wrapper `<IconButton label="Settings">` preserved unchanged
-
-## Conventions Followed
-
-- No semicolons, single quotes, trailing commas, 2-space indent
-- Library imports before local imports
+1. **Removed `accessLevel: string`** from the `GuestFormValues` interface (was line 12)
+2. **Removed `accessLevel: guest.accessLevel,`** from edit mode defaultValues (was line 40)
+3. **Removed `accessLevel: '',`** from create mode defaultValues (was line 51)
+4. **Removed `accessLevel: values.accessLevel || '',`** from the `handleFormSubmit` submit handler (was line 67)
+5. **Removed entire `<FormField label="ACCESS_LEVEL" htmlFor="accessLevel">` block** including its child `<input>` with id, className, placeholder, and register call (was lines 151-158)
 
 ## Verification
 
-- No LSP errors in the modified file
-- File reduced from 69 lines to 58 lines
+- No LSP/TypeScript errors after all removals
+- No dangling commas or orphaned JSX
+- Surrounding code structure intact (STATUS_CLASSIFICATION FormSection now contains only the STATUS select field)
+- File reduced from 246 lines to 234 lines
+- Only removals performed; no new code added

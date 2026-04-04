@@ -275,3 +275,12 @@ Lessons learned and constraints established from validated specs.
 
 **Rule**: When using `FileReader.readAsText()` (or similar methods), always set both `reader.onload` and `reader.onerror`. This extends G-42 (which covers Promise-based File APIs) to the callback-based `FileReader` API.
 **Reason**: `ProjectActionsSheet` set `reader.onload` but not `reader.onerror`, leaving the user with no feedback if the file read fails. The identical operation in `LeftSidebar` correctly set both handlers. Always handle both success and error paths for file I/O operations.
+
+---
+
+## From: Sticky Guest Form Actions (2026-04-04)
+
+### G-47: Do Not Include Out-of-Scope Changes in Feature Commits
+
+**Rule**: A feature commit must only modify the files listed in the spec's "Affected files" section. If you notice an improvement opportunity in an unrelated file while working on a feature, do NOT include it in the same commit. Create a separate commit, task, or spec for the improvement.
+**Reason**: The sticky action bar commit modified `EditGuestPage.tsx` (refactoring `useEffect` redirect to `<Navigate>` component) alongside the in-scope `GuestForm.tsx` change. While the refactor was valid, it violated the spec's explicit scope ("fix is entirely contained within GuestForm.tsx") and made the commit harder to review and revert. Out-of-scope changes in feature commits create traceability issues and can introduce unrelated regressions under the cover of a focused feature change.

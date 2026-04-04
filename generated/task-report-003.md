@@ -1,44 +1,31 @@
-# Task Report — TASK-003: Add Mobile Overflow Menu to TopNav
+# Task Report — TASK-003: Remove logistics from mock guests
 
-## Status: COMPLETE
+## Status: DONE
 
-## File Modified
+## Summary
 
-- `src/components/organisms/TopNav.tsx`
+Removed all 6 `logistics: { ... }` blocks from the mock guest data in `src/data/mock-guests.ts`.
 
 ## Changes Made
 
-### 1. Added imports (lines 1-2)
+| File                      | Action   | Details                                               |
+| ------------------------- | -------- | ----------------------------------------------------- |
+| `src/data/mock-guests.ts` | Modified | Removed `logistics` property from all 6 guest objects |
 
-- Imported `LuEllipsisVertical` icon from `react-icons/lu`
-- Imported `IconButton` atom from `../atoms/IconButton`
+## Details
 
-### 2. Added `Props` interface and component parameter (lines 4-8)
+Each guest object had a `logistics` block containing `shuttleRequired`, `shuttleFrom`, `lodgingBooked`, and `lodgingVenue` fields. All 6 blocks were removed:
 
-- Defined `Props` interface with optional `onOpenProjectMenu?: () => void` callback
-- Updated function signature from `TopNav()` to `TopNav({ onOpenProjectMenu }: Props)`
+1. Guest `4492-AX` (ELARA RIVERA) — lines 18-23 removed
+2. Guest `3371-BK` (ALEXANDER VANCE) — lines 38-43 removed
+3. Guest `5580-CR` (MARCUS CHEN) — lines 58-63 removed
+4. Guest `1039-CK` (MARCUS STERLING) — lines 78-83 removed
+5. Guest `3311-DS` (SARA MORGAN) — lines 98-103 removed
+6. Guest `8821-BL` (JULIAN KANE) — lines 118-123 removed
 
-### 3. Added overflow menu button in right section (lines 20-27)
+File reduced from 125 lines to 89 lines. Comma placement verified correct on all remaining properties.
 
-- Conditionally renders when `onOpenProjectMenu` is provided (backward compatible)
-- Wrapped in `<div className="md:hidden">` to hide on desktop (≥768px)
-- Uses `IconButton` with `label="Project menu"` for accessibility
-- Renders `LuEllipsisVertical` icon at `size={20}`
+## Verification
 
-## Acceptance Criteria Verification
-
-| Criteria                                                              | Status |
-| --------------------------------------------------------------------- | ------ |
-| Overflow menu icon visible on mobile (<768px) via `md:hidden` wrapper | PASS   |
-| Icon hidden on desktop (≥768px) via `md:hidden`                       | PASS   |
-| Clicking icon calls `onOpenProjectMenu` callback                      | PASS   |
-| Icon not rendered when `onOpenProjectMenu` is not provided            | PASS   |
-| TypeScript compiles with no errors                                    | PASS   |
-
-## Conventions Followed
-
-- No semicolons
-- Single quotes
-- 2-space indentation
-- Default export
-- Function declaration (not arrow function)
+- TypeScript compilation: PASS (`npx tsc --noEmit` — no errors)
+- The `Guest` type did not include a `logistics` property, confirming these blocks were already inconsistent with the type definition

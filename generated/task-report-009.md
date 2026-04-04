@@ -1,31 +1,30 @@
-# Task Report — TASK-009: Replace SVG in FAB
+# Task Report — Remove accessLevel from GuestDetailPanel and ImportGuestsPage
 
 ## Status: COMPLETE
 
 ## Summary
 
-Replaced the inline add-user SVG icon in `FAB.tsx` with the `LuUserPlus` icon from `react-icons/lu`.
+Removed the `accessLevel` field from the guest detail panel UI and from the import guest construction logic.
 
-## File Modified
+## Files Modified
 
-- `src/components/atoms/FAB.tsx`
+1. `src/components/organisms/GuestDetailPanel.tsx`
+2. `src/components/organisms/ImportGuestsPage.tsx`
 
 ## Changes Made
 
-1. Added import: `import { LuUserPlus } from 'react-icons/lu'`
-2. Replaced the 15-line inline `<svg>` block (user-plus icon) with `<LuUserPlus size={24} />`
-3. File reduced from 32 lines to 20 lines
+### GuestDetailPanel.tsx
 
-## Conventions Followed
+- Removed the ACCESS LEVEL `<dt>`/`<dd>` pair (lines 81-88 of original) from the CORE METADATA `<dl>` section
+- The `<dl>` now contains only STATUS and ASSIGNED TABLE entries, both structurally valid
 
-- No semicolons
-- Single quotes for imports
-- 2-space indentation
-- Function declaration (not arrow)
-- Default export
+### ImportGuestsPage.tsx
+
+- Removed `accessLevel: '',` from the `addGuest()` call inside the file import handler (line 93 of original)
+- Surrounding properties retain correct comma placement
 
 ## Verification
 
-- No LSP errors in modified file
-- Icon size preserved at 24px via `size` prop
-- All existing button styling, aria-label, and onClick handler preserved unchanged
+- Both files maintain valid JSX structure after removal
+- No new code was added — removals only
+- Surrounding elements remain intact and properly formatted

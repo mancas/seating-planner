@@ -90,17 +90,10 @@ function ImportGuestsPage({ onImportComplete }: Props) {
               firstName: guest.firstName,
               lastName: guest.lastName,
               status: guest.status,
-              accessLevel: '',
               tableAssignment: null,
               seatNumber: null,
               gift: guest.gift,
               dietary: guest.dietary,
-              logistics: {
-                shuttleRequired: false,
-                shuttleFrom: null,
-                lodgingBooked: false,
-                lodgingVenue: null,
-              },
             })
           }
 

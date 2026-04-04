@@ -82,7 +82,7 @@ Data is persisted to `localStorage` with an in-memory fallback. There is no back
 ### Structure
 
 - **Atomic Design**: atoms → molecules → organisms → pages
-- `App.tsx` is a thin layout shell (17 lines): TopNav + Outlet + BottomTabBar — no business logic (G-40)
+- `App.tsx` is a thin layout shell (26 lines): TopNav + Outlet + BottomTabBar + ProjectActionsSheet (mobile) — no business logic (G-40)
 - View components (`GuestListView`, `SeatingPlanView`) own their domain state
 
 ### State Management
@@ -212,7 +212,7 @@ seating-plan/
 │   ├── manifest.webmanifest
 │   └── sw.js                     # Service worker
 ├── generated/                    # Spec-driven pipeline artifacts
-│   ├── guardrails.md             # Accumulated guardrails (G-1 through G-43)
+│   ├── guardrails.md             # Accumulated guardrails (G-1 through G-46)
 │   ├── codebase-context.md       # THIS FILE
 │   └── task-report-*.md          # Development task reports
 ├── spec/                         # Feature specifications
@@ -220,7 +220,7 @@ seating-plan/
 │   └── *.md                      # Individual feature specs
 └── src/
     ├── main.tsx                  # App entry: BrowserRouter, route definitions, SW registration
-    ├── App.tsx                   # Thin layout shell: TopNav + Outlet + BottomTabBar (17 lines)
+    ├── App.tsx                   # Thin layout shell: TopNav + Outlet + BottomTabBar + ProjectActionsSheet (26 lines)
     ├── index.css                 # Design system: @theme, @utility, @layer components
     ├── assets/
     │   └── hero.png              # Static image asset
@@ -242,7 +242,8 @@ seating-plan/
     │   ├── useIsMobile.ts        # Media query hook (<768px)
     │   └── useLongPress.ts       # Touch long-press detection
     ├── utils/                    # Standalone utilities
-    │   └── csv-import.ts         # CSV parsing, validation, template generation
+    │   ├── csv-import.ts         # CSV parsing, validation, template generation
+    │   └── project-export.ts     # Project data export/import (versioned JSON)
     ├── pages/                    # Route-level view components
     │   ├── GuestListView.tsx     # Layout route: guest state, CRUD, sidebar, table, detail panel
     │   ├── SeatingPlanView.tsx   # Canvas view: table state, DnD, mobile sheets
@@ -274,7 +275,7 @@ seating-plan/
         │   ├── SeatAssignmentPopover.tsx
         │   ├── SidebarNavItem.tsx
         │   └── TableGroupHeader.tsx
-        └── organisms/            # Feature-level compositions (16 files)
+        └── organisms/            # Feature-level compositions (17 files)
             ├── BottomTabBar.tsx
             ├── CanvasPropertiesPanel.tsx
             ├── EmptyState.tsx
@@ -288,6 +289,7 @@ seating-plan/
             ├── MobileGuestsSheet.tsx
             ├── MobilePropertiesSheet.tsx
             ├── MobileSeatAssignmentSheet.tsx
+            ├── ProjectActionsSheet.tsx
             ├── SeatingCanvas.tsx
             ├── TablePropertiesForm.tsx
             └── TopNav.tsx
@@ -327,7 +329,8 @@ View Components (GuestListView, SeatingPlanView)
     └── App.tsx (thin shell)
         ├── TopNav
         ├── Outlet (renders GuestListView or SeatingPlanView)
-        └── BottomTabBar
+        ├── BottomTabBar
+        └── ProjectActionsSheet (mobile only)
 ```
 
 ### Build & Scripts
@@ -357,27 +360,28 @@ View Components (GuestListView, SeatingPlanView)
 
 ## Prior Spec Decisions
 
-12 specs completed, 1 confirmed (pending implementation), 1 draft:
+14 specs completed, 2 confirmed (pending implementation):
 
-| Spec                             | Key Architectural Decisions                                                                                                                                                                 |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nought-cobalt-design-system`    | Dark-mode only; Tailwind v4 `@theme`/`@utility`/`@layer` for design tokens; `--nc-*` CSS variable namespace; Space Grotesk font; 4px default border radius                                  |
-| `guest-list-screen`              | Atomic Design hierarchy (atoms/molecules/organisms); three-panel desktop layout (sidebar + main + detail); mobile single-column; `@tanstack/react-table` for desktop table                  |
-| `guest-crud-flow`                | react-hook-form for forms; localStorage persistence via stores; uuid for IDs; dedicated routes for add/edit (`/guests/new`, `/guests/:id/edit`); OutletContext for form data passing        |
-| `seating-canvas`                 | react-zoom-pan-pinch for canvas; @dnd-kit/react for drag-and-drop; auto-generated NATO labels + badge IDs; geometry helpers for table/seat sizing                                           |
-| `semantic-table-refactor`        | `@tanstack/react-table` column defs at module scope; `border-separate border-spacing-0` for styled tables                                                                                   |
-| `sidebar-navigation`             | Route-based navigation (`/` and `/seating-plan`) via LeftSidebar; removed query-param tabs                                                                                                  |
-| `mobile-canvas`                  | vaul Drawer for mobile bottom sheets; useLongPress hook for touch drag; useReducer for mobile UI state machine                                                                              |
-| `fix-mobile-seat-assignment`     | Bottom sheet (vaul Drawer) for mobile seat assignment instead of popover; touch+mouse event listeners                                                                                       |
-| `refactor-codebase`              | Thin App.tsx shell (G-40); layout routes own their OutletContext (G-38); `key` prop for state reset (G-35); dedicated utility files (G-36); useGuestStats hook; useDragEndHandler hook      |
-| `replace-icons-with-react-icons` | All icons from `react-icons/lu` (Lucide); `size` prop for dimensions                                                                                                                        |
-| `update-dietary-flags-metrics`   | Replaced DIETARY FLAGS stat card with TOTAL GIFTS showing sum of guest gifts (€) and count                                                                                                  |
-| `import-guests` (confirmed)      | Dedicated route `/guests/import`; client-side CSV parsing (no external lib); all-or-nothing validation; `src/utils/csv-import.ts` utility; FileDropZone molecule; ImportGuestsPage organism |
-| `export-import-project` (draft)  | Export all localStorage data to versioned JSON; import with confirmation dialog and full data replacement                                                                                   |
+| Spec                                    | Key Architectural Decisions                                                                                                                                                                 |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nought-cobalt-design-system`           | Dark-mode only; Tailwind v4 `@theme`/`@utility`/`@layer` for design tokens; `--nc-*` CSS variable namespace; Space Grotesk font; 4px default border radius                                  |
+| `guest-list-screen`                     | Atomic Design hierarchy (atoms/molecules/organisms); three-panel desktop layout (sidebar + main + detail); mobile single-column; `@tanstack/react-table` for desktop table                  |
+| `guest-crud-flow`                       | react-hook-form for forms; localStorage persistence via stores; uuid for IDs; dedicated routes for add/edit (`/guests/new`, `/guests/:id/edit`); OutletContext for form data passing        |
+| `seating-canvas`                        | react-zoom-pan-pinch for canvas; @dnd-kit/react for drag-and-drop; auto-generated NATO labels + badge IDs; geometry helpers for table/seat sizing                                           |
+| `semantic-table-refactor`               | `@tanstack/react-table` column defs at module scope; `border-separate border-spacing-0` for styled tables                                                                                   |
+| `sidebar-navigation`                    | Route-based navigation (`/` and `/seating-plan`) via LeftSidebar; removed query-param tabs                                                                                                  |
+| `mobile-canvas`                         | vaul Drawer for mobile bottom sheets; useLongPress hook for touch drag; useReducer for mobile UI state machine                                                                              |
+| `fix-mobile-seat-assignment`            | Bottom sheet (vaul Drawer) for mobile seat assignment instead of popover; touch+mouse event listeners                                                                                       |
+| `refactor-codebase`                     | Thin App.tsx shell (G-40); layout routes own their OutletContext (G-38); `key` prop for state reset (G-35); dedicated utility files (G-36); useGuestStats hook; useDragEndHandler hook      |
+| `replace-icons-with-react-icons`        | All icons from `react-icons/lu` (Lucide); `size` prop for dimensions                                                                                                                        |
+| `update-dietary-flags-metrics`          | Replaced DIETARY FLAGS stat card with TOTAL GIFTS showing sum of guest gifts (€) and count                                                                                                  |
+| `import-guests`                         | Dedicated route `/guests/import`; client-side CSV parsing (no external lib); all-or-nothing validation; `src/utils/csv-import.ts` utility; FileDropZone molecule; ImportGuestsPage organism |
+| `export-import-project`                 | Export all localStorage data to versioned JSON; import with confirmation dialog and full data replacement; ProjectActionsSheet for mobile                                                   |
+| `sticky-guest-form-actions` (confirmed) | Make guest form action bar sticky at bottom of viewport, always visible without scrolling                                                                                                   |
 
 ## Guardrails and Lessons Learned
 
-Full guardrails documented in `generated/guardrails.md` (G-1 through G-43). Summary by category:
+Full guardrails documented in `generated/guardrails.md` (G-1 through G-46). Summary by category:
 
 ### CSS & Styling
 
@@ -400,6 +404,12 @@ Full guardrails documented in `generated/guardrails.md` (G-1 through G-43). Summ
 - **G-15**: Form inputs with validation must include `aria-invalid`
 - **G-19**: Custom modals need keyboard + ARIA support
 - **G-43**: Interactive `<div>` elements must have full keyboard support
+
+### Component State & Lifecycle
+
+- **G-44**: Do not unmount components that own pending dialog state
+- **G-45**: Use function declarations (not arrow expressions) for component handlers
+- **G-46**: Always set `reader.onerror` when using FileReader (extends G-42)
 
 ### React Patterns
 

@@ -5,7 +5,6 @@ export interface Guest {
   firstName: string
   lastName: string
   status: GuestStatus
-  accessLevel: string
   tableAssignment: string | null
   seatNumber: number | null
   dietary: {
@@ -13,10 +12,4 @@ export interface Guest {
     notes: string | null
   }
   gift: number | null
-  logistics: {
-    shuttleRequired: boolean
-    shuttleFrom: string | null
-    lodgingBooked: boolean
-    lodgingVenue: string | null
-  }
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LuBus, LuGift, LuHotel, LuX } from 'react-icons/lu'
+import { LuGift, LuX } from 'react-icons/lu'
 import type { Guest } from '../../data/guest-types'
 import IconButton from '../atoms/IconButton'
 import StatusBadge from '../atoms/StatusBadge'
@@ -80,14 +80,6 @@ function renderContent(guest: Guest) {
             </div>
             <div className="flex items-center justify-between py-2">
               <dt className="text-caption text-foreground-muted">
-                ACCESS LEVEL
-              </dt>
-              <dd className="text-body-sm text-foreground">
-                {guest.accessLevel}
-              </dd>
-            </div>
-            <div className="flex items-center justify-between py-2">
-              <dt className="text-caption text-foreground-muted">
                 ASSIGNED TABLE
               </dt>
               <dd className="text-body-sm text-foreground">
@@ -138,38 +130,6 @@ function renderContent(guest: Guest) {
           ) : (
             <p className="text-body-sm text-foreground-muted">NO_GIFT_LOGGED</p>
           )}
-        </GuestDetailSection>
-      </div>
-
-      {/* Logistics */}
-      <div className="px-4">
-        <GuestDetailSection title="LOGISTICS">
-          <div className="flex items-center gap-2 py-2">
-            <LuBus size={16} className="text-foreground-muted shrink-0" />
-            <div>
-              <p className="text-body-sm text-foreground">
-                {guest.logistics.shuttleRequired
-                  ? 'SHUTTLE REQUIRED'
-                  : 'NO SHUTTLE'}
-              </p>
-              <p className="text-caption text-foreground-muted">
-                {guest.logistics.shuttleRequired
-                  ? `From: ${guest.logistics.shuttleFrom}`
-                  : 'N/A'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 py-2">
-            <LuHotel size={16} className="text-foreground-muted shrink-0" />
-            <div>
-              <p className="text-body-sm text-foreground">LODGING BOOKED</p>
-              <p className="text-caption text-foreground-muted">
-                {guest.logistics.lodgingBooked
-                  ? `Venue: ${guest.logistics.lodgingVenue}`
-                  : 'N/A'}
-              </p>
-            </div>
-          </div>
         </GuestDetailSection>
       </div>
     </>
