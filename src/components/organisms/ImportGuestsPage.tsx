@@ -163,8 +163,8 @@ function ImportGuestsPage({ onImportComplete }: Props) {
               Download the CSV template, fill in guest data, then upload.
             </p>
             <p className="text-caption text-foreground-muted mt-3">
-              Columns: firstName, lastName, status, dietaryType,
-              dietaryNotes, gift
+              Columns: firstName, lastName, status, dietaryType, dietaryNotes,
+              gift
             </p>
             <button
               type="button"
