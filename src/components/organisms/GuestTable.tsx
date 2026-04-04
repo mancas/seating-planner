@@ -8,7 +8,6 @@ import {
   getCoreRowModel,
   flexRender,
 } from '@tanstack/react-table'
-import Avatar from '../atoms/Avatar'
 import StatusBadge from '../atoms/StatusBadge'
 import IconButton from '../atoms/IconButton'
 import { LuEllipsis } from 'react-icons/lu'
@@ -21,18 +20,11 @@ const columns = [
     cell: (info) => {
       const guest = info.row.original
       return (
-        <div className="flex items-center gap-3">
-          <Avatar
-            firstName={guest.firstName}
-            lastName={guest.lastName}
-            size="sm"
-          />
-          <div>
-            <p className="text-body-sm font-semibold text-foreground-heading uppercase">
-              {guest.firstName} {guest.lastName}
-            </p>
-            <p className="text-caption text-foreground-muted">ID: {guest.id}</p>
-          </div>
+        <div>
+          <p className="text-body-sm font-semibold text-foreground-heading uppercase">
+            {guest.firstName} {guest.lastName}
+          </p>
+          <p className="text-caption text-foreground-muted">ID: {guest.id}</p>
         </div>
       )
     },

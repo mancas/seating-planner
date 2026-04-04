@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import type { Guest } from '../../data/guest-types'
-import Avatar from '../atoms/Avatar'
 
 interface Props {
   seatIndex: number
@@ -75,11 +74,6 @@ function SeatAssignmentPopover({
             ASSIGNED // {tableLabel} // {seatLabel}
           </p>
           <div className="flex items-center gap-2 mb-2">
-            <Avatar
-              firstName={assignedGuest.firstName}
-              lastName={assignedGuest.lastName}
-              size="sm"
-            />
             <span className="text-body-sm text-foreground-heading font-semibold">
               {assignedGuest.firstName} {assignedGuest.lastName}
             </span>
@@ -104,11 +98,6 @@ function SeatAssignmentPopover({
                   onClick={() => onAssign(guest.id)}
                   className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-elevated text-left"
                 >
-                  <Avatar
-                    firstName={guest.firstName}
-                    lastName={guest.lastName}
-                    size="sm"
-                  />
                   <span className="text-body-sm text-foreground-heading">
                     {guest.firstName} {guest.lastName}
                   </span>

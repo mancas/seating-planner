@@ -1,4 +1,4 @@
-import { LuUserPlus, LuPlus, LuGripVertical } from 'react-icons/lu'
+import { LuUserPlus, LuPlus, LuGripVertical, LuUpload } from 'react-icons/lu'
 import { useDraggable } from '@dnd-kit/react'
 import { useLocation, useNavigate } from 'react-router'
 import SidebarNavItem from '../molecules/SidebarNavItem'
@@ -9,6 +9,7 @@ import { DRAG_TYPE_GUEST } from '../../data/dnd-types'
 
 interface Props {
   onAddGuest: () => void
+  onImportGuests?: () => void
   onAddTable?: () => void
   guests?: Guest[]
   tables?: FloorTable[]
@@ -38,6 +39,7 @@ function DraggableGuestItem({ guest }: { guest: Guest }) {
 
 function LeftSidebar({
   onAddGuest,
+  onImportGuests,
   onAddTable,
   guests = [],
   tables = [],
@@ -49,7 +51,7 @@ function LeftSidebar({
   const unassignedGuests = getUnassignedGuests(guests, tables)
 
   return (
-    <aside className="hidden md:flex flex-col w-[220px] min-w-[220px] bg-surface border-r border-border">
+    <aside className="hidden md:flex flex-col min-w-55 bg-surface border-r border-border">
       {/* Session info */}
       <div className="px-4 py-3 border-b border-border">
         <p className="text-label text-primary tracking-wider">SEATING_01</p>
@@ -86,7 +88,7 @@ function LeftSidebar({
                 <p className="text-caption text-foreground-muted mb-2">
                   UNASSIGNED ({unassignedGuests.length})
                 </p>
-                <ul className="space-y-1 max-h-[200px] overflow-y-auto">
+                <ul className="space-y-1 max-h-50 overflow-y-auto">
                   {unassignedGuests.map((g) => (
                     <DraggableGuestItem key={g.id} guest={g} />
                   ))}
@@ -95,17 +97,25 @@ function LeftSidebar({
             )}
           </>
         ) : (
-          <button
-            className="btn-primary w-full flex items-center justify-center gap-2"
-            onClick={onAddGuest}
-          >
-            <LuUserPlus size={16} />
-            ADD GUEST
-          </button>
+          <>
+            <button
+              className="btn-primary w-full flex items-center justify-center gap-2"
+              onClick={onAddGuest}
+            >
+              <LuUserPlus size={16} />
+              ADD GUEST
+            </button>
+            {onImportGuests && (
+              <button
+                className="btn-secondary w-full flex items-center justify-center gap-2 mt-2"
+                onClick={onImportGuests}
+              >
+                <LuUpload size={16} />
+                IMPORT_CSV
+              </button>
+            )}
+          </>
         )}
-        <p className="text-caption text-foreground-muted hover:text-foreground cursor-pointer mt-3 text-center">
-          HISTORY
-        </p>
       </div>
     </aside>
   )

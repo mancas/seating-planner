@@ -77,6 +77,10 @@ function GuestListView() {
     navigate('/guests/new')
   }, [navigate])
 
+  const handleNavigateToImport = useCallback(() => {
+    navigate('/guests/import')
+  }, [navigate])
+
   const handleNavigateToEdit = useCallback(
     (id: string) => {
       navigate(`/guests/${id}/edit`)
@@ -108,6 +112,7 @@ function GuestListView() {
     <>
       <LeftSidebar
         onAddGuest={handleNavigateToAdd}
+        onImportGuests={handleNavigateToImport}
         onAddTable={handleSidebarAddTable}
         guests={guests}
         tables={tables}
@@ -124,7 +129,10 @@ function GuestListView() {
             }}
           />
         ) : guests.length === 0 ? (
-          <EmptyState onAddGuest={handleNavigateToAdd} />
+          <EmptyState
+            onAddGuest={handleNavigateToAdd}
+            onImportGuests={handleNavigateToImport}
+          />
         ) : (
           <>
             <GuestListHeader

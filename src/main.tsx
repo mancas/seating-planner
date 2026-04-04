@@ -7,6 +7,7 @@ import GuestListView from './pages/GuestListView.tsx'
 import SeatingPlanView from './pages/SeatingPlanView.tsx'
 import AddGuestPage from './pages/AddGuestPage.tsx'
 import EditGuestPage from './pages/EditGuestPage.tsx'
+import ImportGuestsView from './pages/ImportGuestsView.tsx'
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -19,6 +20,7 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <Routes>
         <Route element={<App />}>
+          <Route path="guests/import" element={<ImportGuestsView />} />
           <Route element={<GuestListView />}>
             <Route index element={null} />
             <Route path="guests/new" element={<AddGuestPage />} />

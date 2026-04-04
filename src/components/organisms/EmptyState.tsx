@@ -1,10 +1,11 @@
-import { LuDiamond, LuPlus } from 'react-icons/lu'
+import { LuDiamond, LuPlus, LuUpload } from 'react-icons/lu'
 
 interface Props {
   onAddGuest: () => void
+  onImportGuests?: () => void
 }
 
-function EmptyState({ onAddGuest }: Props) {
+function EmptyState({ onAddGuest, onImportGuests }: Props) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center py-16 px-4">
       <LuDiamond size={40} className="text-foreground-muted mb-4" />
@@ -14,13 +15,24 @@ function EmptyState({ onAddGuest }: Props) {
       <p className="text-body-sm text-foreground-muted mt-2 text-center">
         Begin population sequence to activate guest matrix
       </p>
-      <button
-        className="btn-primary mt-6 flex items-center gap-2"
-        onClick={onAddGuest}
-      >
-        <LuPlus size={14} />
-        NEW_ENTRY
-      </button>
+      <div className="flex items-center gap-3 mt-6">
+        <button
+          className="btn-primary flex items-center gap-2"
+          onClick={onAddGuest}
+        >
+          <LuPlus size={14} />
+          NEW_ENTRY
+        </button>
+        {onImportGuests && (
+          <button
+            className="btn-secondary flex items-center gap-2"
+            onClick={onImportGuests}
+          >
+            <LuUpload size={14} />
+            IMPORT_CSV
+          </button>
+        )}
+      </div>
     </div>
   )
 }

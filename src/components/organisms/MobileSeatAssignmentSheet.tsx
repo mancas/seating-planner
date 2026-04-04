@@ -3,7 +3,6 @@ import { Drawer } from 'vaul'
 import { LuX } from 'react-icons/lu'
 import type { FloorTable } from '../../data/table-types'
 import type { Guest } from '../../data/guest-types'
-import Avatar from '../atoms/Avatar'
 import IconButton from '../atoms/IconButton'
 
 interface Props {
@@ -81,11 +80,6 @@ function MobileSeatAssignmentSheet({
             {assignedGuest ? (
               <>
                 <div className="flex items-center gap-2 py-2">
-                  <Avatar
-                    firstName={assignedGuest.firstName}
-                    lastName={assignedGuest.lastName}
-                    size="sm"
-                  />
                   <span className="text-body-sm text-foreground-heading font-semibold">
                     {assignedGuest.firstName} {assignedGuest.lastName}
                   </span>
@@ -118,11 +112,6 @@ function MobileSeatAssignmentSheet({
                             onClick={() => onAssign(guest.id)}
                             className="w-full flex items-center gap-2 px-2 py-2.5 rounded cursor-pointer active:bg-surface-elevated text-left"
                           >
-                            <Avatar
-                              firstName={guest.firstName}
-                              lastName={guest.lastName}
-                              size="sm"
-                            />
                             <span className="text-body-sm text-foreground-heading">
                               {guest.firstName} {guest.lastName}
                             </span>
@@ -144,11 +133,6 @@ function MobileSeatAssignmentSheet({
                               onClick={() => onAssign(guest.id)}
                               className="w-full flex items-start gap-2 px-2 py-2.5 rounded cursor-pointer active:bg-surface-elevated text-left"
                             >
-                              <Avatar
-                                firstName={guest.firstName}
-                                lastName={guest.lastName}
-                                size="sm"
-                              />
                               <div>
                                 <span className="text-body-sm text-foreground-heading block">
                                   {guest.firstName} {guest.lastName}

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { LuX, LuGift, LuBus, LuHotel } from 'react-icons/lu'
 import type { Guest } from '../../data/guest-types'
-import Avatar from '../atoms/Avatar'
 import StatusBadge from '../atoms/StatusBadge'
 import IconButton from '../atoms/IconButton'
 import GuestDetailSection from '../molecules/GuestDetailSection'
@@ -65,12 +64,7 @@ function renderContent(guest: Guest) {
     <>
       {/* Guest identity */}
       <div className="py-6 px-4 flex flex-col items-center text-center">
-        <Avatar
-          size="lg"
-          firstName={guest.firstName}
-          lastName={guest.lastName}
-        />
-        <h2 className="text-heading-4 text-foreground-heading mt-3">
+        <h2 className="text-heading-4 text-foreground-heading">
           {guest.firstName} {guest.lastName}
         </h2>
         <p className="text-body-sm text-foreground-muted mt-1">{guest.role}</p>

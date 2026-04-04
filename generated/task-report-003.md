@@ -1,63 +1,74 @@
-# Task Report — TASK-003: Update `LeftSidebar` — replace nav items with route-based links
+# Task Report — TASK-003: Create ImportGuestsPage organism
 
 ## Status: COMPLETE
 
-## Files Modified
+## Files Created
 
-- `src/components/organisms/LeftSidebar.tsx`
+- `src/components/organisms/ImportGuestsPage.tsx`
 
 ## Changes Made
 
-### 1. Added router imports (line 3)
+### 1. Created ImportGuestsPage component (244 lines)
 
-- Added `import { useLocation, useNavigate } from 'react-router'`
+Full organism component implementing the CSV import workflow with discriminated state machine.
 
-### 2. Removed `activeTab` from Props interface (lines 9–14)
+**Imports:**
 
-- Removed `activeTab: string` from the `Props` interface
+- `useState`, `useCallback` from React
+- `useNavigate` from `react-router`
+- `LuDownload`, `LuTriangleAlert`, `LuCircleCheck` from `react-icons/lu` (note: `LuCheckCircle` does not exist in installed version, used `LuCircleCheck` instead)
+- `generateTemplate`, `parseCSV`, `validateGuestRows` from `csv-import` utility
+- `ImportError` type from `csv-import`
+- `addGuest` from `guest-store`
+- `FileDropZone` molecule
 
-### 3. Removed `activeTab` from function signature (lines 38–43)
+**State management:**
 
-- Removed `activeTab` from the destructured props
+- `ImportState` discriminated union: `idle`, `error` (with `fileName`, `errors[]`, optional `fileError`), `success` (with `count`)
+- `selectedFileName` state for FileDropZone display
 
-### 4. Added route-based state derivation (lines 44–46)
+**Handlers:**
 
-- Added `useLocation()` and `useNavigate()` hooks
-- Derived `isCanvasView` from `location.pathname === '/seating-plan'`
+- `handleDownloadTemplate` — Blob URL + hidden `<a>` download pattern
+- `handleFileSelect(file)` — validates empty file, extension, then parses/validates CSV, creates guests via `addGuest()`, calls `onImportComplete()`, transitions to success
+- `handleReset` — clears state to idle
 
-### 5. Replaced nav items (lines 62–73)
+**Render structure:**
 
-- Removed four placeholder nav items: PROPERTIES, LAYOUT, OBJECTS, EXPORT
-- Added two route-based nav links:
-  - "Listado de invitados" — active when `!isCanvasView` (covers `/`, `/guests/new`, `/guests/:id/edit`), navigates to `/`
-  - "Canvas" — active when `isCanvasView`, navigates to `/seating-plan`
-
-### 6. Updated bottom actions conditional (line 77)
-
-- Replaced `activeTab === 'canvas'` with `isCanvasView`
+- Page header with cyberpunk subtitle/title pattern
+- Success phase: green-tinted panel with check icon, count, VIEW_GUEST_LIST button
+- Idle/Error phase: Step 1 (download template), Step 2 (FileDropZone), error panels, cancel button
+- Responsive layout: `max-w-2xl mx-auto`, `px-4 md:px-6`
 
 ## Acceptance Criteria Verification
 
-| Criteria                                                            | Status |
-| ------------------------------------------------------------------- | ------ |
-| Sidebar shows exactly two nav links                                 | PASS   |
-| "Listado de invitados" is active at `/` and `/guests/*`             | PASS   |
-| "Canvas" is active at `/seating-plan`                               | PASS   |
-| Clicking a link navigates to the correct route                      | PASS   |
-| Bottom section shows ADD GUEST on `/`                               | PASS   |
-| Bottom section shows ADD TABLE + unassigned list on `/seating-plan` | PASS   |
-| `activeTab` removed from Props interface                            | PASS   |
-| TypeScript compiles without errors                                  | PASS   |
+| Criteria                                                                          | Status |
+| --------------------------------------------------------------------------------- | ------ |
+| Page renders with "BATCH_IMPORT // GUEST_REGISTRY" heading                        | PASS   |
+| Download Template button triggers browser download of `guest-template.csv`        | PASS   |
+| File upload via FileDropZone triggers parsing and validation                      | PASS   |
+| Empty file shows "EMPTY_FILE // NO DATA DETECTED" error                           | PASS   |
+| Non-CSV file shows "INVALID_FORMAT // ONLY .CSV FILES ACCEPTED" error             | PASS   |
+| Validation errors render in red-tinted panel with row numbers                     | PASS   |
+| Selecting a new file clears previous errors                                       | PASS   |
+| Successful import creates guests via `addGuest()`, shows success panel with count | PASS   |
+| VIEW_GUEST_LIST button navigates to `/` with history replacement                  | PASS   |
+| CANCEL button navigates to `/`                                                    | PASS   |
+| Layout is responsive (single-column on mobile, padded on desktop)                 | PASS   |
+| File compiles with `tsc -b`                                                       | PASS   |
 
 ## Type Check
 
 ```
-npx tsc --noEmit — passed with no errors
+npx tsc -b --noEmit — passed with no errors
 ```
 
-## Dependencies Note
+## Notes
 
-TASK-004 must update `App.tsx` to stop passing `activeTab` to `LeftSidebar`. Currently the build passes because `activeTab` is no longer in the Props interface — any call site still passing it will get a TS error when TASK-004 hasn't been applied yet (or it may be silently ignored if the prop is spread). This is the expected coordination between TASK-003 and TASK-004.
+- `LuCheckCircle` from the spec doesn't exist in the installed `react-icons/lu` package. Used `LuCircleCheck` which is the correct export name for this version.
+- The `import type` for `ImportError` is used as required by `verbatimModuleSyntax`.
+- No `import type` for `Guest` was needed since the type is not directly referenced in this file.
+- No `setState` inside `useEffect` — file reading uses `.then()` callback pattern instead.
 
 ## Conventions Followed
 
@@ -65,5 +76,9 @@ TASK-004 must update `App.tsx` to stop passing `activeTab` to `LeftSidebar`. Cur
 - Single quotes
 - 2-space indentation
 - Trailing commas
-- Uses existing `SidebarNavItem` molecule with `label`, `isActive`, `onClick` props
-- Labels match spec decision DD-3: "Listado de invitados" and "Canvas" (not uppercase cyberpunk style)
+- Default export
+- `import type` for type-only imports
+- Icons from `react-icons/lu` with `size` prop
+- All user-facing text UPPERCASE with underscores
+- Design system classes used correctly
+- Page header pattern matches GuestForm.tsx

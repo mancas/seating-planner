@@ -242,3 +242,17 @@ Lessons learned and constraints established from validated specs.
 
 **Rule**: While G-16 says "avoid setState inside useEffect", there is one valid exception: when the effect must also perform a browser side effect (like `window.history.replaceState`). In this case, `useEffect` is correct because the side effect cannot run during render. Add an eslint-disable comment with a reference to this guardrail.
 **Reason**: `GuestListView` uses `useEffect` to read `location.state`, set `selectedGuestId`, and call `window.history.replaceState`. The spec explicitly chose this over setState-during-render because `window.history.replaceState` is a side effect that violates React's render purity rules. The ESLint rule `react-hooks/set-state-in-effect` will flag this — suppress with a comment.
+
+---
+
+## From: Import Guests (2026-04-04)
+
+### G-42: Handle Promise Rejections from File API Reads
+
+**Rule**: When using `file.text()`, `file.arrayBuffer()`, or similar File API methods that return Promises, always attach a `.catch()` handler (or use try/catch with async/await). Never leave a `file.text().then(...)` chain without error handling.
+**Reason**: During Import Guests validation, `file.text().then(content => { ... })` had no `.catch()` handler. If the File API rejects (file deleted between selection and read, permission error, etc.), the UI is left in a stale state with no error feedback to the user. Unhandled promise rejections also produce console warnings and may crash in strict promise error handling environments.
+
+### G-43: Interactive `<div>` Elements Must Have Full Keyboard Support
+
+**Rule**: When a `<div>` has `onClick` and `cursor-pointer` (acting as an interactive element), it must also have: `tabIndex={0}`, `role="button"`, an `onKeyDown` handler for Enter and Space keys, and `focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2` styling. This extends G-11 with a concrete checklist for non-semantic interactive elements.
+**Reason**: The `FileDropZone` component's outer `<div>` had `onClick` and `cursor-pointer` but no keyboard support. Keyboard-only users could not focus or activate the drop zone. While inner buttons (SELECT_FILE) were accessible, the primary interaction surface was not. Per G-8 and G-11, all interactive elements must be keyboard accessible with visible focus indicators.
