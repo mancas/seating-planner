@@ -1,0 +1,12 @@
+node_modules
+dist
+dist-ssr
+*.log
+.git
+.github
+.husky
+.vscode
+.idea
+.DS_Store
+generated
+spec
