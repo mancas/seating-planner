@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useState } from 'react'
 import type { Guest, GuestStatus } from '../../data/guest-types'
 import FormField from '../molecules/FormField'
@@ -35,7 +35,7 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     setValue,
     formState: { errors },
   } = useForm<GuestFormValues>({
@@ -72,8 +72,8 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
         },
   })
 
-  const shuttleRequired = watch('shuttleRequired')
-  const lodgingBooked = watch('lodgingBooked')
+  const shuttleRequired = useWatch({ control, name: 'shuttleRequired' })
+  const lodgingBooked = useWatch({ control, name: 'lodgingBooked' })
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
