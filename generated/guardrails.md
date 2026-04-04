@@ -203,3 +203,42 @@ Lessons learned and constraints established from validated specs.
 
 **Rule**: When adding `document.addEventListener('mousedown', ...)` for close-on-outside-click behavior, always also add `touchstart` listener. Mobile browsers may not fire `mousedown` for touch interactions in all contexts.
 **Reason**: `SeatAssignmentPopover` originally only listened for `mousedown`, which meant outside-tap on mobile didn't close the popover. The fix was straightforward (add `touchstart`), but the pattern should be followed for any future popovers or menus.
+
+---
+
+## From: Refactor Codebase (2026-04-04)
+
+### G-35: Use `key` Prop to Reset Component State Instead of `prevId` Tracking
+
+**Rule**: When a component has local state that should reset when a parent-provided entity changes (e.g., a form's label state when the selected table changes), use `key={entity.id}` on the component to force React to remount it — resetting all local state automatically. Do NOT use the `prevId` tracking / getDerivedStateFromProps pattern (comparing `prevId` in state, conditionally calling `setState` during render).
+**Reason**: The `prevTableId` pattern in `CanvasPropertiesPanel` and `MobilePropertiesSheet` was fragile and error-prone — each additional piece of local state would require its own `prev*` tracker. The `key` prop is React's official recommendation (see: "Resetting state with a key" in React docs) and was used successfully in the `TablePropertiesForm` refactor.
+
+### G-36: Extract Shared Logic into Dedicated Utility Files, Not Co-locate with Data
+
+**Rule**: Utility functions (computed values, transformations, helpers) should live in dedicated files (`guest-utils.ts`, `canvas-utils.ts`) rather than being co-located with type definitions (`dnd-types.ts`) or seed data (`mock-guests.ts`). Type files should only export types; data files should only export data; utility files should only export functions.
+**Reason**: The `screenToCanvas` function was buried in `dnd-types.ts` (a type definition file) and statistics functions were duplicated between `mock-guests.ts` (seed data) and `guest-store.ts` (persistence layer). Extracting utilities to dedicated files makes them discoverable and prevents the "everything in one file" antipattern.
+
+### G-37: Remove Dead Exports After Creating Replacements
+
+**Rule**: When creating a replacement for existing functionality (e.g., a `useGuestStats` hook replacing inline stats, or a `getUnassignedGuests` utility replacing inline computations), grep the codebase for all original implementations and delete any that become orphaned. Export-level dead code is particularly dangerous because TypeScript won't warn about unused exports.
+**Reason**: After creating `useGuestStats`, the 7 statistics functions in `guest-store.ts` (`getConfirmedCount`, etc.) became dead code with zero consumers but were not removed. TypeScript does not flag unused exports. Always verify with `grep import.*functionName` after creating replacements.
+
+### G-38: Layout Routes Own Their Outlet Context
+
+**Rule**: When using react-router layout routes, the layout route component (not the root `App`) should own the state and provide the `OutletContext` for its child routes. This keeps state close to where it's consumed and makes each route self-contained.
+**Reason**: In the refactoring, `GuestListView` became a layout route that provides `OutletContext` to `AddGuestPage` and `EditGuestPage`. This pattern is cleaner than the original approach where `App.tsx` passed context to all child routes despite the canvas view not needing it.
+
+### G-39: Store Functions Are Not Hooks — Don't Call Them in Render Without Memoization
+
+**Rule**: Store read functions that access `localStorage` (e.g., `getTables()`, `getGuests()`) perform I/O (JSON deserialization) and should not be called directly in the component body on every render. Wrap in `useState(() => fn())` (read once), `useMemo(() => fn(), deps)` (recompute when deps change), or use a reactive store pattern.
+**Reason**: `GuestListView` calls `getTables()` on every render without memoization, deserializing the full table array each time. While the performance impact is negligible at current scale, this violates the principle of minimal work in render and is inconsistent with the `useState(() => getGuests())` pattern used for guests in the same component.
+
+### G-40: Thin Layout Shell App.tsx — No Business Logic
+
+**Rule**: `App.tsx` should be a thin layout shell that renders only shared chrome (`TopNav`, `BottomTabBar`, `Outlet`). All state management, CRUD operations, computed values, and view-specific rendering should live in route-level view components (`GuestListView`, `SeatingPlanView`).
+**Reason**: The original `App.tsx` was a 332-line god component owning all guest state, table state, navigation callbacks, computed statistics, DnD configuration, and two entirely different UI trees. After refactoring to 17 lines, each concern is isolated in the appropriate route component, making the code easier to understand, test, and extend.
+
+### G-41: G-16 Exception — Side Effects Justify useEffect with setState
+
+**Rule**: While G-16 says "avoid setState inside useEffect", there is one valid exception: when the effect must also perform a browser side effect (like `window.history.replaceState`). In this case, `useEffect` is correct because the side effect cannot run during render. Add an eslint-disable comment with a reference to this guardrail.
+**Reason**: `GuestListView` uses `useEffect` to read `location.state`, set `selectedGuestId`, and call `window.history.replaceState`. The spec explicitly chose this over setState-during-render because `window.history.replaceState` is a side effect that violates React's render purity rules. The ESLint rule `react-hooks/set-state-in-effect` will flag this — suppress with a comment.

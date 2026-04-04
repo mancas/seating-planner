@@ -1,7 +1,7 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef } from 'react'
 import { useDraggable, useDroppable } from '@dnd-kit/react'
 import type { FloorTable, SeatAssignment } from '../../data/table-types'
-import type { Guest } from '../../data/mock-guests'
+import type { Guest } from '../../data/guest-types'
 import {
   getRectTableSize,
   getCircleTableDiameter,
@@ -16,7 +16,8 @@ import type {
   DropTableData,
 } from '../../data/dnd-types'
 import SeatIndicator from '../atoms/SeatIndicator'
-import { useLongPress } from '../../hooks/useLongPress'
+
+const TOUCH_MOVE_THRESHOLD = 10
 
 interface Props {
   table: FloorTable
@@ -28,6 +29,7 @@ interface Props {
   onTableMouseDown?: (e: React.MouseEvent) => void
   isMobile?: boolean
   activeTool?: string
+  scale?: number
   onTableTouchDrag?: (tableId: string, deltaX: number, deltaY: number) => void
 }
 
@@ -40,6 +42,7 @@ function SeatSlot({
   activeSeatIndex,
   onSeatClick,
   isMobile,
+  activeTool,
 }: {
   seatIndex: number
   tableId: string
@@ -48,6 +51,7 @@ function SeatSlot({
   activeSeatIndex: number | null
   onSeatClick: (seatIndex: number, anchorRect: DOMRect) => void
   isMobile?: boolean
+  activeTool?: string
 }) {
   const initials = guest
     ? `${guest.firstName.charAt(0)}${guest.lastName.charAt(0)}`
@@ -86,6 +90,17 @@ function SeatSlot({
             ).getBoundingClientRect()
             onSeatClick(seatIndex, rect)
           }}
+          onMobileTap={
+            isMobile && activeTool === 'select'
+              ? (e) => {
+                  e.stopPropagation()
+                  const rect = (
+                    e.currentTarget as HTMLElement
+                  ).getBoundingClientRect()
+                  onSeatClick(seatIndex, rect)
+                }
+              : undefined
+          }
         />
       </div>
     </div>
@@ -102,6 +117,7 @@ function CanvasTable({
   onTableMouseDown,
   isMobile,
   activeTool,
+  scale,
   onTableTouchDrag,
 }: Props) {
   const isCircle = table.shape === 'circular'
@@ -137,43 +153,14 @@ function CanvasTable({
   }
 
   const touchStartPos = useRef<{ x: number; y: number } | null>(null)
+  const touchMoved = useRef(false)
+  const dragAccumRef = useRef({ x: 0, y: 0 })
+  const rootRef = useRef<HTMLDivElement>(null)
   const [isDragMode, setIsDragMode] = useState(false)
-
-  const handleLongPress = useCallback(() => {
-    if (isSelected && isMobile && activeTool === 'select') {
-      setIsDragMode(true)
-    }
-  }, [isSelected, isMobile, activeTool])
-
-  const handleTap = useCallback(() => {
-    onSelect()
-  }, [onSelect])
-
-  const longPressHandlers = useLongPress({
-    threshold: 300,
-    onLongPress: handleLongPress,
-    onTap: handleTap,
-  })
-
-  function handleTouchMove(e: React.TouchEvent) {
-    if (!isDragMode || !touchStartPos.current) return
-    e.preventDefault() // Prevent scroll/pan while dragging table
-    const touch = e.touches[0]
-    const deltaX = touch.clientX - touchStartPos.current.x
-    const deltaY = touch.clientY - touchStartPos.current.y
-    touchStartPos.current = { x: touch.clientX, y: touch.clientY }
-    onTableTouchDrag?.(table.id, deltaX, deltaY)
-  }
-
-  function handleTouchEnd() {
-    if (isDragMode) {
-      setIsDragMode(false)
-    }
-    touchStartPos.current = null
-  }
 
   return (
     <div
+      ref={rootRef}
       className={`absolute ${isDragMode ? 'shadow-lg ring-2 ring-primary rounded' : ''}`}
       style={{
         left: table.x,
@@ -186,22 +173,68 @@ function CanvasTable({
       onMouseDown={handleMouseDown}
       onClick={(e) => e.stopPropagation()}
       onTouchStart={(e) => {
-        if (isMobile && activeTool === 'select') {
+        if (!isMobile) return
+        if (activeTool === 'pan') {
+          // Pan/hand tool: start table drag immediately
           touchStartPos.current = {
             x: e.touches[0].clientX,
             y: e.touches[0].clientY,
           }
-          longPressHandlers.onTouchStart()
+          dragAccumRef.current = { x: 0, y: 0 }
+          setIsDragMode(true)
           e.stopPropagation()
+        } else if (activeTool === 'select') {
+          // Select tool: track for tap detection, let TransformWrapper pan
+          touchStartPos.current = {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY,
+          }
+          touchMoved.current = false
         }
       }}
       onTouchMove={(e) => {
-        longPressHandlers.onTouchMove()
-        handleTouchMove(e)
+        if (!touchStartPos.current) return
+        if (isDragMode && rootRef.current) {
+          // Dragging table — direct DOM update, no React re-render
+          e.preventDefault()
+          e.stopPropagation()
+          const touch = e.touches[0]
+          const dx = touch.clientX - touchStartPos.current.x
+          const dy = touch.clientY - touchStartPos.current.y
+          touchStartPos.current = { x: touch.clientX, y: touch.clientY }
+          const s = scale ?? 1
+          dragAccumRef.current.x += dx / s
+          dragAccumRef.current.y += dy / s
+          rootRef.current.style.left = `${table.x + dragAccumRef.current.x}px`
+          rootRef.current.style.top = `${table.y + dragAccumRef.current.y}px`
+        } else {
+          // Select tool: track movement to distinguish tap from pan
+          const touch = e.touches[0]
+          const dist = Math.hypot(
+            touch.clientX - touchStartPos.current.x,
+            touch.clientY - touchStartPos.current.y,
+          )
+          if (dist > TOUCH_MOVE_THRESHOLD) {
+            touchMoved.current = true
+          }
+        }
       }}
       onTouchEnd={() => {
-        longPressHandlers.onTouchEnd()
-        handleTouchEnd()
+        if (isDragMode) {
+          setIsDragMode(false)
+          // Persist final position (single localStorage write)
+          onTableTouchDrag?.(
+            table.id,
+            dragAccumRef.current.x,
+            dragAccumRef.current.y,
+          )
+          dragAccumRef.current = { x: 0, y: 0 }
+        } else if (isMobile && activeTool === 'select' && !touchMoved.current) {
+          // Tap detected in select mode → select table
+          onSelect()
+        }
+        touchStartPos.current = null
+        touchMoved.current = false
       }}
     >
       {/* Table body */}
@@ -250,6 +283,7 @@ function CanvasTable({
               top: pos.y + SEAT_RADIUS - 14,
             }}
             onTouchStart={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
           >
             <SeatSlot
@@ -260,6 +294,7 @@ function CanvasTable({
               activeSeatIndex={activeSeatIndex}
               onSeatClick={onSeatClick}
               isMobile={isMobile}
+              activeTool={activeTool}
             />
           </div>
         )

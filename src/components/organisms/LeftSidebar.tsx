@@ -2,8 +2,9 @@ import { LuUserPlus, LuPlus, LuGripVertical } from 'react-icons/lu'
 import { useDraggable } from '@dnd-kit/react'
 import { useLocation, useNavigate } from 'react-router'
 import SidebarNavItem from '../molecules/SidebarNavItem'
-import type { Guest } from '../../data/mock-guests'
+import type { Guest } from '../../data/guest-types'
 import type { FloorTable } from '../../data/table-types'
+import { getUnassignedGuests } from '../../data/guest-utils'
 import { DRAG_TYPE_GUEST } from '../../data/dnd-types'
 
 interface Props {
@@ -45,10 +46,7 @@ function LeftSidebar({
   const navigate = useNavigate()
   const isCanvasView = location.pathname === '/seating-plan'
 
-  const allAssignedGuestIds = new Set(
-    tables.flatMap((t) => t.seats.map((s) => s.guestId)),
-  )
-  const unassignedGuests = guests.filter((g) => !allAssignedGuestIds.has(g.id))
+  const unassignedGuests = getUnassignedGuests(guests, tables)
 
   return (
     <aside className="hidden md:flex flex-col w-[220px] min-w-[220px] bg-surface border-r border-border">

@@ -58,6 +58,15 @@ export function useTableState() {
     [refreshTables],
   )
 
+  const handleReassignGuest = useCallback(
+    (tableId: string, seatIndex: number, guestId: string) => {
+      storeClearGuestAssignments(guestId)
+      storeAssignGuestToSeat(tableId, seatIndex, guestId)
+      refreshTables()
+    },
+    [refreshTables],
+  )
+
   const handleUnassignSeat = useCallback(
     (tableId: string, seatIndex: number) => {
       storeUnassignSeat(tableId, seatIndex)
@@ -95,6 +104,7 @@ export function useTableState() {
     handleUpdateTable,
     handleDeleteTable,
     handleAssignGuest,
+    handleReassignGuest,
     handleUnassignSeat,
     handleSwapSeats,
     handleClearGuestAssignments,

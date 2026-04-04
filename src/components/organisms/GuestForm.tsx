@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { useState } from 'react'
-import type { Guest, GuestStatus } from '../../data/mock-guests'
+import type { Guest, GuestStatus } from '../../data/guest-types'
 import FormField from '../molecules/FormField'
 import FormSection from '../molecules/FormSection'
 import ConfirmDialog from '../molecules/ConfirmDialog'
@@ -289,7 +289,7 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
           {isEdit && (
             <button
               type="button"
-              className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded font-semibold text-sm cursor-pointer focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+              className="btn-destructive"
               onClick={() => setShowDeleteDialog(true)}
             >
               DELETE

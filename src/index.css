@@ -1,29 +1,29 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Gray scale */
-  --color-gray-950: #0a0a0a;
-  --color-gray-900: #0e0e0e;
-  --color-gray-850: #131313;
-  --color-gray-800: #1a1a1a;
-  --color-gray-700: #2a2a2a;
-  --color-gray-600: #3a3a3a;
-  --color-gray-500: #6b6b6b;
-  --color-gray-400: #8a8a8a;
-  --color-gray-300: #a0a0a0;
-  --color-gray-200: #c0c0c0;
-  --color-gray-100: #e0e0e0;
-  --color-gray-50: #f0f0f0;
+  /* Gray scale — sourced from :root --nc-* tokens */
+  --color-gray-950: var(--nc-gray-950);
+  --color-gray-900: var(--nc-gray-900);
+  --color-gray-850: var(--nc-gray-850);
+  --color-gray-800: var(--nc-gray-800);
+  --color-gray-700: var(--nc-gray-700);
+  --color-gray-600: var(--nc-gray-600);
+  --color-gray-500: var(--nc-gray-500);
+  --color-gray-400: var(--nc-gray-400);
+  --color-gray-300: var(--nc-gray-300);
+  --color-gray-200: var(--nc-gray-200);
+  --color-gray-100: var(--nc-gray-100);
+  --color-gray-50: var(--nc-gray-50);
 
-  /* Cobalt accent scale */
-  --color-cobalt-950: #001433;
-  --color-cobalt-900: #002266;
-  --color-cobalt-800: #003399;
-  --color-cobalt-700: #0044cc;
-  --color-cobalt-600: #0057ff;
-  --color-cobalt-500: #3377ff;
-  --color-cobalt-400: #6699ff;
-  --color-cobalt-300: #99bbff;
+  /* Cobalt accent scale — sourced from :root --nc-* tokens */
+  --color-cobalt-950: var(--nc-cobalt-950);
+  --color-cobalt-900: var(--nc-cobalt-900);
+  --color-cobalt-800: var(--nc-cobalt-800);
+  --color-cobalt-700: var(--nc-cobalt-700);
+  --color-cobalt-600: var(--nc-cobalt-600);
+  --color-cobalt-500: var(--nc-cobalt-500);
+  --color-cobalt-400: var(--nc-cobalt-400);
+  --color-cobalt-300: var(--nc-cobalt-300);
 
   /* Semantic color aliases */
   --color-background: var(--color-gray-900);
@@ -32,15 +32,15 @@
   --color-foreground: var(--color-gray-100);
   --color-foreground-muted: var(--color-gray-500);
   --color-foreground-heading: var(--color-gray-50);
-  --color-border: rgba(67, 70, 86, 0.15);
+  --color-border: var(--nc-border);
   --color-primary: var(--color-cobalt-600);
   --color-primary-hover: var(--color-cobalt-700);
-  --color-primary-foreground: #ffffff;
+  --color-primary-foreground: var(--nc-primary-foreground);
   --color-ring: var(--color-cobalt-500);
 
   /* AC-6 and AC-7 aliases */
   --color-muted: var(--color-gray-500);
-  --color-default: rgba(67, 70, 86, 0.15);
+  --color-default: var(--nc-border);
 
   /* Typography — font families */
   --font-sans: 'Space Grotesk', system-ui, sans-serif;
@@ -394,5 +394,28 @@ code {
     background: var(--nc-cobalt-950);
     border-radius: 4px;
     padding: 2px 8px;
+  }
+
+  .btn-destructive {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.45;
+    color: #ffffff;
+    background: #dc2626;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    &:hover {
+      background: #b91c1c;
+    }
+    &:focus-visible {
+      outline: 2px solid var(--nc-ring);
+      outline-offset: 2px;
+    }
   }
 }

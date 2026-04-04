@@ -1,63 +1,19 @@
-import type { FloorTable, TableShape, SeatAssignment } from './table-types'
+import type { FloorTable, SeatAssignment } from './table-types'
 import { NATO_LABELS } from './table-types'
 import { v4 as uuidv4 } from 'uuid'
+import { createStorage } from './storage-utils'
 
-export type { FloorTable, TableShape, SeatAssignment }
-
-const STORAGE_KEY = 'seating-plan:tables'
-const COUNTER_KEY = 'seating-plan:table-counter'
-
-let memoryFallback: FloorTable[] | null = null
-let memoryCounterFallback: number | null = null
-
-// ── Storage helpers ───────────────────────────────────────────────────
-
-function readFromStorage(): FloorTable[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw) as FloorTable[]
-    return []
-  } catch {
-    if (memoryFallback !== null) return memoryFallback
-    return []
-  }
-}
-
-function writeToStorage(tables: FloorTable[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tables))
-  } catch {
-    memoryFallback = tables
-  }
-}
-
-function readCounter(): number {
-  try {
-    const raw = localStorage.getItem(COUNTER_KEY)
-    if (raw) return JSON.parse(raw) as number
-    return 0
-  } catch {
-    if (memoryCounterFallback !== null) return memoryCounterFallback
-    return 0
-  }
-}
-
-function writeCounter(value: number): void {
-  try {
-    localStorage.setItem(COUNTER_KEY, JSON.stringify(value))
-  } catch {
-    memoryCounterFallback = value
-  }
-}
+const tableStorage = createStorage<FloorTable[]>('seating-plan:tables', [])
+const counterStorage = createStorage<number>('seating-plan:table-counter', 0)
 
 // ── Public API ────────────────────────────────────────────────────────
 
 export function getTables(): FloorTable[] {
-  return readFromStorage()
+  return tableStorage.read()
 }
 
 export function getTableById(id: string): FloorTable | undefined {
-  return readFromStorage().find((t) => t.id === id)
+  return tableStorage.read().find((t) => t.id === id)
 }
 
 export function addTable(
@@ -65,9 +21,9 @@ export function addTable(
     seats?: SeatAssignment[]
   },
 ): FloorTable {
-  const tables = readFromStorage()
-  const counter = readCounter() + 1
-  writeCounter(counter)
+  const tables = tableStorage.read()
+  const counter = counterStorage.read() + 1
+  counterStorage.write(counter)
 
   const badgeId = `T${String(counter).padStart(2, '0')}`
   const label = `TABLE ${NATO_LABELS[(counter - 1) % NATO_LABELS.length]}`
@@ -85,7 +41,7 @@ export function addTable(
   }
 
   tables.push(newTable)
-  writeToStorage(tables)
+  tableStorage.write(tables)
   return newTable
 }
 
@@ -93,7 +49,7 @@ export function updateTable(
   id: string,
   data: Partial<Omit<FloorTable, 'id' | 'badgeId'>>,
 ): FloorTable | undefined {
-  const tables = readFromStorage()
+  const tables = tableStorage.read()
   const index = tables.findIndex((t) => t.id === id)
   if (index === -1) return undefined
 
@@ -118,15 +74,15 @@ export function updateTable(
   }
 
   tables[index] = updated
-  writeToStorage(tables)
+  tableStorage.write(tables)
   return updated
 }
 
 export function deleteTable(id: string): boolean {
-  const tables = readFromStorage()
+  const tables = tableStorage.read()
   const filtered = tables.filter((t) => t.id !== id)
   if (filtered.length === tables.length) return false
-  writeToStorage(filtered)
+  tableStorage.write(filtered)
   return true
 }
 
@@ -135,7 +91,7 @@ export function assignGuestToSeat(
   seatIndex: number,
   guestId: string,
 ): FloorTable | undefined {
-  const tables = readFromStorage()
+  const tables = tableStorage.read()
   const index = tables.findIndex((t) => t.id === tableId)
   if (index === -1) return undefined
 
@@ -145,7 +101,7 @@ export function assignGuestToSeat(
   table.seats.push({ seatIndex, guestId })
 
   tables[index] = table
-  writeToStorage(tables)
+  tableStorage.write(tables)
   return table
 }
 
@@ -153,7 +109,7 @@ export function unassignSeat(
   tableId: string,
   seatIndex: number,
 ): FloorTable | undefined {
-  const tables = readFromStorage()
+  const tables = tableStorage.read()
   const index = tables.findIndex((t) => t.id === tableId)
   if (index === -1) return undefined
 
@@ -161,7 +117,7 @@ export function unassignSeat(
   table.seats = table.seats.filter((s) => s.seatIndex !== seatIndex)
 
   tables[index] = table
-  writeToStorage(tables)
+  tableStorage.write(tables)
   return table
 }
 
@@ -175,7 +131,7 @@ export function swapSeats(
   if (sourceTableId === targetTableId && sourceSeatIndex === targetSeatIndex)
     return
 
-  const tables = readFromStorage()
+  const tables = tableStorage.read()
 
   const sourceTableIdx = tables.findIndex((t) => t.id === sourceTableId)
   if (sourceTableIdx === -1) return
@@ -222,11 +178,11 @@ export function swapSeats(
     })
   }
 
-  writeToStorage(tables)
+  tableStorage.write(tables)
 }
 
 export function clearGuestAssignments(guestId: string): void {
-  const tables = readFromStorage()
+  const tables = tableStorage.read()
   let changed = false
 
   for (let i = 0; i < tables.length; i++) {
@@ -238,6 +194,6 @@ export function clearGuestAssignments(guestId: string): void {
   }
 
   if (changed) {
-    writeToStorage(tables)
+    tableStorage.write(tables)
   }
 }

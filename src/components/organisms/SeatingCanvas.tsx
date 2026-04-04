@@ -2,13 +2,15 @@ import { useState, useRef, useMemo } from 'react'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import type { ReactZoomPanPinchContentRef } from 'react-zoom-pan-pinch'
 import type { FloorTable, TableShape } from '../../data/table-types'
-import type { Guest } from '../../data/mock-guests'
-import { screenToCanvas } from '../../data/dnd-types'
+import type { Guest } from '../../data/guest-types'
+import { getUnassignedGuests } from '../../data/guest-utils'
+import { screenToCanvas } from '../../data/canvas-utils'
 import CanvasToolbar from '../molecules/CanvasToolbar'
 import type { CanvasTool } from '../molecules/CanvasToolbar'
 import CanvasTable from '../molecules/CanvasTable'
 import CanvasStatusBar from '../atoms/CanvasStatusBar'
 import SeatAssignmentPopover from '../molecules/SeatAssignmentPopover'
+import MobileSeatAssignmentSheet from './MobileSeatAssignmentSheet'
 import { useIsMobile } from '../../hooks/useIsMobile'
 
 interface Props {
@@ -37,6 +39,7 @@ interface Props {
     tgtTableId: string,
     tgtSeatIdx: number,
   ) => void
+  onReassignGuest: (tableId: string, seatIndex: number, guestId: string) => void
 }
 
 interface ActiveSeat {
@@ -53,6 +56,8 @@ interface DragState {
   origY: number
 }
 
+const CANVAS_WIDTH = 3000
+const CANVAS_HEIGHT = 2000
 const DRAG_THRESHOLD = 3
 
 function SeatingCanvas({
@@ -64,6 +69,7 @@ function SeatingCanvas({
   onUpdateTable,
   onAssignGuest,
   onUnassignSeat,
+  onReassignGuest,
 }: Props) {
   const [activeTool, setActiveTool] = useState<CanvasTool>('select')
   const [activeSeat, setActiveSeat] = useState<ActiveSeat | null>(null)
@@ -77,12 +83,10 @@ function SeatingCanvas({
   const hasDragged = useRef(false)
 
   // Compute unassigned guests
-  const unassignedGuests = useMemo(() => {
-    const assignedGuestIds = new Set(
-      tables.flatMap((t) => t.seats.map((s) => s.guestId)),
-    )
-    return guests.filter((g) => !assignedGuestIds.has(g.id))
-  }, [tables, guests])
+  const unassignedGuests = useMemo(
+    () => getUnassignedGuests(guests, tables),
+    [tables, guests],
+  )
 
   // Canvas click handler — only fires for direct clicks on the dot-grid background
   function handleCanvasClick(e: React.MouseEvent<HTMLDivElement>) {
@@ -160,6 +164,9 @@ function SeatingCanvas({
     seatIndex: number,
     anchorRect: DOMRect,
   ) {
+    if (isMobile) {
+      onSelectTable(null) // Close MobilePropertiesSheet (DD-F3)
+    }
     setActiveSeat({ tableId, seatIndex, anchorRect })
   }
 
@@ -185,17 +192,15 @@ function SeatingCanvas({
           minScale={isMobile ? 0.5 : 1}
           maxScale={isMobile ? 3 : 1}
           limitToBounds={false}
-          panning={{ disabled: isMobile ? false : activeTool !== 'pan' }}
+          panning={{
+            disabled: isMobile ? activeTool === 'pan' : activeTool !== 'pan',
+          }}
           pinch={{ disabled: !isMobile }}
           doubleClick={{ disabled: true }}
           wheel={{ disabled: true }}
-          onTransformed={
-            isMobile
-              ? (_ref, state) => {
-                  setCurrentZoom(state.scale)
-                }
-              : undefined
-          }
+          onTransformed={(_ref, state) => {
+            setCurrentZoom(state.scale)
+          }}
         >
           <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }}>
             {/* Dot grid canvas area */}
@@ -203,8 +208,8 @@ function SeatingCanvas({
               ref={canvasRef}
               className="relative"
               style={{
-                width: 3000,
-                height: 2000,
+                width: CANVAS_WIDTH,
+                height: CANVAS_HEIGHT,
                 backgroundImage:
                   'radial-gradient(circle, var(--nc-gray-700) 1px, transparent 1px)',
                 backgroundSize: '24px 24px',
@@ -248,14 +253,13 @@ function SeatingCanvas({
                   }}
                   isMobile={isMobile}
                   activeTool={activeTool}
-                  onTableTouchDrag={(tableId, deltaX, deltaY) => {
-                    const instance = transformRef.current?.instance
-                    const scale = instance?.transformState.scale ?? 1
+                  scale={currentZoom}
+                  onTableTouchDrag={(tableId, canvasDx, canvasDy) => {
                     const t = tables.find((tbl) => tbl.id === tableId)
                     if (t) {
                       onUpdateTable(tableId, {
-                        x: t.x + deltaX / scale,
-                        y: t.y + deltaY / scale,
+                        x: t.x + canvasDx,
+                        y: t.y + canvasDy,
                       })
                     }
                   }}
@@ -280,8 +284,8 @@ function SeatingCanvas({
           <CanvasStatusBar zoom={isMobile ? currentZoom : undefined} />
         </div>
 
-        {/* Seat assignment popover */}
-        {activeSeat && activeSeatTable && (
+        {/* Seat assignment: popover on desktop, bottom sheet on mobile */}
+        {activeSeat && activeSeatTable && !isMobile && (
           <SeatAssignmentPopover
             seatIndex={activeSeat.seatIndex}
             tableLabel={activeSeatTable.label}
@@ -297,6 +301,25 @@ function SeatingCanvas({
             }}
             onClose={() => setActiveSeat(null)}
             anchorRect={activeSeat.anchorRect}
+          />
+        )}
+        {activeSeat && activeSeatTable && isMobile && (
+          <MobileSeatAssignmentSheet
+            seatIndex={activeSeat.seatIndex}
+            tableLabel={activeSeatTable.label}
+            assignedGuest={activeSeatGuest}
+            unassignedGuests={unassignedGuests}
+            tables={tables}
+            guests={guests}
+            onAssign={(guestId) => {
+              onReassignGuest(activeSeat.tableId, activeSeat.seatIndex, guestId)
+              setActiveSeat(null)
+            }}
+            onUnassign={() => {
+              onUnassignSeat(activeSeat.tableId, activeSeat.seatIndex)
+              setActiveSeat(null)
+            }}
+            onClose={() => setActiveSeat(null)}
           />
         )}
       </div>

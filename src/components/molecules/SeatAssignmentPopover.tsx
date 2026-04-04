@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { Guest } from '../../data/mock-guests'
+import type { Guest } from '../../data/guest-types'
 import Avatar from '../atoms/Avatar'
 
 interface Props {
@@ -12,6 +12,9 @@ interface Props {
   onClose: () => void
   anchorRect: DOMRect
 }
+
+const POPOVER_WIDTH = 224
+const POPOVER_GAP = 8
 
 function SeatAssignmentPopover({
   seatIndex,
@@ -45,20 +48,19 @@ function SeatAssignmentPopover({
 
   const seatLabel = `SEAT_${String(seatIndex + 1).padStart(2, '0')}`
 
-  // Position: centered horizontally below anchor, 8px gap
-  const popoverWidth = 224 // w-56 = 14rem = 224px
-  let top = anchorRect.bottom + 8
-  let left = anchorRect.left + anchorRect.width / 2 - popoverWidth / 2
+  // Position: centered horizontally below anchor
+  let top = anchorRect.bottom + POPOVER_GAP
+  let left = anchorRect.left + anchorRect.width / 2 - POPOVER_WIDTH / 2
 
   // Flip above if below viewport
   if (top + 200 > window.innerHeight) {
-    top = anchorRect.top - 8 - 200
+    top = anchorRect.top - POPOVER_GAP - 200
   }
 
   // Clamp left to stay in viewport
-  if (left < 8) left = 8
-  if (left + popoverWidth > window.innerWidth - 8) {
-    left = window.innerWidth - 8 - popoverWidth
+  if (left < POPOVER_GAP) left = POPOVER_GAP
+  if (left + POPOVER_WIDTH > window.innerWidth - POPOVER_GAP) {
+    left = window.innerWidth - POPOVER_GAP - POPOVER_WIDTH
   }
 
   return (

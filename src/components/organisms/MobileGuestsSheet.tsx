@@ -1,6 +1,6 @@
 import { Drawer } from 'vaul'
 import { LuX } from 'react-icons/lu'
-import type { Guest } from '../../data/mock-guests'
+import type { Guest } from '../../data/guest-types'
 import Avatar from '../atoms/Avatar'
 import IconButton from '../atoms/IconButton'
 

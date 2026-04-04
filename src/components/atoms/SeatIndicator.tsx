@@ -5,6 +5,7 @@ interface Props {
   isDropTarget?: boolean
   isSwapTarget?: boolean
   onClick?: (e: React.MouseEvent) => void
+  onMobileTap?: (e: React.TouchEvent) => void
 }
 
 function SeatIndicator({
@@ -14,6 +15,7 @@ function SeatIndicator({
   isDropTarget = false,
   isSwapTarget = false,
   onClick,
+  onMobileTap,
 }: Props) {
   const base =
     'w-7 h-7 rounded-full cursor-pointer hover:ring-2 hover:ring-primary/50 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2'
@@ -37,6 +39,12 @@ function SeatIndicator({
   return (
     <button
       onClick={onClick}
+      onTouchEnd={(e) => {
+        if (onMobileTap) {
+          e.preventDefault()
+          onMobileTap(e)
+        }
+      }}
       aria-label={isEmpty ? 'Empty seat' : `Seat: ${initials}`}
       className={`${base} ${variant} ${selected} ${dropTarget} ${swapTarget}`}
     >

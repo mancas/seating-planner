@@ -1,588 +1,512 @@
-# Codebase Context
+# Codebase Context — seating-plan
 
-## Tech Stack
+## Project Overview
 
-- **Language(s)**: TypeScript ~5.9.3 (strict mode, ES2023 target)
-- **Framework**: React ^19.2.4
-- **Runtime**: Node.js (ESM, `"type": "module"`)
-- **Build Tool**: Vite ^8.0.1
-- **CSS Framework**: TailwindCSS ^4.2.2 (CSS-first config via `@tailwindcss/vite` plugin, no `tailwind.config.js`)
-- **Routing**: React Router ^7.14.0 (BrowserRouter, nested routes, route-based navigation)
-- **Design System**: Nought Cobalt — dark-mode-only, monochrome + cobalt blue (#0057FF), Space Grotesk typeface
+A dark-themed, event seating plan management application for organizing guests and assigning them to tables. The app has two main views: a **Guest List** (tabular CRUD interface for managing guest records) and a **Seating Canvas** (visual 2D floor plan for placing tables, assigning guests to seats via drag-and-drop). The aesthetic is a futuristic/sci-fi "Nought Cobalt" design system with uppercase labels, monospaced identifiers, and a NATO phonetic naming convention for tables.
 
-## Key Dependencies
+Data is persisted to `localStorage` with an in-memory fallback. There is no backend/API — this is a fully client-side SPA.
 
-| Library                      | Version  | Purpose                                                   |
-| ---------------------------- | -------- | --------------------------------------------------------- |
-| react                        | ^19.2.4  | UI framework                                              |
-| react-dom                    | ^19.2.4  | React DOM rendering                                       |
-| react-router                 | ^7.14.0  | Client-side routing (BrowserRouter, nested routes)        |
-| react-hook-form              | ^7.72.1  | Form state management and validation for guest CRUD       |
-| react-icons                  | ^5.6.0   | Icon library (Lucide `lu` family used exclusively)        |
-| react-zoom-pan-pinch         | ^3.7.0   | Pan/zoom for seating canvas                               |
-| @dnd-kit/react               | ^0.3.2   | Drag-and-drop for guest seat assignment and seat swapping |
-| @tanstack/react-table        | ^8.21.3  | Headless table utilities for the desktop guest list       |
-| uuid                         | ^13.0.0  | UUID v4 generation for guest and table IDs                |
-| tailwindcss                  | ^4.2.2   | Utility-first CSS framework (v4 CSS-first config)         |
-| @tailwindcss/vite            | ^4.2.2   | Vite plugin for TailwindCSS v4                            |
-| @vitejs/plugin-react         | ^6.0.1   | React support for Vite (Oxc-based)                        |
-| typescript                   | ~5.9.3   | Type checking                                             |
-| eslint                       | ^9.39.4  | Linting (flat config)                                     |
-| eslint-config-prettier       | ^10.1.8  | Disables ESLint rules that conflict with Prettier         |
-| eslint-plugin-react-hooks    | ^7.0.1   | React hooks linting                                       |
-| eslint-plugin-react-refresh  | ^0.5.2   | React refresh linting                                     |
-| typescript-eslint            | ^8.57.0  | TypeScript ESLint integration                             |
-| prettier                     | ^3.8.1   | Code formatter                                            |
-| husky                        | ^9.1.7   | Git hooks                                                 |
-| @types/uuid                  | ^10.0.0  | TypeScript types for uuid                                 |
-| @types/node                  | ^24.12.0 | TypeScript types for Node.js                              |
-| Space Grotesk (Google Fonts) | CDN      | Primary typeface — loaded via `<link>` in `index.html`    |
+## Technology Stack
 
-## Code Conventions
+- **Framework**: React 19.2.4 (with StrictMode)
+- **Build tool**: Vite 8.0.1 (with `@vitejs/plugin-react` 6.0.1)
+- **Language**: TypeScript ~5.9.3 (strict mode, ES2023 target, `verbatimModuleSyntax`)
+- **Styling**: Tailwind CSS 4.2.2 (via `@tailwindcss/vite` plugin, v4 `@theme`/`@utility`/`@layer` syntax)
+- **State management**: React `useState` + custom hooks; no external state library
+- **Routing**: React Router 7.14.0 (`react-router`, BrowserRouter with nested `<Route>` + `<Outlet>`)
+- **Form handling**: react-hook-form 7.72.1
+- **Drag and Drop**: @dnd-kit/react 0.3.2
+- **Canvas pan/zoom**: react-zoom-pan-pinch 3.7.0
+- **Mobile bottom sheets**: vaul 1.1.2 (Drawer component)
+- **Icons**: react-icons 5.6.0 (exclusively Lucide family — `react-icons/lu`)
+- **Table rendering**: @tanstack/react-table 8.21.3
+- **ID generation**: uuid 13.0.0
+- **Font**: Space Grotesk (Google Fonts, with preconnect)
+- **Linting**: ESLint 9.39.4 + typescript-eslint 8.57.0 + eslint-plugin-react-hooks 7.0.1 + eslint-plugin-react-refresh 0.5.2 + eslint-config-prettier 10.1.8
+- **Formatting**: Prettier 3.8.1 (no semicolons, single quotes, trailing commas)
+- **Pre-commit hooks**: Husky 9.1.7 (runs `prettier --check .` + `npm run lint`)
 
-- **Naming**: camelCase for variables/functions, PascalCase for components/types/interfaces
-- **File organization**: Atomic design structure: `src/components/atoms/` (14 components), `src/components/molecules/` (10 components), `src/components/organisms/` (11 components). Pages in `src/pages/`. Data layer in `src/data/`. Custom hooks in `src/hooks/`. No barrel `index.ts` files.
-- **Import style**: Relative imports (`../../data/mock-guests`, `../atoms/Avatar`); no path aliases configured
-- **Type imports**: `import type { X }` required by `verbatimModuleSyntax`
-- **Component style**: Function declarations (`function App()`) with default exports. No arrow function components.
-- **Semicolons**: None (Prettier `semi: false`)
-- **Quotes**: Single quotes (Prettier `singleQuote: true`)
-- **Trailing commas**: All (Prettier `trailingComma: "all"`)
-- **Print width**: 80 characters
-- **Tab width**: 2 spaces
-- **Prop interfaces**: Named `Props` (local to file), defined above the component function
-- **Icons**: All from `react-icons/lu` (Lucide). Use `size` prop for dimensions. No mixing icon families.
-
-### Linter/Formatter
-
-- **ESLint**: Flat config (`eslint.config.js`) with `@eslint/js` recommended, `typescript-eslint` recommended, `react-hooks` recommended, `react-refresh` vite config, and `eslint-config-prettier`. Targets `**/*.{ts,tsx}` files. Ignores `dist/`.
-- **Prettier**: Configured via `.prettierrc`; ignores `dist`, `node_modules`, `package-lock.json` (`.prettierignore`)
-- **Pre-commit hook** (Husky): Runs `npx prettier --check .` and `npm run lint` before every commit
-
-### TypeScript Configuration
-
-- **Target**: ES2023
-- **Module**: ESNext with bundler resolution
-- **JSX**: react-jsx
-- **Strict mode**: Enabled (`strict: true`)
-- **Additional checks**: `noUnusedLocals`, `noUnusedParameters`, `erasableSyntaxOnly`, `noFallthroughCasesInSwitch`, `noUncheckedSideEffectImports`
-- **verbatimModuleSyntax**: Enabled (requires explicit `type` keyword for type-only imports: `import type { X }`)
-- **Project references**: Split config — `tsconfig.app.json` (includes `src/`) and `tsconfig.node.json` (includes `vite.config.ts`)
-
-## Architectural Patterns
-
-- **Structure**: Single-page application (SPA) with React + BrowserRouter. App shell with nested route layout: `<App>` is a layout route rendering `<Outlet>` for child routes (`/guests/new`, `/guests/:id/edit`). Route-based view switching: `/` (guest list) and `/seating-plan` (canvas). Three-panel desktop layout (TopNav, LeftSidebar, main content + optional detail/properties panel). Mobile layout with bottom tab bar, FAB, and table-grouped guest list. Responsive breakpoint at 768px (`md:` Tailwind prefix).
-- **State management**: Local component state via `useState` in `App.tsx`. No global state library. `App` owns `guests` (read from localStorage on mount), `selectedGuestId`. View determined by `useLocation().pathname`. Table state managed via `useTableState` custom hook. Data and callbacks passed down as props. Child routes receive data via `useOutletContext`.
-- **Data layer**: Two localStorage-backed CRUD store modules following the same pattern:
-  - `src/data/guest-store.ts` — key `"seating-plan:guests"`, manages `Guest[]`
-  - `src/data/table-store.ts` — key `"seating-plan:tables"` + `"seating-plan:table-counter"`, manages `FloorTable[]`
-  - Both use try/catch with in-memory fallback, UUID v4 for IDs, and pure functional module style (no classes).
-- **Type definitions**: `src/data/mock-guests.ts` (Guest, GuestStatus), `src/data/table-types.ts` (FloorTable, TableShape, SeatAssignment, geometry helpers), `src/data/dnd-types.ts` (drag-and-drop type discriminators and data interfaces).
-- **Data fetching**: None — client-only with localStorage persistence.
-- **Drag-and-drop**: `@dnd-kit/react` with `DragDropProvider` wrapping the canvas view. Three drag types: guest from sidebar (`DRAG_TYPE_GUEST`), occupied seat for swapping (`DRAG_TYPE_SEAT`), and drop targets (seats and table bodies). `handleDragEnd` in `App.tsx` orchestrates all DnD interactions.
-- **Canvas**: `react-zoom-pan-pinch` for pan/zoom via `TransformWrapper` + `TransformComponent`. Tables rendered as positioned `<div>`s with CSS transforms for rotation. Canvas size: 3000x2000px. Geometry helpers in `table-types.ts` compute table sizes and seat positions based on shape and seat count. Toolbar with select/pan/add-circle/add-rectangle tools. Desktop-only currently — mobile shows placeholder.
-- **Desktop guest table**: Uses `@tanstack/react-table` with `createColumnHelper<Guest>()` for the desktop `<table>` layout. Column definitions at module scope (per G-27). `border-separate border-spacing-0` for styled row borders (per G-28).
-- **Error handling**: Minimal. localStorage read/write wrapped in try/catch with silent fallback. No global error boundary. No error reporting.
-- **Styling approach**: Nought Cobalt design system. Tailwind utility classes in JSX for all component styling. `src/index.css` provides design tokens via `@theme` (Tailwind utilities) and `:root` (`--nc-*` CSS custom properties), base element styles, typography `@utility` classes, and component base styles in `@layer components`. `src/App.css` is empty.
-
-### Current File Structure
+## Project Structure
 
 ```
-src/
-├── App.css                    (empty)
-├── App.tsx                    (app shell, layout route, route-based view switching, state management, DnD handler)
-├── index.css                  (design system: tokens, theme, base styles, utilities, components)
-├── main.tsx                   (entry point: StrictMode + BrowserRouter + Routes + App)
-├── assets/
-│   ├── hero.png
-│   ├── react.svg
-│   └── vite.svg
-├── data/
-│   ├── dnd-types.ts           (DnD type discriminators, data interfaces, screenToCanvas helper)
-│   ├── guest-store.ts         (localStorage CRUD: getGuests, addGuest, updateGuest, deleteGuest, stats)
-│   ├── mock-guests.ts         (Guest/GuestStatus types, mock data array, stat helpers)
-│   ├── table-store.ts         (localStorage CRUD: getTables, addTable, updateTable, deleteTable, seat ops)
-│   └── table-types.ts         (FloorTable, TableShape, SeatAssignment types, geometry helpers, NATO labels)
-├── hooks/
-│   └── useTableState.ts       (custom hook: table CRUD + selection + seat assignment state)
-├── pages/
-│   ├── AddGuestPage.tsx       (renders GuestForm for new guest, uses useOutletContext)
-│   └── EditGuestPage.tsx      (renders GuestForm pre-populated, uses useOutletContext + useParams)
-└── components/
-    ├── atoms/
-    │   ├── Avatar.tsx          (circular initials, sm/md/lg sizes)
-    │   ├── CanvasStatusBar.tsx (static status bar: "ZOOM: 100%" + "LAYER: FLOOR_PLAN_MAIN")
-    │   ├── FAB.tsx             (floating action button, mobile-only, LuUserPlus icon, fixed bottom-20 right-4 z-50)
-    │   ├── FormError.tsx       (form validation error message, role="alert")
-    │   ├── IconButton.tsx      (icon-only button with aria-label, focus-visible)
-    │   ├── NavLink.tsx         (top nav link with active cobalt underline — ORPHANED, zero consumers)
-    │   ├── SearchInput.tsx     (search input with LuSearch icon — ORPHANED, zero consumers)
-    │   ├── SeatIndicator.tsx   (visual seat indicator for canvas tables, button with aria-label)
-    │   ├── ShapeToggle.tsx     (rectangular/circular shape toggle for properties panel)
-    │   ├── StatCard.tsx        (label + value card, optional mobile border)
-    │   ├── StatusBadge.tsx     (CONFIRMED/PENDING/DECLINED text badge with variant classes)
-    │   ├── StatusIcon.tsx      (LuCircleCheck/LuEllipsis icon, mobile-only)
-    │   ├── TabBarItem.tsx      (bottom tab bar item with icon + label)
-    │   └── Toggle.tsx          (toggle switch, role="switch", aria-checked)
-    ├── molecules/
-    │   ├── CanvasTable.tsx     (table visual on canvas: shape, seats, label, rotation, DnD targets)
-    │   ├── CanvasToolbar.tsx   (4-tool toolbar: select, pan, add-circle, add-rectangle)
-    │   ├── ConfirmDialog.tsx   (delete confirmation modal, LuTriangleAlert, dark overlay + backdrop-blur)
-    │   ├── FormField.tsx       (label + input wrapper + FormError for forms)
-    │   ├── FormSection.tsx     (bordered section heading + children for form grouping)
-    │   ├── GuestDetailSection.tsx (labeled section in detail panel, border-t divider)
-    │   ├── GuestRow.tsx        (dual-layout: desktop grid row / mobile compact row)
-    │   ├── SeatAssignmentPopover.tsx (popover for assigning/unassigning guests to seats, fixed z-50, viewport clamped)
-    │   ├── SidebarNavItem.tsx  (sidebar nav item with active cobalt highlight + border-l)
-    │   └── TableGroupHeader.tsx (location + table name + seats, mobile-only)
-    └── organisms/
-        ├── BottomTabBar.tsx    (4-tab mobile nav bar, fixed bottom-0 z-40, route-based navigation)
-        ├── CanvasPropertiesPanel.tsx (right panel: edit selected table label/shape/seats/rotation/delete, hidden md:flex, 320px)
-        ├── EmptyState.tsx      (empty guest list with LuDiamond + CTA to add)
-        ├── GuestDetailPanel.tsx (right detail panel, desktop aside + mobile full-screen overlay)
-        ├── GuestForm.tsx       (add/edit form with react-hook-form, all guest fields, delete dialog)
-        ├── GuestListFooterStats.tsx (3 stat cards with progress bar, desktop-only)
-        ├── GuestListHeader.tsx (title + summary stats, responsive desktop/mobile layouts)
-        ├── GuestTable.tsx      (semantic <table> desktop via @tanstack/react-table / grouped mobile, search empty state)
-        ├── LeftSidebar.tsx     (nav items + ADD GUEST/ADD TABLE buttons, hidden md:flex 220px, draggable guests)
-        ├── SeatingCanvas.tsx   (interactive floor plan: tables, seats, zoom/pan, toolbar, status bar — DESKTOP ONLY, mobile placeholder)
-        └── TopNav.tsx          (brand text + LuSettings + avatar, 56px height)
+seating-plan/
+├── index.html                    # SPA entry, loads Google Fonts
+├── package.json                  # Dependencies & scripts
+├── vite.config.ts                # Vite + React + Tailwind plugins
+├── tsconfig.json                 # Project references
+├── tsconfig.app.json             # App TS config (strict, ES2023)
+├── tsconfig.node.json            # Node TS config (for vite.config.ts)
+├── eslint.config.js              # ESLint flat config
+├── .prettierrc                   # Prettier config
+├── .prettierignore               # Prettier ignore
+├── .husky/pre-commit             # Pre-commit: prettier check + lint
+├── public/
+│   ├── favicon.svg
+│   └── icons.svg
+├── generated/                    # Spec-driven pipeline artifacts
+│   ├── guardrails.md             # Accumulated guardrails (G-1 through G-34)
+│   ├── codebase-context.md       # THIS FILE
+│   └── task-report-*.md          # Development task reports
+├── spec/                         # Feature specifications
+│   ├── INDEX.md
+│   └── *.md                      # Individual feature specs
+└── src/
+    ├── main.tsx                  # App entry, BrowserRouter + Routes
+    ├── App.tsx                   # Root layout, state orchestration, DnD
+    ├── App.css                   # Empty (all styles in index.css)
+    ├── index.css                 # Design system: @theme, @utility, @layer
+    ├── assets/                   # Static assets (hero.png, SVGs)
+    ├── data/                     # Data layer
+    │   ├── mock-guests.ts        # Guest type + seed data
+    │   ├── guest-store.ts        # Guest CRUD (localStorage)
+    │   ├── table-types.ts        # Table/seat types, geometry helpers
+    │   ├── table-store.ts        # Table CRUD (localStorage)
+    │   └── dnd-types.ts          # DnD discriminators + coordinate math
+    ├── hooks/                    # Custom hooks
+    │   ├── useTableState.ts      # Table state + action wrappers
+    │   ├── useIsMobile.ts        # Media query hook (<768px)
+    │   └── useLongPress.ts       # Touch long-press detection
+    ├── pages/                    # Route-level pages
+    │   ├── AddGuestPage.tsx      # Renders GuestForm for new guest
+    │   └── EditGuestPage.tsx     # Renders GuestForm for existing guest
+    └── components/               # Atomic Design hierarchy
+        ├── atoms/                # Smallest reusable UI primitives
+        │   ├── Avatar.tsx
+        │   ├── CanvasStatusBar.tsx
+        │   ├── FAB.tsx
+        │   ├── FormError.tsx
+        │   ├── IconButton.tsx
+        │   ├── NavLink.tsx       # DEAD CODE — no consumers (per G-30)
+        │   ├── SearchInput.tsx   # DEAD CODE — no consumers (per G-30)
+        │   ├── SeatIndicator.tsx
+        │   ├── ShapeToggle.tsx
+        │   ├── StatCard.tsx
+        │   ├── StatusBadge.tsx
+        │   ├── StatusIcon.tsx
+        │   ├── TabBarItem.tsx
+        │   └── Toggle.tsx
+        ├── molecules/            # Composed from atoms
+        │   ├── CanvasTable.tsx
+        │   ├── CanvasToolbar.tsx
+        │   ├── ConfirmDialog.tsx
+        │   ├── FormField.tsx
+        │   ├── FormSection.tsx
+        │   ├── GuestDetailSection.tsx
+        │   ├── GuestRow.tsx
+        │   ├── SeatAssignmentPopover.tsx
+        │   ├── SidebarNavItem.tsx
+        │   └── TableGroupHeader.tsx
+        └── organisms/            # Feature-level compositions
+            ├── BottomTabBar.tsx
+            ├── CanvasPropertiesPanel.tsx
+            ├── EmptyState.tsx
+            ├── GuestDetailPanel.tsx
+            ├── GuestForm.tsx
+            ├── GuestListFooterStats.tsx
+            ├── GuestListHeader.tsx
+            ├── GuestTable.tsx
+            ├── LeftSidebar.tsx
+            ├── MobileGuestsSheet.tsx
+            ├── MobilePropertiesSheet.tsx
+            ├── MobileSeatAssignmentSheet.tsx
+            ├── SeatingCanvas.tsx
+            └── TopNav.tsx
 ```
 
-### Routing Architecture
+## Key Patterns & Conventions
 
-- `main.tsx` wraps `<App />` in `<BrowserRouter>` with `<Routes>`
-- `<App>` is a layout route (`<Route element={<App />}>`) with child routes:
-  - `<Route index element={null} />` — default (guest list rendered by App itself)
-  - `<Route path="seating-plan" element={null} />` — canvas view (rendered by App itself)
-  - `<Route path="guests/new" element={<AddGuestPage />} />`
-  - `<Route path="guests/:id/edit" element={<EditGuestPage />} />`
-- `App.tsx` renders `<Outlet>` for child routes in the main content area when `isChildRoute` is true
-- Outlet context passes `{ guests, onAdd, onUpdate, onDelete, onCancel }` to child pages
-- View switching via `useLocation().pathname`: `/` = guest list (default), `/seating-plan` = canvas
-- Canvas view wraps content in `<DragDropProvider>` for DnD support
+### Component Organization
 
-### CSS Architecture
+- **Atomic Design**: `atoms/` → `molecules/` → `organisms/` hierarchy, plus `pages/` for route components.
+- Components are organized by complexity, not by feature.
 
-**`src/index.css`** (398 lines):
+### Export Style
 
-- Line 1: `@import 'tailwindcss'` — top-level Tailwind v4 import (must stay first — G-1)
-- Lines 3–55: `@theme` block — gray scale (12 steps), cobalt accent scale (8 steps), semantic color aliases (`background`, `surface`, `surface-elevated`, `foreground`, `foreground-muted`, `foreground-heading`, `border`, `primary`, `primary-hover`, `primary-foreground`, `ring`, `muted`, `default`), font families, border radii
-- Lines 57–96: `:root` block — `--nc-*` namespaced CSS custom properties (parallel to `@theme` tokens) + `color-scheme: dark`
-- Lines 98–191: Base element styles — `html`, `body`, `h1`–`h5`, `p`, `code`, `#root`
-- Lines 193–276: Typography `@utility` classes — 12 utilities (`text-display`, `text-heading-1` through `text-heading-5`, `text-body-lg`, `text-body`, `text-body-sm`, `text-caption`, `text-label`, `text-code`)
-- Lines 278–398: `@layer components` — 6 component base styles (`.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.card`, `.input`, `.badge`)
+- **Default exports** for all components and pages.
+- **Named exports** for types (via `export type`), constants, and utility functions.
+- `GuestRow.tsx` is an exception: it uses named export `{ GuestRowMobile }`.
+
+### Styling Approach
+
+- **Tailwind CSS v4** with utility-first classes applied directly in JSX.
+- **Design tokens** defined in `src/index.css`:
+  - `@theme` block for Tailwind utility generation (color, font, radius scales).
+  - `:root` block for `--nc-*` namespaced CSS custom properties.
+  - `@utility` directives for typography classes (`text-display`, `text-heading-*`, `text-body-*`, `text-caption`, `text-label`, `text-code`).
+  - `@layer components` for reusable component classes (`.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.card`, `.input`, `.badge`).
+- **Dark mode only** — `color-scheme: dark` on `:root`, no light mode (G-4).
+- **Responsive**: CSS visibility (`hidden md:block`, `md:hidden`) for layout; `useIsMobile()` JS hook for behavioral differences.
+
+### State Management Pattern
+
+- **No external state library**. All state lives in `App.tsx` via `useState`.
+- Data stores (`guest-store.ts`, `table-store.ts`) are plain functions that read/write `localStorage`.
+- `useTableState` hook wraps table store functions with React state synchronization.
+- State is passed down via props; actions bubble up via callback props.
+- Route child components receive data via `useOutletContext`.
+
+### Type Definitions
+
+- **Co-located with data**: `Guest` type in `mock-guests.ts`, `FloorTable`/`TableShape`/`SeatAssignment` in `table-types.ts`, DnD types in `dnd-types.ts`.
+- **Re-exported** from store files: `guest-store.ts` re-exports `Guest`, `GuestStatus`; `table-store.ts` re-exports `FloorTable`, `TableShape`, `SeatAssignment`.
+- Component props defined as inline `interface Props` at top of each component file.
+
+### File Naming Conventions
+
+- PascalCase for component files: `GuestForm.tsx`, `CanvasTable.tsx`.
+- camelCase for hooks: `useTableState.ts`, `useIsMobile.ts`.
+- kebab-case for data files: `guest-store.ts`, `table-types.ts`, `dnd-types.ts`.
+- kebab-case for CSS files: `index.css`, `App.css`.
+
+### Other Conventions
+
+- All user-facing text is **UPPERCASE** with underscore separators (sci-fi aesthetic): `"NO_RECORDS // INITIALIZE_DB"`.
+- Icons are exclusively from `react-icons/lu` (Lucide) — never mix families (G-20).
+- Icon sizing via `size` prop, not CSS classes (G-22).
+- All buttons include `cursor-pointer` and `focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2` (G-8, G-11).
+- Form inputs with validation must include `aria-invalid` (G-15).
+- No `useEffect` with `setState` — use "adjusting state during render" pattern (G-16, G-25).
+- `@tanstack/react-table` column definitions at module scope (G-27).
+
+## Data Flow
+
+```
+localStorage
+    ↕ (read/write)
+Data Stores (guest-store.ts, table-store.ts)
+    ↕ (function calls)
+App.tsx (useState + useTableState hook)
+    ↓ props
+    ├── Guest List View
+    │   ├── GuestListHeader (stats)
+    │   ├── GuestTable (guest data, selection)
+    │   ├── GuestListFooterStats (derived stats)
+    │   └── GuestDetailPanel (selected guest)
+    │
+    ├── Seating Canvas View (wrapped in DragDropProvider)
+    │   ├── LeftSidebar (nav + unassigned guests + DnD)
+    │   ├── SeatingCanvas
+    │   │   ├── CanvasTable → SeatSlot → SeatIndicator
+    │   │   ├── CanvasToolbar
+    │   │   ├── SeatAssignmentPopover (desktop)
+    │   │   └── MobileSeatAssignmentSheet (mobile)
+    │   ├── CanvasPropertiesPanel (desktop)
+    │   └── MobilePropertiesSheet (mobile)
+    │
+    └── Guest Form Routes (via Outlet + context)
+        ├── AddGuestPage → GuestForm
+        └── EditGuestPage → GuestForm
+```
+
+### Key data flow details:
+
+1. `App.tsx` calls `getGuests()` / `getTables()` to initialize state from localStorage.
+2. All mutations go through store functions, then `setGuests(getGuests())` or `refreshTables()` re-reads from storage.
+3. The `DragDropProvider` wraps only the canvas view; `handleDragEnd` in `App.tsx` dispatches to appropriate table store actions.
+4. Guest CRUD forms use `react-hook-form` internally; on submit, data flows up to `App.tsx` handlers via `useOutletContext`.
+
+## Component Hierarchy
+
+```
+<BrowserRouter>
+  <Routes>
+    <Route element={<App />}>           ← Root layout
+      <Route index />                    ← Guest list (default view)
+      <Route path="seating-plan" />      ← Canvas view
+      <Route path="guests/new" />        ← AddGuestPage
+      <Route path="guests/:id/edit" />   ← EditGuestPage
+    </Route>
+  </Routes>
+</BrowserRouter>
+
+App
+├── TopNav
+├── [Guest List View]
+│   ├── LeftSidebar
+│   │   └── SidebarNavItem
+│   ├── GuestListHeader
+│   │   └── StatCard
+│   ├── GuestTable
+│   │   ├── (desktop) @tanstack/react-table with Avatar, StatusBadge, IconButton
+│   │   └── (mobile) TableGroupHeader + GuestRowMobile → StatusIcon
+│   ├── GuestListFooterStats
+│   │   └── StatCard
+│   ├── GuestDetailPanel
+│   │   ├── Avatar, StatusBadge, IconButton
+│   │   └── GuestDetailSection
+│   ├── FAB
+│   └── EmptyState
+│
+├── [Canvas View] (DragDropProvider wrapper)
+│   ├── LeftSidebar
+│   │   └── DraggableGuestItem (unassigned guests)
+│   ├── SeatingCanvas
+│   │   ├── TransformWrapper/TransformComponent
+│   │   ├── CanvasTable
+│   │   │   └── SeatSlot (useDroppable + useDraggable)
+│   │   │       └── SeatIndicator
+│   │   ├── CanvasToolbar
+│   │   ├── CanvasStatusBar
+│   │   ├── SeatAssignmentPopover (desktop)
+│   │   └── MobileSeatAssignmentSheet (mobile, vaul Drawer)
+│   ├── CanvasPropertiesPanel (desktop sidebar)
+│   │   └── ShapeToggle
+│   ├── MobilePropertiesSheet (mobile, vaul Drawer)
+│   │   └── ShapeToggle
+│   └── MobileGuestsSheet (mobile, vaul Drawer)
+│
+├── [Form Routes] (via Outlet)
+│   ├── AddGuestPage → GuestForm
+│   └── EditGuestPage → GuestForm
+│       ├── FormSection
+│       ├── FormField → FormError
+│       ├── Toggle
+│       └── ConfirmDialog
+│
+└── BottomTabBar
+    └── TabBarItem
+```
+
+## Existing Abstractions
+
+### Custom Hooks
+
+| Hook            | File                                     | Purpose                                                                                                |
+| --------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `useTableState` | `src/hooks/useTableState.ts` (112 lines) | Wraps table-store CRUD with React state. Returns `tables`, `selectedTableId`, and all action handlers. |
+| `useIsMobile`   | `src/hooks/useIsMobile.ts` (18 lines)    | Returns boolean based on `(max-width: 767px)` media query.                                             |
+| `useLongPress`  | `src/hooks/useLongPress.ts` (66 lines)   | Touch long-press detection with configurable threshold and move cancellation.                          |
+
+### Data Stores
+
+| Store       | File                                  | Purpose                                                                                        |
+| ----------- | ------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Guest Store | `src/data/guest-store.ts` (114 lines) | CRUD + aggregation for guest records (localStorage with memory fallback).                      |
+| Table Store | `src/data/table-store.ts` (243 lines) | CRUD + seat assignment/swap/unassign for floor tables. Auto-generates NATO labels + badge IDs. |
+
+### Shared UI Components (Atoms)
+
+| Component         | File                        | Purpose                                                      |
+| ----------------- | --------------------------- | ------------------------------------------------------------ |
+| `Avatar`          | `atoms/Avatar.tsx`          | Circular initials avatar (sm/md/lg).                         |
+| `IconButton`      | `atoms/IconButton.tsx`      | Accessible icon-only button with hover/focus states.         |
+| `StatusBadge`     | `atoms/StatusBadge.tsx`     | Colored badge for guest status (CONFIRMED/PENDING/DECLINED). |
+| `StatusIcon`      | `atoms/StatusIcon.tsx`      | Mobile-only status icon (checkmark or ellipsis).             |
+| `StatCard`        | `atoms/StatCard.tsx`        | Card displaying a label + numeric value.                     |
+| `FAB`             | `atoms/FAB.tsx`             | Floating action button (mobile only).                        |
+| `Toggle`          | `atoms/Toggle.tsx`          | Accessible switch component with `role="switch"`.            |
+| `ShapeToggle`     | `atoms/ShapeToggle.tsx`     | Toggle between rectangular/circular table shapes.            |
+| `SeatIndicator`   | `atoms/SeatIndicator.tsx`   | Circular seat dot (empty/occupied/selected/drop-target).     |
+| `CanvasStatusBar` | `atoms/CanvasStatusBar.tsx` | Zoom level + layer info display.                             |
+| `FormError`       | `atoms/FormError.tsx`       | Validation error message with `role="alert"`.                |
+| `TabBarItem`      | `atoms/TabBarItem.tsx`      | Mobile bottom tab bar item.                                  |
+| `NavLink`         | `atoms/NavLink.tsx`         | **DEAD CODE** — previously used in TopNav, no consumers.     |
+| `SearchInput`     | `atoms/SearchInput.tsx`     | **DEAD CODE** — previously used in TopNav, no consumers.     |
+
+### Shared UI Components (Molecules)
+
+| Component                     | File                                  | Purpose                                                    |
+| ----------------------------- | ------------------------------------- | ---------------------------------------------------------- |
+| `CanvasTable`                 | `molecules/CanvasTable.tsx`           | Renders a table on the canvas with seats, DnD, touch drag. |
+| `CanvasToolbar`               | `molecules/CanvasToolbar.tsx`         | Tool selection bar (select/pan/add-circle/add-rect).       |
+| `SeatAssignmentPopover`       | `molecules/SeatAssignmentPopover.tsx` | Desktop popover for assigning guests to seats.             |
+| `GuestRow` / `GuestRowMobile` | `molecules/GuestRow.tsx`              | Mobile guest row with status icon.                         |
+| `TableGroupHeader`            | `molecules/TableGroupHeader.tsx`      | Mobile group header for table-grouped guests.              |
+| `GuestDetailSection`          | `molecules/GuestDetailSection.tsx`    | Titled section in guest detail panel.                      |
+| `ConfirmDialog`               | `molecules/ConfirmDialog.tsx`         | Modal confirmation dialog (delete actions).                |
+| `FormField`                   | `molecules/FormField.tsx`             | Label + input + error wrapper for forms.                   |
+| `FormSection`                 | `molecules/FormSection.tsx`           | Titled section in forms.                                   |
+| `SidebarNavItem`              | `molecules/SidebarNavItem.tsx`        | Sidebar navigation item.                                   |
+
+### Design System Classes (index.css)
+
+- **Buttons**: `.btn-primary`, `.btn-secondary`, `.btn-ghost`
+- **Containers**: `.card`
+- **Inputs**: `.input`
+- **Badges**: `.badge`
+- **Typography utilities**: `text-display`, `text-heading-1` through `text-heading-5`, `text-body-lg`, `text-body`, `text-body-sm`, `text-caption`, `text-label`, `text-code`
+
+### Type Definitions
+
+| Type             | File                          | Key Fields                                                                                                                      |
+| ---------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `Guest`          | `data/mock-guests.ts`         | `id`, `firstName`, `lastName`, `role`, `status`, `accessLevel`, `tableAssignment`, `seatNumber`, `dietary`, `gift`, `logistics` |
+| `GuestStatus`    | `data/mock-guests.ts`         | `'CONFIRMED' \| 'PENDING' \| 'DECLINED'`                                                                                        |
+| `FloorTable`     | `data/table-types.ts`         | `id`, `badgeId`, `label`, `shape`, `seatCount`, `x`, `y`, `rotation`, `seats`                                                   |
+| `TableShape`     | `data/table-types.ts`         | `'rectangular' \| 'circular'`                                                                                                   |
+| `SeatAssignment` | `data/table-types.ts`         | `seatIndex`, `guestId`                                                                                                          |
+| `DragGuestData`  | `data/dnd-types.ts`           | `type: 'guest'`, `guestId`                                                                                                      |
+| `DragSeatData`   | `data/dnd-types.ts`           | `type: 'seat'`, `tableId`, `seatIndex`, `guestId`                                                                               |
+| `DropSeatData`   | `data/dnd-types.ts`           | `tableId`, `seatIndex`                                                                                                          |
+| `DropTableData`  | `data/dnd-types.ts`           | `tableId`                                                                                                                       |
+| `CanvasTool`     | `molecules/CanvasToolbar.tsx` | `'select' \| 'pan' \| 'add-circle' \| 'add-rectangle'`                                                                          |
+
+## Routing
+
+| Path               | Component                    | Description                                                        |
+| ------------------ | ---------------------------- | ------------------------------------------------------------------ |
+| `/`                | `App` → Guest list view      | Default: shows GuestListHeader + GuestTable + GuestListFooterStats |
+| `/seating-plan`    | `App` → Canvas view          | Seating canvas with DragDropProvider                               |
+| `/guests/new`      | `AddGuestPage` (via Outlet)  | Guest creation form                                                |
+| `/guests/:id/edit` | `EditGuestPage` (via Outlet) | Guest edit form                                                    |
+
+Routes are defined in `main.tsx` as nested routes under `<App />`. Child routes (`/guests/*`) render via `<Outlet>` with context passing guest data and action handlers.
+
+## Build & Development
+
+### Scripts
+
+| Script         | Command                | Description                           |
+| -------------- | ---------------------- | ------------------------------------- |
+| `dev`          | `vite --host`          | Dev server (accessible on LAN)        |
+| `build`        | `tsc -b && vite build` | Type-check + production build         |
+| `lint`         | `eslint .`             | Run ESLint                            |
+| `format`       | `prettier --write .`   | Format all files                      |
+| `format:check` | `prettier --check .`   | Check formatting (used in pre-commit) |
+| `preview`      | `vite preview`         | Preview production build              |
+| `prepare`      | `husky`                | Install husky hooks                   |
+
+### Pre-commit Hook (`.husky/pre-commit`)
+
+```sh
+npx prettier --check .
+npm run lint
+```
+
+Both must pass before commits are accepted.
+
+### Prettier Config
+
+- No semicolons
+- Single quotes
+- Trailing commas (all)
+- 80 character print width
+- 2-space indentation
+
+### TypeScript Config
+
+- Target: ES2023
+- Strict mode with: `noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch`, `noUncheckedSideEffectImports`
+- `verbatimModuleSyntax`: requires `import type` for type-only imports
+- `erasableSyntaxOnly`: no enums or parameter properties
+
+## Files Inventory
+
+### Source Files (52 files, ~4,740 lines total)
+
+| File                                                     | Lines | Description                                                        |
+| -------------------------------------------------------- | ----- | ------------------------------------------------------------------ |
+| `src/main.tsx`                                           | 22    | App entry: BrowserRouter, route definitions                        |
+| `src/App.tsx`                                            | 332   | Root layout: state management, DnD, view switching                 |
+| `src/App.css`                                            | 0     | Empty (unused)                                                     |
+| `src/index.css`                                          | 398   | Full design system: tokens, typography, components                 |
+| **Data Layer**                                           |       |                                                                    |
+| `src/data/mock-guests.ts`                                | 191   | Guest type definition + 6 seed records + helpers                   |
+| `src/data/guest-store.ts`                                | 114   | Guest CRUD with localStorage persistence                           |
+| `src/data/table-types.ts`                                | 117   | Table/seat types, geometry helpers, NATO labels                    |
+| `src/data/table-store.ts`                                | 243   | Table CRUD, seat assignment, swap, localStorage                    |
+| `src/data/dnd-types.ts`                                  | 45    | DnD type discriminators + coordinate conversion                    |
+| **Hooks**                                                |       |                                                                    |
+| `src/hooks/useTableState.ts`                             | 112   | Table state wrapper with React sync                                |
+| `src/hooks/useIsMobile.ts`                               | 18    | Mobile detection via matchMedia                                    |
+| `src/hooks/useLongPress.ts`                              | 66    | Touch long-press gesture detection                                 |
+| **Pages**                                                |       |                                                                    |
+| `src/pages/AddGuestPage.tsx`                             | 18    | New guest page (Outlet consumer)                                   |
+| `src/pages/EditGuestPage.tsx`                            | 41    | Edit guest page (Outlet consumer, redirect on invalid ID)          |
+| **Atoms**                                                |       |                                                                    |
+| `src/components/atoms/Avatar.tsx`                        | 25    | Circular initials avatar                                           |
+| `src/components/atoms/CanvasStatusBar.tsx`               | 15    | Zoom/layer info                                                    |
+| `src/components/atoms/FAB.tsx`                           | 20    | Floating action button (mobile)                                    |
+| `src/components/atoms/FormError.tsx`                     | 16    | Validation error with role="alert"                                 |
+| `src/components/atoms/IconButton.tsx`                    | 21    | Accessible icon button                                             |
+| `src/components/atoms/NavLink.tsx`                       | 22    | DEAD CODE — orphaned after sidebar refactor                        |
+| `src/components/atoms/SearchInput.tsx`                   | 28    | DEAD CODE — orphaned after sidebar refactor                        |
+| `src/components/atoms/SeatIndicator.tsx`                 | 56    | Seat circle (empty/occupied/selected/target)                       |
+| `src/components/atoms/ShapeToggle.tsx`                   | 30    | Rectangular/circular shape toggle                                  |
+| `src/components/atoms/StatCard.tsx`                      | 24    | Stat display card                                                  |
+| `src/components/atoms/StatusBadge.tsx`                   | 27    | Status pill badge                                                  |
+| `src/components/atoms/StatusIcon.tsx`                    | 16    | Mobile status icon                                                 |
+| `src/components/atoms/TabBarItem.tsx`                    | 34    | Bottom tab bar item                                                |
+| `src/components/atoms/Toggle.tsx`                        | 28    | Accessible switch toggle                                           |
+| **Molecules**                                            |       |                                                                    |
+| `src/components/molecules/CanvasTable.tsx`               | 304   | Table on canvas with seats, DnD, touch handling                    |
+| `src/components/molecules/CanvasToolbar.tsx`             | 45    | Canvas tool selection bar                                          |
+| `src/components/molecules/ConfirmDialog.tsx`             | 56    | Modal confirmation dialog                                          |
+| `src/components/molecules/FormField.tsx`                 | 30    | Form label + input + error wrapper                                 |
+| `src/components/molecules/FormSection.tsx`               | 19    | Titled form section                                                |
+| `src/components/molecules/GuestDetailSection.tsx`        | 19    | Titled detail section                                              |
+| `src/components/molecules/GuestRow.tsx`                  | 39    | Mobile guest row (named export: GuestRowMobile)                    |
+| `src/components/molecules/SeatAssignmentPopover.tsx`     | 127   | Desktop seat assignment popover                                    |
+| `src/components/molecules/SidebarNavItem.tsx`            | 22    | Sidebar nav item                                                   |
+| `src/components/molecules/TableGroupHeader.tsx`          | 32    | Mobile table group header                                          |
+| **Organisms**                                            |       |                                                                    |
+| `src/components/organisms/BottomTabBar.tsx`              | 42    | Mobile bottom navigation                                           |
+| `src/components/organisms/CanvasPropertiesPanel.tsx`     | 163   | Desktop table properties sidebar                                   |
+| `src/components/organisms/EmptyState.tsx`                | 28    | Empty guest list state                                             |
+| `src/components/organisms/GuestDetailPanel.tsx`          | 218   | Guest detail sidebar (desktop) / overlay (mobile)                  |
+| `src/components/organisms/GuestForm.tsx`                 | 317   | Full guest add/edit form                                           |
+| `src/components/organisms/GuestListFooterStats.tsx`      | 41    | Desktop footer stats bar                                           |
+| `src/components/organisms/GuestListHeader.tsx`           | 50    | Guest list header with stats                                       |
+| `src/components/organisms/GuestTable.tsx`                | 205   | Guest table (desktop: @tanstack/react-table, mobile: grouped rows) |
+| `src/components/organisms/LeftSidebar.tsx`               | 116   | Desktop sidebar nav + actions                                      |
+| `src/components/organisms/MobileGuestsSheet.tsx`         | 68    | Mobile unassigned guests drawer                                    |
+| `src/components/organisms/MobilePropertiesSheet.tsx`     | 181   | Mobile table properties drawer                                     |
+| `src/components/organisms/MobileSeatAssignmentSheet.tsx` | 177   | Mobile seat assignment drawer                                      |
+| `src/components/organisms/SeatingCanvas.tsx`             | 335   | Main canvas with pan/zoom, table placement, seat interaction       |
+| `src/components/organisms/TopNav.tsx`                    | 27    | Top navigation bar                                                 |
+
+### Known Dead Code
+
+- `src/components/atoms/NavLink.tsx` — No imports anywhere (G-30).
+- `src/components/atoms/SearchInput.tsx` — No imports anywhere (G-30).
+- `src/App.css` — Empty file, all styles in `index.css`.
+- `GuestTable.searchQuery` prop — Always passed `""`, never used meaningfully (G-29).
+
+## Guardrails Summary
+
+The project has 34 established guardrails (G-1 through G-34) documented in `generated/guardrails.md`. Key rules developers must follow:
+
+### CSS & Styling
+
+- **G-1**: `@import 'tailwindcss'` must be the first line of `index.css`
+- **G-2**: Use `@theme` for Tailwind utilities, `:root` for direct CSS vars
+- **G-3**: Always use `var(--nc-*)` namespace for custom CSS
+- **G-4**: Dark mode only — no `prefers-color-scheme`
+- **G-5**: Default border radius is 4px
+- **G-6**: Use `@utility` for multi-property custom utilities
+- **G-7**: Use `@layer components` for component base styles
+- **G-10**: Grep all `src/` when renaming CSS variables
+- **G-28**: Use `border-separate` + `border-spacing-0` for styled tables
+
+### Accessibility
+
+- **G-8**: `focus-visible` for buttons, `focus` for inputs
+- **G-11**: All interactive elements must be keyboard accessible
+- **G-15**: Form inputs with validation must include `aria-invalid`
+- **G-19**: Custom modals need keyboard + ARIA support
+
+### React Patterns
+
+- **G-16/G-25**: No `setState` inside `useEffect` — use sync state adjustment
+- **G-17**: Single source of truth for data transformations
+- **G-27**: `@tanstack/react-table` columns at module scope
+- **G-29**: Clean up vestigial props after interface changes
+- **G-30**: Verify component import graph after removing consumers
+- **G-31**: Clean up timer refs on unmount
+- **G-32**: Choose one responsive visibility strategy per element
 
 ### Icons
 
-- All icons use **`react-icons/lu` (Lucide)** family exclusively
-- Icons used: `LuSearch`, `LuSettings`, `LuUserPlus`, `LuX`, `LuGift`, `LuBus`, `LuHotel`, `LuTriangleAlert`, `LuDiamond`, `LuPlus`, `LuSquarePen`, `LuUser`, `LuWrench`, `LuEllipsis`, `LuCircleCheck`, `LuMousePointer2`, `LuHand`, `LuCircle`, `LuSquare`, `LuUsers`, `LuGripVertical`
-- Sizing via `size` prop (not CSS width/height)
-- Color via Tailwind `className` (e.g., `text-foreground-muted`, `text-primary`)
-
-### Data Layer Pattern (Canonical: `guest-store.ts` / `table-store.ts`)
-
-New stores should follow this pattern:
-
-1. Module-level `STORAGE_KEY` constant with namespaced key (`"seating-plan:<entity>"`)
-2. Private `readFromStorage()` / `writeToStorage()` functions with try/catch and memory fallback
-3. Exported CRUD functions: `getAll()`, `getById(id)`, `add(data)`, `update(id, data)`, `delete(id)`
-4. Exported stat/query helpers as needed
-5. Types defined separately (in a types file or co-located) and re-exported
-6. UUID v4 for ID generation
-7. No class — pure functional module
-
-### Custom Hook Pattern (Canonical: `useTableState.ts`)
-
-Hooks that wrap a store module:
-
-1. Internal `useState` initialized from store's `getAll()` via lazy initializer
-2. Internal `refreshX()` callback that re-reads from store
-3. `useCallback`-wrapped handler functions that call store operations then `refresh()`
-4. Returns state + setters + handlers as an object
-
-## Canvas-Specific Architecture (Critical for Mobile Canvas Feature)
-
-### SeatingCanvas Component (`src/components/organisms/SeatingCanvas.tsx`)
-
-**Current structure** (287 lines):
-
-- **Props interface**: Accepts `tables`, `guests`, `selectedTableId`, `onSelectTable`, `onAddTable`, `onUpdateTable`, `onDeleteTable`, `onAssignGuest`, `onUnassignSeat`, `onSwapSeats`
-- **Internal state**: `activeTool` (CanvasTool), `activeSeat` (ActiveSeat | null), `dragState` (DragState | null), `hasDragged` ref
-- **Mobile placeholder** (lines 176-181): `<div className="md:hidden ...">CANVAS_EDITOR // DESKTOP_REQUIRED</div>`
-- **Desktop canvas** (lines 183-282): `<div className="hidden md:flex ...">` wrapping `TransformWrapper` + `TransformComponent` + tables + toolbar + status bar + seat popover
-
-**TransformWrapper config** (desktop, lines 185-194):
-
-```typescript
-disabled={activeTool !== 'pan'}
-initialScale={1}
-minScale={1}
-maxScale={1}
-panning={{ disabled: activeTool !== 'pan' }}
-doubleClick={{ disabled: true }}
-wheel={{ disabled: true }}
-```
-
-Note: Desktop zoom is locked at 1.0. Panning only enabled when pan tool active.
-
-**Mouse-based table drag** (lines 72-74, 128-152):
-
-- `DragState` interface with `tableId`, `startX`, `startY`, `origX`, `origY`
-- `DRAG_THRESHOLD = 3` pixels before marking as dragged
-- `handleCanvasMouseMove` computes delta, divides by scale, calls `onUpdateTable`
-- `handleCanvasMouseUp` clears drag state
-- `hasDragged` ref prevents click-to-select after drag
-
-**Canvas click handler** (`handleCanvasClick`, lines 85-126):
-
-- Guards: ignores if `hasDragged`, ignores if `e.target !== e.currentTarget` (only direct background clicks)
-- Add tools: converts screen coords to canvas coords via `screenToCanvas()`, calls `onAddTable`, reverts to select tool
-- Select tool: deselects table (`onSelectTable(null)`)
-
-**Coordinate conversion** (`screenToCanvas` from `dnd-types.ts`):
-
-```typescript
-function screenToCanvas(
-  screenX,
-  screenY,
-  containerRect,
-  scale,
-  positionX,
-  positionY,
-) {
-  const x = (screenX - containerRect.left - positionX) / scale
-  const y = (screenY - containerRect.top - positionY) / scale
-  return { x, y }
-}
-```
-
-### CanvasTable Component (`src/components/molecules/CanvasTable.tsx`)
-
-**Current structure** (204 lines):
-
-- **Props**: `table`, `isSelected`, `guests`, `onSelect`, `onSeatClick`, `activeSeatIndex`, `onTableMouseDown`
-- **SeatSlot** sub-component (lines 30-86): wraps each seat in `useDroppable` + `useDraggable` from `@dnd-kit/react`. Renders `SeatIndicator` atom.
-- **Table body**: `useDroppable` for guest-dropped-on-table interaction
-- **Mouse handler** (`handleMouseDown`, lines 123-127): calls `e.stopPropagation()`, `onSelect()`, `onTableMouseDown(e)`
-- **Root div**: `absolute` positioned with `left`, `top`, `width`, `height`, `transform: rotate(Xdeg)`
-- **No touch handlers**: Only `onMouseDown` and `onClick` (stopPropagation) are wired
-
-### CanvasToolbar Component (`src/components/molecules/CanvasToolbar.tsx`)
-
-- Exports `CanvasTool` type: `'select' | 'pan' | 'add-circle' | 'add-rectangle'`
-- 4 tool buttons with `LuMousePointer2`, `LuHand`, `LuCircle`, `LuSquare`
-- Active state: `bg-primary text-primary-foreground`
-- Container: `bg-surface border border-border rounded p-1 flex gap-1`
-- No position styling — positioned by parent
-
-### CanvasStatusBar Component (`src/components/atoms/CanvasStatusBar.tsx`)
-
-- **Stateless, no props**: Renders hard-coded "ZOOM: 100%" and "LAYER: FLOOR_PLAN_MAIN"
-- Needs `zoom` prop added for mobile dynamic zoom display
-
-### CanvasPropertiesPanel (`src/components/organisms/CanvasPropertiesPanel.tsx`)
-
-- **Desktop-only**: `hidden md:flex` on the `<aside>` root
-- 320px fixed width, full-height sidebar on the right
-- Fields: label input (local state with "adjusting state during render" pattern for table switch), reference ID badge, `ShapeToggle`, seat count slider (1-20), rotation slider (0-359) with preset buttons (0°, 90°, 180°, 270°), DELETE ENTITY button
-- `onUpdate` callback signature: `(data: { label?: string; shape?: TableShape; seatCount?: number; rotation?: number }) => void`
-- `onDelete` and `onClose` callbacks
-
-### SeatAssignmentPopover (`src/components/molecules/SeatAssignmentPopover.tsx`)
-
-- **Fixed z-50** positioning with viewport clamping (flips above if below viewport, clamps left/right)
-- Width: `w-56` (224px)
-- Close-on-outside-click via `document.addEventListener('mousedown', ...)` in `useEffect`
-- Shows assigned guest with UNASSIGN button, or list of unassigned guests for assignment
-- **Note**: Uses `mousedown` listener, not `pointerdown` — may need update for mobile touch events
-
-### App.tsx Canvas Integration
-
-- `canvasContent` JSX block (lines 182-213): wraps `LeftSidebar` + `main > SeatingCanvas` + conditional `CanvasPropertiesPanel`
-- `DragDropProvider` wraps `canvasContent` when `isCanvasView && !isChildRoute`
-- FAB renders unconditionally on `!isChildRoute` — needs conditional hide on canvas view
-- `selectedCanvasTableId` state managed via `useTableState` hook
-
-### react-zoom-pan-pinch Usage
-
-- Import: `TransformWrapper`, `TransformComponent`, `ReactZoomPanPinchContentRef`
-- `transformRef` typed as `useRef<ReactZoomPanPinchContentRef>(null)`
-- Access transform state: `transformRef.current?.instance?.transformState.scale` / `.positionX` / `.positionY`
-- `onTransformed` callback available for tracking zoom changes (not currently used)
-- `TransformComponent` with `wrapperStyle={{ width: '100%', height: '100%' }}` and `contentStyle={{ width: '100%', height: '100%' }}`
-
-### @dnd-kit/react Usage
-
-- `DragDropProvider` in `App.tsx` with `onDragEnd` callback
-- `useDraggable` in `SeatSlot` (canvas) and `DraggableGuestItem` (sidebar)
-- `useDroppable` in `SeatSlot` and `CanvasTable` body
-- `disabled` prop available on `useDraggable` for conditional disable
-
-### Z-Index Stacking Order
-
-| Element           | z-index | Positioning                       |
-| ----------------- | ------- | --------------------------------- |
-| Canvas toolbar    | z-10    | `absolute top-4 left-4` (desktop) |
-| Canvas status bar | z-10    | `absolute top-4 right-4`          |
-| BottomTabBar      | z-40    | `fixed bottom-0 left-0 right-0`   |
-| FAB (Add guest)   | z-50    | `fixed bottom-20 right-4`         |
-| Seat popover      | z-50    | `fixed` with computed top/left    |
-
-### Responsive Breakpoint Strategy
-
-- **Single breakpoint**: `md` (768px) — used consistently project-wide
-- **Mobile-only**: `md:hidden` (shown below 768px, hidden at 768px+)
-- **Desktop-only**: `hidden md:flex` or `hidden md:block` (hidden below 768px, shown at 768px+)
-- **No intermediate breakpoints**: No `sm`, `lg`, `xl` breakpoints used
-- **Components with dual rendering**: Most components render both layouts within the same component using conditional Tailwind classes
-- **Key mobile-only elements**: `BottomTabBar`, `FAB`, mobile guest rows in `GuestRow`, `TableGroupHeader`
-- **Key desktop-only elements**: `LeftSidebar`, `CanvasPropertiesPanel`, desktop `<table>` in `GuestTable`
-
-## Test Conventions
-
-- **Framework**: None installed (no Jest, Vitest, or other test framework in dependencies)
-- **Location**: N/A
-- **Naming**: N/A
-
-## Project-Specific Practices
-
-- **Build command**: `tsc -b && vite build` (TypeScript checks before Vite build)
-- **Dev server**: `vite` (port not customized)
-- **Pre-commit enforcement**: Prettier format check + ESLint run via Husky pre-commit hook
-- **No test suite**: No tests exist or are required by the pre-commit hook
-- **Entry point**: `index.html` → `src/main.tsx` → `App.tsx`
-- **Static assets**: `public/favicon.svg`, `public/icons.svg`
-- **Font loading**: Google Fonts preconnect + stylesheet links in `index.html` `<head>` for Space Grotesk (400, 500, 600, 700)
-- **Cyberpunk aesthetic**: All UI labels use uppercase, underscores, and technical-sounding codes (e.g., `REGISTRY.SYSTEM_V4`, `SEATING_01`, `PLANNER_V1.0`, `IDENTITY_MATRIX`, `STATUS_CLASSIFICATION`, `NO_RECORDS // INITIALIZE_DB`)
-- **Responsive pattern**: Single components adapt via Tailwind responsive utilities (`hidden md:block`, `md:hidden`, `md:flex`, etc.) — no separate mobile/desktop component files
-- **Form patterns**: `react-hook-form` with `register` + built-in validation (required, no schema library). `aria-invalid` on validated inputs. `role="alert"` on error messages. Toggle for booleans with conditional child fields.
-- **Data persistence**: localStorage under namespaced keys (e.g., `"seating-plan:guests"`, `"seating-plan:tables"`). Empty list on fresh install (no mock data seeding).
-- **ID generation**: UUID v4 via `uuid` package for all entity records. Table `badgeId` via auto-incrementing counter stored in localStorage (`"seating-plan:table-counter"`).
-- **Table labeling**: Auto-generated labels using NATO phonetic alphabet (e.g., `TABLE ALPHA`, `TABLE BRAVO`) with badge IDs like `T01`, `T02`.
-- **Component patterns observed**:
-  - Props interface named `Props`, always above the function
-  - No destructuring in function signature for simple components; destructured params for complex ones
-  - Variant styling via `Record<EnumType, string>` maps (see `StatusBadge.tsx`)
-  - Conditional CSS classes via template literals with ternaries
-  - `renderContent()` helper functions extracted for large JSX blocks within same file (see `GuestDetailPanel.tsx`)
-  - Dual mobile/desktop rendering within single component using `md:hidden` / `hidden md:block`
-
-## Prior Spec Decisions
-
-### Spec: Nought Cobalt Design System — Status: Completed (2026-04-03)
-
-Key architectural decisions:
-
-1. **DD-1: `--nc-*` CSS namespace** — All design tokens use the `--nc-` prefix.
-2. **DD-2: Monochrome gray scale** — 12-step pure grayscale from `gray-950` (#0A0A0A) to `gray-50` (#F0F0F0).
-3. **DD-3: Cobalt blue accent scale** — 8-step scale centered on `#0057FF` (cobalt-600).
-4. **DD-4: Semantic color aliases** — `background`, `surface`, `surface-elevated`, `foreground`, `foreground-muted`, `foreground-heading`, `border`, `primary`, `primary-hover`, `primary-foreground`, `ring`.
-5. **DD-5: Typography scale** — Space Grotesk, 12-level type scale from Display (56px) to Caption/Label (12px).
-6. **DD-6: Google Fonts import** for Space Grotesk with preconnect in `index.html`.
-7. **DD-7: CSS-first TailwindCSS v4 config** — `@theme` directive in `src/index.css`.
-8. **DD-8: Default border radius** — 4px globally.
-9. **DD-9: Component base styles** — `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.card`, `.input`, `.badge` in `@layer components`.
-10. **DD-10: Dark mode only** — `color-scheme: dark`, no light mode.
-
-### Spec: Guest List Screen — Status: Completed (2026-04-03)
-
-Key architectural decisions:
-
-1. **DD-1: Three-panel layout** — TopNav (full width, 56px), LeftSidebar (220px fixed, desktop-only), main content (flexible), GuestDetailPanel (320px fixed, conditional).
-2. **DD-2: Atomic design component organization** — `atoms/`, `molecules/`, `organisms/`. No barrel files.
-3. **DD-3: Mock data module** — `src/data/mock-guests.ts` with typed guest array and stat helpers.
-4. **DD-4: Guest data model** — `Guest` interface with `GuestStatus` union type, nullable fields, nested `dietary` and `logistics` objects.
-5. **DD-5: Route-based navigation** — View switching via `useLocation().pathname`.
-6. **DD-6: Local state for detail panel** — `useState` for `selectedGuestId` in `App`.
-7. **DD-7: Client-side search** — Case-insensitive substring match on `firstName + lastName`.
-8. **DD-8: Cyberpunk aesthetic naming** — Uppercase, underscores, technical codes.
-9. **DD-9: Status badge variants** — CONFIRMED (cobalt filled), PENDING (cobalt outlined), DECLINED (muted red outlined).
-10. **DD-10: Selected row indicator** — `border-l-2 border-l-primary bg-surface-elevated`.
-11. **DD-11: Responsive breakpoint at 768px** — `md:` prefix.
-12. **DD-12: Bottom tab bar** — 4 tabs with route-based navigation on mobile.
-13. **DD-13: Mobile guest list grouped by table** — UNASSIGNED group with `totalSeats={0}`.
-14. **DD-14: FAB on mobile** — Replaces sidebar "ADD GUEST" button.
-
-### Spec: Guest CRUD Flow — Status: Completed (2026-04-03)
-
-Key architectural decisions:
-
-1. **DD-1: Form as dedicated route** — `/guests/new` and `/guests/:id/edit` as nested React Router routes within `<App>` layout.
-2. **DD-2: react-hook-form** — `useForm` with built-in `register` + `required` validation. No schema library.
-3. **DD-3: localStorage data layer** — `src/data/guest-store.ts` with CRUD operations.
-4. **DD-4: localStorage key** — `"seating-plan:guests"`. JSON-serialized `Guest[]`.
-5. **DD-5: UUID v4 guest IDs** — Via `uuid` package.
-6. **DD-6: React state + localStorage sync** — App reads from store, CRUD updates both (`setGuests(getGuests())`).
-7. **DD-7: Custom delete confirmation dialog** — Dark overlay modal. Red confirm button (exception to cobalt-only accent).
-8. **DD-8: Form field sections** — Cyberpunk section headings (IDENTITY_MATRIX, STATUS_CLASSIFICATION, etc.).
-9. **DD-9: Navigation after submission** — Add: `navigate('/', { replace: true })`. Edit: `navigate('/', { state: { selectedGuestId: id } })`.
-10. **DD-10: Empty state** — "NO_RECORDS // INITIALIZE_DB" with CTA to `/guests/new`.
-11. **DD-11: Outlet context** — `App` passes `{ guests, onAdd, onUpdate, onDelete, onCancel }` via `<Outlet context>`.
-12. **DD-12: Single GuestForm** — Handles add (no `guest` prop) and edit (with `guest` prop, shows delete) modes.
-
-### Spec: Replace Icons with react-icons — Status: Completed (2026-04-03)
-
-Key decisions:
-
-1. **DD-1: Lucide icon family** — All icons use `react-icons/lu` (Lucide) exclusively for consistent 2px stroke style.
-2. **DD-2: `size` prop for dimensions** — Icon dimensions set via `size` prop, not CSS classes.
-3. **DD-3: Color via className** — Icon colors set via Tailwind `text-*` classes on the icon component.
-
-### Spec: Seating Canvas — Status: Completed (2026-04-03)
-
-Key architectural decisions:
-
-1. **DD-1: Canvas view** — Interactive 2D floor plan editor at `/seating-plan`.
-2. **DD-2: Table types** — Rectangular and circular shapes, defined in `src/data/table-types.ts`.
-3. **DD-3: Auto-sizing** — Table dimensions computed from seat count via `getRectTableSize()` and `getCircleTableDiameter()`. No manual resize handles.
-4. **DD-4: Table store** — `src/data/table-store.ts` following `guest-store.ts` pattern with `"seating-plan:tables"` localStorage key. Separate counter key for auto-incrementing badge IDs.
-5. **DD-5: NATO phonetic labels** — Tables auto-labeled `TABLE ALPHA`, `TABLE BRAVO`, etc.
-6. **DD-6: Seat assignment** — Guests assigned to specific seat indices on tables. `SeatAssignment` type with `seatIndex` + `guestId`.
-7. **DD-7: DnD with @dnd-kit/react** — `DragDropProvider` wraps canvas view. Three interactions: guest-to-seat, guest-to-table (auto-picks first empty seat), seat-to-seat swap.
-8. **DD-8: Pan/zoom** — `react-zoom-pan-pinch` for canvas navigation. `screenToCanvas()` helper for coordinate conversion.
-9. **DD-9: Properties panel** — Right-side panel for editing selected table (label, shape, seat count, rotation, delete). Uses "adjusting state during render" pattern (G-25) for form reset.
-10. **DD-10: Toolbar** — 4 tools: select (LuMousePointer2), pan (LuHand), add circle (LuCircle), add rectangle (LuSquare).
-11. **DD-11: useTableState hook** — Custom hook encapsulating table store operations + React state sync.
-12. **DD-12: Geometry helpers** — `SEAT_SPACING`, `TABLE_PADDING`, `SEAT_RADIUS`, min dimension constants, `getSeatPositions()` for computing seat coordinates.
-
-### Spec: Semantic Table Refactor — Status: Completed (2026-04-03)
-
-Key architectural decisions:
-
-1. **DD-1: @tanstack/react-table for desktop guest list** — `createColumnHelper<Guest>()` at module scope, `useReactTable` with `getCoreRowModel`. Replaces prior `<div>` grid layout.
-2. **DD-2: Semantic `<table>` element** — Desktop guest list uses `<table>`, `<thead>`, `<tbody>`, `<tr>`, `<th scope="col">`, `<td>` for proper HTML semantics and accessibility.
-3. **DD-3: `border-separate border-spacing-0`** — Table uses `border-separate` to support per-row borders (selected state `border-l-2`).
-4. **DD-4: Column definitions at module scope** — Per G-27, columns defined outside the component for stable references.
-
-### Spec: Sidebar Navigation — Status: Completed (2026-04-03)
-
-Key architectural decisions:
-
-1. **DD-1: Route-based navigation** — `/` (guest list) and `/seating-plan` (canvas) as proper routes, replacing query-param tab switching.
-2. **DD-2: Sidebar as primary navigation** — Two links: "Listado de invitados" (`/`) and "Canvas" (`/seating-plan`).
-3. **DD-3: Active state from route path** — Derive active view from `useLocation().pathname` instead of `useSearchParams`.
-4. **DD-4: BottomTabBar route navigation** — CANVAS/GUESTS tabs navigate via routes instead of query params.
-5. **DD-5: Remove old nav items** — PROPERTIES, LAYOUT, OBJECTS, EXPORT removed from sidebar.
-6. **DD-6: TopNav simplification** — Retains only brand text, settings icon, and avatar.
-
-### Spec: Mobile Canvas — Status: Confirmed (2026-04-03)
-
-Planned feature (to be implemented):
-
-1. **DD-M1: Touch interaction model** — Single-finger drag on background pans, pinch zooms, tap selects table, long-press (300ms) + drag repositions selected table, tap on seat opens popover, tap on canvas with add tool places table.
-2. **DD-M2: Properties bottom sheet** — Replaces desktop sidebar on mobile. Up to 60vh, drag handle, same fields as `CanvasPropertiesPanel`.
-3. **DD-M3: Unassigned guests FAB + sheet** — FAB at `bottom-[140px] right-4 z-30` with badge count. Opens read-only bottom sheet.
-4. **DD-M4: Long-press threshold** — 300ms with visual feedback (ring glow at 150ms, intensify at 300ms).
-5. **DD-M5: Mobile zoom config** — `react-zoom-pan-pinch` with `minScale: 0.5`, `maxScale: 3`, panning always enabled, pinch enabled, wheel disabled, double-click disabled.
-6. **DD-M6: Mobile toolbar position** — `fixed bottom-20 left-1/2 -translate-x-1/2 z-30`.
-7. **DD-M7: No DnD on mobile** — `@dnd-kit/react` interactions disabled. Assignment via popover only.
-8. **DD-M8: Responsive breakpoint** — Same `md` (768px) boundary.
-9. **DD-M9: Same canvas size** — 3000x2000px on mobile, same as desktop.
-10. **DD-M10: `useIsMobile` hook** — Uses `window.matchMedia('(max-width: 767px)')` for JS-side behavior differences.
-
-## Guardrails and Lessons Learned
-
-### From: Nought Cobalt Design System (2026-04-03)
-
-**G-1: Tailwind v4 `@import` Must Be Top-Level**
-`@import 'tailwindcss'` must always be the very first line of `src/index.css`, at the top level. Never nest it inside a media query, selector, or any other at-rule.
-
-**G-2: Use `@theme` for Tailwind Utility Generation, `:root` for Direct CSS Variables**
-Design tokens that should generate Tailwind utility classes go in the `@theme` block (using `--color-*`, `--font-*`, `--radius-*` namespaces). Tokens intended for direct CSS consumption go in `:root` with the `--nc-*` prefix.
-
-**G-3: All Design Tokens Use `--nc-*` Namespace**
-When referencing design tokens in custom CSS (outside Tailwind utilities), always use `var(--nc-*)` variables, never raw hex values or Tailwind's generated `var(--color-*)` variables.
-
-**G-4: No Light Mode — Dark Only**
-Never add `prefers-color-scheme` media queries or `color-scheme: light dark`. The application is dark-mode only with `color-scheme: dark` on `:root`.
-
-**G-5: Default Border Radius is 4px**
-Use `4px` (or the `rounded` Tailwind utility) as the default border radius. Only deviate with explicit design justification.
-
-**G-6: Use `@utility` for Multi-Property Utility Classes**
-When defining custom Tailwind utilities that set multiple CSS properties, use the `@utility` directive, not `@layer utilities`.
-
-**G-7: Use `@layer components` for Component Base Styles**
-Component base styles go in `@layer components` to ensure proper specificity ordering.
-
-**G-8: `focus-visible` for Buttons, `focus` for Inputs**
-Interactive elements primarily clicked (buttons) use `:focus-visible`. Form inputs use `:focus`.
-
-**G-9: Google Fonts Must Include Preconnect**
-Always include both preconnect links (`fonts.googleapis.com` and `fonts.gstatic.com` with `crossorigin`) before the stylesheet link.
-
-**G-10: Variable Migration Completeness**
-When renaming CSS custom properties, grep the entire `src/` directory for old variable names. CSS custom properties silently fall back to `initial` when undefined.
-
-### From: Guest List Screen (2026-04-03)
-
-**G-11: All Interactive Elements Must Be Keyboard Accessible**
-Every clickable element must be keyboard accessible. Buttons need `cursor-pointer`. `<div onClick>` needs `role="button"`, `tabIndex={0}`, `onKeyDown` — or refactor to `<button>`. All buttons need `focus-visible` outline.
-
-**G-12: Always Review Ternary Branches for Copy-Paste Errors**
-Verify that ternary true/false branches produce different outputs. Identical branches are always a bug.
-
-**G-13: Use Design System Typography Classes Consistently**
-All text elements must use the appropriate typography utility class. Never rely on inherited font sizing.
-
-**G-14: Mobile-Specific Groups Need Contextual Data**
-Group metadata should be derived from the group's context, not hardcoded.
-
-### From: Guest CRUD Flow (2026-04-03)
-
-**G-15: Form Inputs with Validation Must Include `aria-invalid`**
-Any form input with validation must include `aria-invalid={errors.fieldName ? 'true' : 'false'}`. Error messages use `role="alert"`.
-
-**G-16: Avoid `setState` Inside `useEffect` — Use Synchronous State Adjustment**
-Prefer the "adjusting state during render" pattern over `useEffect` with `setState`. Check React's "You Might Not Need an Effect" guide.
-
-**G-17: Single Source of Truth for Data Transformations**
-Data filtering, sorting, and transformation should happen in exactly one place.
-
-**G-18: Delete Unused Component Files**
-If a component is created but never imported anywhere, delete it.
-
-**G-19: Custom Modal Dialogs Need Keyboard and ARIA Support**
-Modals must include: `role="alertdialog"` or `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, Escape key handler, and ideally focus trapping.
-
-### From: Replace Icons with react-icons (2026-04-03)
-
-**G-20: Use a Single Icon Family for Consistency**
-All icons must come from `react-icons/lu` (Lucide). Do not mix icon families unless there is an explicit design justification.
-
-**G-21: Verify Icon Export Names Against the Actual Package**
-Before specifying an icon component name, verify the export exists in the target `react-icons` sub-package.
-
-**G-22: Use `size` Prop for Icon Dimensions, Not CSS Width/Height**
-Set icon dimensions via the `size` prop on `react-icons` components, not via CSS `w-*`/`h-*` classes.
-
-### From: Seating Canvas (2026-04-03)
-
-**G-23: Data Store Function Signatures Must Match Their Intended Contract**
-When a data store function is designed to accept certain fields for updates, the TypeScript type signature must accurately reflect which fields are accepted. Do not use `Omit` to accidentally exclude fields that should be updatable. Prefer `Partial<Pick<T, ...>>` to be explicit.
-
-**G-24: Spec Is the Authoritative Reference for Literal Values**
-When the spec defines specific literal values (string constants, padding numbers, default counts), use those exact values. Do not substitute alternatives without explicit spec amendment.
-
-**G-25: G-16 Applies Even When `useEffect` Seems Justified**
-The `react-hooks/set-state-in-effect` ESLint rule will block the pre-commit hook for ANY synchronous `setState` inside `useEffect`. Always use the synchronous "adjusting state during render" pattern.
-
-**G-26: Collapse Identical Conditional Branches**
-Extends G-12. When an if/else or ternary has identical branches, collapse them into a single unconditional block.
-
-### From: Semantic Table Refactor (2026-04-03)
-
-**G-27: Define @tanstack/react-table Column Definitions at Module Scope**
-When using `@tanstack/react-table`, define the `columns` array (via `createColumnHelper<T>()`) at module scope (outside the component function), not inside the component. This ensures a stable reference and prevents unnecessary re-renders.
-
-**G-28: Use `border-separate` + `border-spacing-0` for Styled `<table>` Elements**
-When applying per-row or per-cell borders, use `border-collapse: separate` with `border-spacing: 0` on the `<table>` element. Do not use `border-collapse: collapse`. The Tailwind classes are `border-separate border-spacing-0`.
-
-### From: Sidebar Navigation (2026-04-03)
-
-**G-29: Clean Up Vestigial Props After Interface Changes**
-When a feature removes functionality, audit all components that consumed the removed data to eliminate vestigial props, state, and derived values. A required prop that is always passed a constant is dead code.
-
-**G-30: Verify Component Import Graph After Removing Consumers**
-When removing imports of a component from its only consumer, check whether any other file still imports the component. If not, the component file is dead code per G-18.
+- **G-20**: All icons from `react-icons/lu` (Lucide) only
+- **G-21**: Verify icon export names against actual package
+- **G-22**: Use `size` prop for icon dimensions
+
+### Code Quality
+
+- **G-12/G-26**: No identical conditional branches
+- **G-13**: Use design system typography classes consistently
+- **G-18**: Delete unused component files
+- **G-23**: Store function signatures must match intended contract
+- **G-24**: Spec is authoritative for literal values
+- **G-33**: Align equivalent type definitions across components
+- **G-34**: Touch event listeners must accompany mouse listeners

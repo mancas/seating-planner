@@ -1,4 +1,4 @@
-import type { Guest } from '../../data/mock-guests'
+import type { Guest } from '../../data/guest-types'
 import StatusIcon from '../atoms/StatusIcon'
 
 interface Props {
@@ -36,4 +36,4 @@ function GuestRowMobile({ guest, isSelected, onClick }: Props) {
   )
 }
 
-export { GuestRowMobile }
+export default GuestRowMobile

@@ -1,4 +1,4 @@
-import type { GuestStatus } from '../../data/mock-guests'
+import type { GuestStatus } from '../../data/guest-types'
 
 interface Props {
   status: GuestStatus

@@ -1,75 +1,95 @@
-# Codebase Context Updates — Sidebar Navigation
+# Codebase Context Updates — Refactor Codebase
 
-Updates to `generated/codebase-context.md` based on validated sidebar navigation implementation.
+Updates to project structure and patterns based on the validated refactor-codebase spec implementation.
 
 ---
 
-## Changes to Routing Architecture
+## Architecture Changes
 
-Replace the current routing architecture section with:
+### App.tsx — Thin Layout Shell (17 lines)
 
-- `main.tsx` wraps `<App />` in `<BrowserRouter>` with `<Routes>`
-- `<App>` is a layout route (`<Route element={<App />}>`) with child routes:
-  - `<Route index element={null} />` — default (guest list rendered by App itself)
-  - `<Route path="seating-plan" element={null} />` — canvas view (rendered by App based on pathname)
-  - `<Route path="guests/new" element={<AddGuestPage />} />`
-  - `<Route path="guests/:id/edit" element={<EditGuestPage />} />`
-- `App.tsx` renders `<Outlet>` for child routes in the main content area when `isChildRoute` is true
-- Outlet context passes `{ guests, onAdd, onUpdate, onDelete, onCancel }` to child pages
-- **View switching uses route-based navigation**: `/` for guest list, `/seating-plan` for canvas. No query params.
-- Active view derived from `useLocation().pathname` in each component independently (no prop threading)
-- Canvas view wraps content in `<DragDropProvider>` for DnD support
+`App.tsx` is now a pure layout shell rendering `TopNav`, `<Outlet />`, and `BottomTabBar`. It contains zero state, zero hooks, and zero business logic.
 
-## Changes to State Management
-
-Update state management section — remove references to `searchQuery`, `activeTab`, `useSearchParams`:
-
-- **State management**: Local component state via `useState` in `App.tsx`. No global state library. `App` owns `guests` (read from localStorage on mount) and `selectedGuestId`. Active view (`isCanvasView`) is derived from `useLocation().pathname` — not stored as state. Table state managed via `useTableState` custom hook. Data and callbacks passed down as props. Child routes receive data via `useOutletContext`.
-
-## Changes to Component Descriptions
-
-Update the following in the file structure:
+### Route Architecture
 
 ```
-├── TopNav.tsx          (brand text + LuSettings + avatar — no props)
-├── LeftSidebar.tsx     (2 route-based nav links + ADD GUEST/ADD TABLE buttons, desktop-only, draggable guests, derives active state via useLocation)
-├── BottomTabBar.tsx    (4-tab mobile nav bar, fixed bottom, route-based navigation for CANVAS/GUESTS, TOOLS/MORE are placeholders)
+<Route element={<App />}>                    ← layout: TopNav + Outlet + BottomTabBar
+  <Route element={<GuestListView />}>        ← layout: LeftSidebar + main + detail panel
+    <Route index element={null} />           ← guest list (rendered by GuestListView)
+    <Route path="guests/new" ... />          ← AddGuestPage (via Outlet context)
+    <Route path="guests/:id/edit" ... />     ← EditGuestPage (via Outlet context)
+  </Route>
+  <Route path="seating-plan" ... />          ← SeatingPlanView (standalone)
+</Route>
 ```
 
-## Changes to Architectural Patterns — Structure
+### View Components
 
-Update the structure description:
+- **`GuestListView`** (`src/pages/GuestListView.tsx`, 157 lines) — Owns guest state, CRUD handlers, statistics (via `useGuestStats`), navigation, FAB. Acts as layout route providing `OutletContext` to form pages.
+- **`SeatingPlanView`** (`src/pages/SeatingPlanView.tsx`, 122 lines) — Owns table state (via `useTableState`), DnD handler (via `useDragEndHandler`), canvas rendering, mobile sheets.
 
-- **Structure**: Single-page application (SPA) with React + BrowserRouter. App shell with nested route layout: `<App>` is a layout route rendering `<Outlet>` for child routes (`/guests/new`, `/guests/:id/edit`). **Route-based view switching**: `/` renders guest list, `/seating-plan` renders canvas. Three-panel desktop layout (TopNav, LeftSidebar with navigation links, main content + optional detail/properties panel). Mobile layout with bottom tab bar, FAB, and table-grouped guest list. Responsive breakpoint at 768px (`md:` Tailwind prefix).
+## New Files
 
-## Changes to Prior Spec Decisions
+### Data Layer
 
-Update the Sidebar Navigation entry status:
+| File                         | Purpose                                                                               |
+| ---------------------------- | ------------------------------------------------------------------------------------- |
+| `src/data/guest-types.ts`    | `Guest` interface and `GuestStatus` type (extracted from `mock-guests.ts`)            |
+| `src/data/canvas-utils.ts`   | `screenToCanvas()` coordinate conversion (extracted from `dnd-types.ts`)              |
+| `src/data/outlet-context.ts` | Shared `OutletContext` interface for form page routes                                 |
+| `src/data/guest-utils.ts`    | `getUnassignedGuests(guests, tables)` utility                                         |
+| `src/data/storage-utils.ts`  | `createStorage<T>(key, fallback)` — generic localStorage wrapper with memory fallback |
 
-### Spec: Sidebar Navigation — Status: Completed (2026-04-03)
+### Hooks
 
-Key architectural decisions:
+| File                             | Purpose                                                            |
+| -------------------------------- | ------------------------------------------------------------------ |
+| `src/hooks/useGuestStats.ts`     | `useGuestStats(guests)` — memoized statistics computation          |
+| `src/hooks/useDragEndHandler.ts` | `useDragEndHandler(tables, assignFn, swapFn)` — DnD dispatch logic |
 
-1. **DD-1: Route-based navigation** — `/` and `/seating-plan` as proper React Router routes, replacing `/?tab=guests` and `/?tab=canvas`.
-2. **DD-2: Sidebar as primary navigation** — Two links: "Listado de invitados" (`/`) and "Canvas" (`/seating-plan`). TopNav tab selector and search input removed.
-3. **DD-3: Navigation link labels** — "Listado de invitados" and "Canvas" (not uppercase cyberpunk style — explicit user preference).
-4. **DD-4: Route path** — `/seating-plan` for canvas view (kebab-case, correct English spelling).
-5. **DD-5: Active state from route path** — Derive active view from `useLocation().pathname === '/seating-plan'` in each component independently. `!isCanvasView` covers all guest-domain routes (`/`, `/guests/new`, `/guests/:id/edit`).
-6. **DD-6: Reuse SidebarNavItem** — Existing molecule component with `label`, `isActive`, `onClick` props.
-7. **DD-7: BottomTabBar self-contained** — Uses `useLocation` and `useNavigate` internally. No props.
+### Components
 
-## Removed Patterns
+| File                                               | Purpose                                                                                                |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `src/components/organisms/TablePropertiesForm.tsx` | Shared form UI for table properties (used by both `CanvasPropertiesPanel` and `MobilePropertiesSheet`) |
 
-The following patterns no longer exist in the codebase:
+## Modified File Summaries
 
-- `useSearchParams` for tab switching — **removed** (no file imports or uses `useSearchParams`)
-- `activeTab` prop threading from `App` → `TopNav`/`LeftSidebar`/`BottomTabBar` — **removed**
-- `onTabChange` callback prop — **removed**
-- `searchQuery` state in `App.tsx` — **removed** (search functionality removed from TopNav)
-- `filteredGuests` computation in `App.tsx` — **removed**
-- `NavLink` atom import in `TopNav.tsx` — **removed** (component file still exists but has zero consumers)
-- `SearchInput` atom import in `TopNav.tsx` — **removed** (component file may have zero consumers)
+### Significantly Changed
 
-## New Guardrails
+- **`mock-guests.ts`** — Now only exports seed data array. Types extracted to `guest-types.ts`. Dead stats functions removed.
+- **`guest-store.ts`** — Uses `createStorage` utility. Imports types from `guest-types.ts`. Type re-exports removed. **Note**: Still contains unused stats functions (flagged in validation).
+- **`table-store.ts`** — Uses `createStorage` for both tables and counter. Type re-exports removed.
+- **`dnd-types.ts`** — Only DnD type discriminators and interfaces. `screenToCanvas` moved out.
+- **`CanvasPropertiesPanel.tsx`** — Thin wrapper (41 lines). Uses `TablePropertiesForm` with `key={table.id}`.
+- **`MobilePropertiesSheet.tsx`** — Thin wrapper (57 lines). Uses `TablePropertiesForm` with `key={table.id}`.
+- **`GuestDetailPanel.tsx`** — Single responsive markup (no duplicated mobile/desktop blocks).
+- **`GuestTable.tsx`** — Accepts `tables` prop for actual seat counts. `searchQuery` prop removed. Default import for `GuestRow`.
+- **`GuestRow.tsx`** — Uses `export default` (was named export).
 
-See `generated/guardrails.md` for G-29 and G-30.
+### CSS Changes
+
+- **`index.css`** — `@theme` block now references `:root` `--nc-*` vars (no duplicate hex values). Added `btn-destructive` class in `@layer components`.
+
+### Deleted Files
+
+- `src/components/atoms/NavLink.tsx`
+- `src/components/atoms/SearchInput.tsx`
+- `src/App.css`
+- `src/assets/react.svg`
+- `src/assets/vite.svg`
+
+## Import Graph Changes
+
+- All `Guest`/`GuestStatus` imports now from `data/guest-types` (not `mock-guests` or `guest-store`)
+- All `FloorTable`/`TableShape`/`SeatAssignment` imports from `data/table-types` (not `table-store`)
+- `screenToCanvas` imported from `data/canvas-utils` (not `dnd-types`)
+- `OutletContext` imported from `data/outlet-context` (not locally defined)
+
+## Design Patterns Established
+
+1. **`key` prop for state reset** — Parent passes `key={entity.id}` to reset child local state when entity changes
+2. **Shared form + thin wrapper** — Extract shared form logic, each wrapper provides only container chrome
+3. **Layout route for outlet context** — View component acts as layout route, provides context to child form pages
+4. **`createStorage<T>`** — Generic localStorage abstraction with memory fallback
+5. **Named constants for magic numbers** — `CANVAS_WIDTH`, `CANVAS_HEIGHT`, `POPOVER_WIDTH`, `POPOVER_GAP`, `TOUCH_MOVE_THRESHOLD`

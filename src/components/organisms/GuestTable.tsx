@@ -1,5 +1,6 @@
-import type { Guest } from '../../data/mock-guests'
-import { GuestRowMobile } from '../molecules/GuestRow'
+import type { Guest } from '../../data/guest-types'
+import type { FloorTable } from '../../data/table-types'
+import GuestRowMobile from '../molecules/GuestRow'
 import TableGroupHeader from '../molecules/TableGroupHeader'
 import {
   createColumnHelper,
@@ -61,9 +62,9 @@ const columns = [
 
 interface Props {
   guests: Guest[]
+  tables: FloorTable[]
   selectedGuestId: string | null
   onGuestClick: (guestId: string) => void
-  searchQuery: string
 }
 
 function getLocationLabel(table: string): string {
@@ -75,10 +76,18 @@ function getLocationLabel(table: string): string {
 
 function GuestTable({
   guests,
+  tables: floorTables,
   selectedGuestId,
   onGuestClick,
-  searchQuery,
 }: Props) {
+  // Build a lookup map from table assignment key to actual seat count
+  const seatCountMap = new Map<string, number>()
+  for (const ft of floorTables) {
+    seatCountMap.set(ft.label, ft.seatCount)
+    seatCountMap.set(ft.badgeId, ft.seatCount)
+    seatCountMap.set(ft.id, ft.seatCount)
+  }
+
   // Group guests by table assignment for mobile view
   // Filtering is handled by the parent (App.tsx) — guests prop is already filtered
   const groupMap = new Map<string, Guest[]>()
@@ -98,9 +107,6 @@ function GuestTable({
     if (b === 'UNASSIGNED') return -1
     return a.localeCompare(b)
   })
-
-  const isEmpty = guests.length === 0
-  const hasActiveSearch = searchQuery.trim().length > 0
 
   const table = useReactTable({
     data: guests,
@@ -133,70 +139,55 @@ function GuestTable({
           ))}
         </thead>
         <tbody>
-          {isEmpty && hasActiveSearch ? (
-            <tr>
-              <td
-                colSpan={table.getAllColumns().length}
-                className="py-16 text-center text-foreground-muted text-label tracking-wider"
-              >
-                NO_RESULTS // QUERY_MISMATCH
-              </td>
+          {table.getRowModel().rows.map((row) => (
+            <tr
+              key={row.original.id}
+              onClick={() => onGuestClick(row.original.id)}
+              className={`cursor-pointer hover:bg-gray-800/50 ${
+                row.original.id === selectedGuestId
+                  ? 'border-l-2 border-l-primary bg-surface-elevated'
+                  : 'border-l-2 border-l-transparent'
+              }`}
+            >
+              {row.getVisibleCells().map((cell) => (
+                <td key={cell.id} className="px-4 py-3">
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+              ))}
             </tr>
-          ) : (
-            table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.original.id}
-                onClick={() => onGuestClick(row.original.id)}
-                className={`cursor-pointer hover:bg-gray-800/50 ${
-                  row.original.id === selectedGuestId
-                    ? 'border-l-2 border-l-primary bg-surface-elevated'
-                    : 'border-l-2 border-l-transparent'
-                }`}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-4 py-3">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))
-          )}
+          ))}
         </tbody>
       </table>
 
       {/* Mobile layout */}
       <div className="md:hidden">
-        {isEmpty && hasActiveSearch ? (
-          <div className="md:hidden flex items-center justify-center py-16 text-foreground-muted text-label tracking-wider">
-            NO_RESULTS // QUERY_MISMATCH
-          </div>
-        ) : (
-          sortedKeys.map((tableKey) => {
-            const groupGuests = groupMap.get(tableKey)!
-            const tableName =
-              tableKey === 'UNASSIGNED'
-                ? 'NO TABLE'
-                : tableKey.replace('_', ' ')
-            return (
-              <div key={tableKey}>
-                <TableGroupHeader
-                  location={getLocationLabel(tableKey)}
-                  tableName={tableName}
-                  seatCount={groupGuests.length}
-                  totalSeats={tableKey === 'UNASSIGNED' ? 0 : 8}
+        {sortedKeys.map((tableKey) => {
+          const groupGuests = groupMap.get(tableKey)!
+          const tableName =
+            tableKey === 'UNASSIGNED' ? 'NO TABLE' : tableKey.replace('_', ' ')
+          return (
+            <div key={tableKey}>
+              <TableGroupHeader
+                location={getLocationLabel(tableKey)}
+                tableName={tableName}
+                seatCount={groupGuests.length}
+                totalSeats={
+                  tableKey === 'UNASSIGNED'
+                    ? 0
+                    : (seatCountMap.get(tableKey) ?? groupGuests.length)
+                }
+              />
+              {groupGuests.map((guest) => (
+                <GuestRowMobile
+                  key={guest.id}
+                  guest={guest}
+                  isSelected={guest.id === selectedGuestId}
+                  onClick={() => onGuestClick(guest.id)}
                 />
-                {groupGuests.map((guest) => (
-                  <GuestRowMobile
-                    key={guest.id}
-                    guest={guest}
-                    isSelected={guest.id === selectedGuestId}
-                    onClick={() => onGuestClick(guest.id)}
-                  />
-                ))}
-              </div>
-            )
-          })
-        )}
+              ))}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

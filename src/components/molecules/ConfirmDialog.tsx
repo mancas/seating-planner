@@ -40,11 +40,7 @@ function ConfirmDialog({
           <button type="button" className="btn-secondary" onClick={onCancel}>
             {cancelLabel ?? 'CANCEL'}
           </button>
-          <button
-            type="button"
-            className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded font-semibold text-sm cursor-pointer focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
-            onClick={onConfirm}
-          >
+          <button type="button" className="btn-destructive" onClick={onConfirm}>
             {confirmLabel ?? 'CONFIRM_DEL'}
           </button>
         </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { LuX, LuGift, LuBus, LuHotel } from 'react-icons/lu'
-import type { Guest } from '../../data/mock-guests'
+import type { Guest } from '../../data/guest-types'
 import Avatar from '../atoms/Avatar'
 import StatusBadge from '../atoms/StatusBadge'
 import IconButton from '../atoms/IconButton'
@@ -18,8 +18,7 @@ function GuestDetailPanel({ guest, onClose, onUpdate, onDelete }: Props) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   return (
     <>
-      {/* Mobile: full-screen overlay */}
-      <div className="md:hidden fixed inset-0 z-50 flex flex-col bg-background overflow-y-auto">
+      <aside className="fixed inset-0 z-50 flex flex-col bg-background overflow-y-auto md:static md:inset-auto md:z-auto md:w-[320px] md:min-w-[320px] md:bg-surface md:border-l md:border-border">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
           <span className="text-label text-foreground-muted tracking-wider uppercase">
@@ -37,37 +36,7 @@ function GuestDetailPanel({ guest, onClose, onUpdate, onDelete }: Props) {
           <button className="btn-secondary flex-1">CONTACT</button>
           <button
             type="button"
-            className="bg-red-600 hover:bg-red-700 text-white flex-1 px-5 py-2.5 rounded font-semibold text-sm cursor-pointer focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
-            onClick={() => setShowDeleteDialog(true)}
-          >
-            DELETE
-          </button>
-          <button className="btn-primary flex-1" onClick={onUpdate}>
-            UPDATE
-          </button>
-        </div>
-      </div>
-
-      {/* Desktop: inline side panel */}
-      <aside className="hidden md:flex flex-col w-[320px] min-w-[320px] bg-surface border-l border-border overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <span className="text-label text-foreground-muted tracking-wider uppercase">
-            GUEST_DETAILS
-          </span>
-          <IconButton onClick={onClose} label="Close details">
-            <LuX size={20} />
-          </IconButton>
-        </div>
-
-        {renderContent(guest)}
-
-        {/* Action buttons */}
-        <div className="px-4 py-4 mt-auto border-t border-border flex gap-3">
-          <button className="btn-secondary flex-1">CONTACT</button>
-          <button
-            type="button"
-            className="bg-red-600 hover:bg-red-700 text-white flex-1 px-5 py-2.5 rounded font-semibold text-sm cursor-pointer focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+            className="btn-destructive flex-1"
             onClick={() => setShowDeleteDialog(true)}
           >
             DELETE

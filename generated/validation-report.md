@@ -1,159 +1,148 @@
-# Validation Report: Sidebar Navigation
+# Validation Report — Refactor Codebase
 
-**Date**: 2026-04-03
-**Spec**: `spec/sidebar-navigation.md`
+**Date**: 2026-04-04
+**Spec**: `spec/refactor-codebase.md`
 **Validator**: Validator Agent
-**Iteration**: 1
+**Iteration**: 2 (re-review)
 
 ---
 
-## Verdict: APPROVED
+## Build Status
 
-Zero CRITICAL findings. Zero MAJOR findings. 4 MINOR findings (non-blocking).
+**PASS** — `npx tsc -b && npx vite build` completed successfully (169 modules, 551.84 kB JS, 35.79 kB CSS). Vite warns about chunk size >500 kB (pre-existing, not introduced by this refactor).
 
----
+## Lint Status
 
-## Step 1: Completeness Check — Acceptance Criteria
+**2 errors, 2 warnings** — unchanged from iteration 1 (all pre-existing or justified)
 
-| AC    | Description                                                                       | Status | Evidence                                                                                        |
-| ----- | --------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------- |
-| AC-1  | TopNav center section (CANVAS/GUEST LIST NavLinks) removed; search removed        | PASS   | `TopNav.tsx` has no NavLink/SearchInput imports, no center section, no search input             |
-| AC-2  | No tab-switching UI or search input visible in TopNav on any route                | PASS   | `TopNav` renders only brand (left), settings + avatar (right)                                   |
-| AC-3  | Sidebar shows "Listado de invitados" and "Canvas" links; guest link active at `/` | PASS   | `LeftSidebar.tsx:63-72` — two `SidebarNavItem` entries; `!isCanvasView` is true at `/`          |
-| AC-4  | "Canvas" link active at `/seating-plan`                                           | PASS   | `LeftSidebar.tsx:46` — `isCanvasView = location.pathname === '/seating-plan'`                   |
-| AC-5  | Clicking "Canvas" navigates to `/seating-plan`                                    | PASS   | `LeftSidebar.tsx:71` — `onClick={() => navigate('/seating-plan')}`                              |
-| AC-6  | Clicking "Listado de invitados" navigates to `/`                                  | PASS   | `LeftSidebar.tsx:66` — `onClick={() => navigate('/')}`                                          |
-| AC-7  | Only two nav links present (no PROPERTIES, LAYOUT, OBJECTS, EXPORT)               | PASS   | `LeftSidebar.tsx:62-73` — only two `SidebarNavItem` components rendered                         |
-| AC-8  | `/` renders guest list view                                                       | PASS   | `App.tsx:215-266` — `defaultContent` renders guest list when not `isCanvasView`                 |
-| AC-9  | `/seating-plan` renders seating canvas view                                       | PASS   | `App.tsx:272` — `isCanvasView && !isChildRoute` renders `canvasContent` with `DragDropProvider` |
-| AC-10 | Legacy `/?tab=*` query params ignored                                             | PASS   | No `useSearchParams` in codebase; query params have no effect on routing                        |
-| AC-11 | `/guests/new` renders add guest form (unchanged)                                  | PASS   | `main.tsx:16` — route unchanged; `App.tsx:224-233` — `isChildRoute` renders `<Outlet>`          |
-| AC-12 | `/guests/:id/edit` renders edit guest form (unchanged)                            | PASS   | `main.tsx:17` — route unchanged                                                                 |
-| AC-13 | Mobile BottomTabBar: CANVAS/GUESTS use route navigation                           | PASS   | `BottomTabBar.tsx:17` — `navigate('/seating-plan')` and `BottomTabBar.tsx:23` — `navigate('/')` |
-| AC-14 | Mobile at `/`: GUESTS tab active                                                  | PASS   | `BottomTabBar.tsx:22` — `isActive={!isCanvasView}`, true at `/`                                 |
-| AC-15 | Mobile at `/seating-plan`: CANVAS tab active                                      | PASS   | `BottomTabBar.tsx:16` — `isActive={isCanvasView}`, true at `/seating-plan`                      |
-| AC-16 | Add guest redirects to `/` (not `/?tab=guests`)                                   | PASS   | `App.tsx:66` — `navigate('/', { replace: true })`                                               |
-| AC-17 | Edit guest redirects to `/` with selectedGuestId                                  | PASS   | `App.tsx:75` — `navigate('/', { state: { selectedGuestId: id } })`                              |
-| AC-18 | Delete guest redirects to `/`                                                     | PASS   | `App.tsx:86` — `navigate('/', { replace: true })`                                               |
-| AC-19 | Sidebar bottom: ADD GUEST + HISTORY at `/`                                        | PASS   | `LeftSidebar.tsx:77-111` — `isCanvasView` false shows ADD GUEST button + HISTORY                |
-| AC-20 | Sidebar bottom: ADD TABLE + unassigned + HISTORY at `/seating-plan`               | PASS   | `LeftSidebar.tsx:77-97` — `isCanvasView` true shows ADD TABLE + unassigned list + HISTORY       |
-
-**Result**: 20/20 acceptance criteria met. No requirements missed. No scope creep detected.
+| Finding                                                    | Severity | Source                                                                  |
+| ---------------------------------------------------------- | -------- | ----------------------------------------------------------------------- |
+| `react-hooks/refs` — `SeatingCanvas.tsx:232`               | error    | **Pre-existing** — accessing `transformRef.current` during render       |
+| `react-hooks/set-state-in-effect` — `GuestListView.tsx:35` | error    | **Introduced by T-07/T-10** — justified in spec (side effect in render) |
+| `react-hooks/incompatible-library` — `GuestForm.tsx:78`    | warning  | **Pre-existing** — react-hook-form `watch()`                            |
+| `react-hooks/incompatible-library` — `GuestTable.tsx:111`  | warning  | **Pre-existing** — TanStack Table `useReactTable()`                     |
 
 ---
 
-## Step 2: Convention Compliance
+## Re-Review: Iteration 1 Findings
 
-| Convention                          | Status | Notes                                                                                         |
-| ----------------------------------- | ------ | --------------------------------------------------------------------------------------------- |
-| Function declarations (not arrows)  | PASS   | All components use `function X()` with `export default X`                                     |
-| No semicolons                       | PASS   | Prettier check passes                                                                         |
-| Single quotes                       | PASS   | Prettier check passes                                                                         |
-| Trailing commas                     | PASS   | Prettier check passes                                                                         |
-| 2-space indentation                 | PASS   | Prettier check passes                                                                         |
-| Props interface named `Props`       | PASS   | `LeftSidebar.tsx:9` uses `Props`; `TopNav.tsx` and `BottomTabBar.tsx` have no props (correct) |
-| `import type` for type-only imports | PASS   | `App.tsx:10,12-16`, `LeftSidebar.tsx:5-6` use `import type`                                   |
-| Relative imports (no path aliases)  | PASS   | All imports use relative paths                                                                |
-| Icons from `react-icons/lu` only    | PASS   | All icon imports are from `react-icons/lu`                                                    |
-| Icon sizing via `size` prop         | PASS   | All icons use `size` prop                                                                     |
-| `useCallback` for handlers as props | PASS   | `App.tsx` wraps all handlers in `useCallback`                                                 |
-| Atomic design file organization     | PASS   | No new files created; existing structure preserved                                            |
+### M-1: `guest-store.ts` dead statistics functions — **FIXED**
 
-**Result**: Full convention compliance.
+`guest-store.ts` is now 50 lines containing only 5 CRUD functions (`getGuests`, `getGuestById`, `addGuest`, `updateGuest`, `deleteGuest`). All 7 dead statistics functions (`getConfirmedCount`, `getPendingCount`, `getConfirmationRate`, `getDietaryFlagCount`, `getTotalGuests`, `getWaitlistCount`, `getGuestsByTable`) have been deleted. Build and lint pass with no regressions.
 
 ---
 
-## Step 3: Best Practices Research
+## Findings
 
-### React Router v7 Navigation Patterns
+### CRITICAL
 
-Source: [React Router v7 Navigating docs](https://reactrouter.com/start/framework/navigating)
+None
 
-1. **`useNavigate` for programmatic navigation**: React Router docs recommend `useNavigate` for cases where "the user is _not_ interacting but you need to navigate" (e.g., timeouts, redirects). For user-initiated navigation, `<Link>` or `<NavLink>` components are preferred. The sidebar nav items use `onClick={() => navigate('/')}` on a `<div>`, which works correctly but is not the most idiomatic React Router pattern — `<NavLink to="/">` would provide built-in active state, proper `<a>` semantics, and keyboard navigation.
+### MAJOR
 
-2. **Assessment**: The `useNavigate` + `onClick` pattern is a valid approach within this codebase's existing conventions. The `SidebarNavItem` molecule pre-dates this feature and uses `<div onClick>`. Refactoring to React Router's `<NavLink>` would require changes to `SidebarNavItem`'s internal structure, which the spec explicitly placed out of scope ("Changes to the `SidebarNavItem` component styling"). The current approach is functionally correct and consistent with the project's patterns.
+None — M-1 has been resolved. M-2 remains as a documented design decision (see MINOR below).
 
----
+### MINOR (carried forward from iteration 1)
 
-## Step 4: Framework Best Practices Validation
+**m-0: `SeatingPlanView` guest state uses `useState` with no setter — misleading pattern** (downgraded from M-2)
 
-| Check                                     | Status | Notes                                                                                            |
-| ----------------------------------------- | ------ | ------------------------------------------------------------------------------------------------ |
-| Correct React Router API usage            | PASS   | `useLocation`, `useNavigate`, `Outlet`, `Route` all used correctly                               |
-| Route definition correctness              | PASS   | `<Route path="seating-plan" element={null} />` follows existing `element={null}` pattern         |
-| `DragDropProvider` wraps canvas correctly | PASS   | `App.tsx:273-275` — only wraps canvas content, not the entire app                                |
-| No unnecessary re-renders                 | PASS   | `isCanvasView` is derived (no state), `useCallback` wraps handlers                               |
-| State derivation from URL                 | PASS   | Single source of truth — `location.pathname` drives view selection (aligns with G-17)            |
-| Error handling                            | PASS   | `EditGuestPage.tsx:23-27` — redirect on invalid guest ID preserved                               |
-| No setState in useEffect (G-16)           | PASS   | No new `useEffect` + `setState` patterns introduced; `App.tsx:42-47` uses render-time adjustment |
-
-**Result**: Framework best practices are followed correctly.
-
----
-
-## Step 5: Code Quality Assessment
-
-### Readability: GOOD
-
-- `isCanvasView` is a clear, descriptive variable name used consistently across `App.tsx`, `LeftSidebar.tsx`, and `BottomTabBar.tsx`
-- Removal of `activeTab`, `onTabChange`, `searchQuery`, `onSearchChange` props simplifies component interfaces significantly
-- `TopNav.tsx` reduced from ~58 lines to 27 lines
-
-### Maintainability: GOOD
-
-- Active state derived from `useLocation()` in each component independently — no prop threading required
-- Each component is self-contained for navigation concerns
-- `GuestTable` still has `searchQuery` as a required prop (passed as `""`) — see finding M-1
-
-### DRY: ACCEPTABLE
-
-- `isCanvasView = location.pathname === '/seating-plan'` is duplicated in 3 files (`App.tsx:34`, `LeftSidebar.tsx:46`, `BottomTabBar.tsx:8`). This is acceptable since each component independently derives its own state from the router context, avoiding prop threading. Extracting to a shared hook would be premature abstraction for a single equality check.
-
-### Simplicity: GOOD
-
-- The refactor removes complexity (query params, prop threading) rather than adding it
-- Clean removal of MODULE_OFFLINE fallback and tab-switching ternaries in `App.tsx`
-
----
-
-## Step 6: Classified Findings
-
-### CRITICAL: None
-
-### MAJOR: None
+- **Location**: `src/pages/SeatingPlanView.tsx:20`
+- **Issue**: `const [guests] = useState<Guest[]>(() => getGuests())` uses a state hook but never calls the setter. Functionally correct because route navigation causes remounts, but the pattern implies the value could change.
+- **Recommendation**: Document as known limitation. Consider using `useMemo` for clarity.
 
 ### MINOR
 
-| #   | Finding                                                     | Severity | Location                               | Recommendation                                                                                                                                                                                      |
-| --- | ----------------------------------------------------------- | -------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| M-1 | `GuestTable.searchQuery` prop is vestigial                  | MINOR    | `GuestTable.tsx:66`, `App.tsx:248`     | `searchQuery` is now always `""`. The prop, `hasActiveSearch` variable, and `NO_RESULTS` empty state are dead code. Make `searchQuery` optional or remove it in a follow-up cleanup.                |
-| M-2 | `SidebarNavItem` uses `<div onClick>` without keyboard a11y | MINOR    | `SidebarNavItem.tsx:13-18`             | Pre-existing issue (not introduced by this feature). Per G-11, should use `<button>` or add `role="button"`, `tabIndex={0}`, `onKeyDown`. Recommend addressing in a follow-up accessibility pass.   |
-| M-3 | `NavLink` atom component is now unused                      | MINOR    | `src/components/atoms/NavLink.tsx`     | No file in the codebase imports `NavLink`. Per G-18, unused files should be deleted. However, the spec explicitly notes this is out of scope (line 115). Recommend deleting in a follow-up cleanup. |
-| M-4 | `SearchInput` atom component may be unused                  | MINOR    | `src/components/atoms/SearchInput.tsx` | Was only imported by `TopNav`. Since removed from `TopNav`, it may now have zero consumers. Verify and delete if unused in a follow-up.                                                             |
+**m-1: ESLint error on `setSelectedGuestId` in `useEffect` should be suppressed**
+
+- **Location**: `src/pages/GuestListView.tsx:32-38`
+- **Issue**: The `react-hooks/set-state-in-effect` rule flags this. The spec explicitly chose `useEffect` over setState-during-render because `window.history.replaceState` is a side effect that shouldn't run during render. This is a valid trade-off against guardrail G-16/G-25.
+- **Recommendation**: Add `// eslint-disable-next-line react-hooks/set-state-in-effect` with a comment referencing the spec justification.
+
+**m-2: Inconsistent `onUpdate` prop types between `CanvasPropertiesPanel` and `MobilePropertiesSheet`**
+
+- **Location**: `CanvasPropertiesPanel.tsx:8-13` vs `MobilePropertiesSheet.tsx:9-12`
+- **Issue**: CPC defines `onUpdate` as a manual inline type `{ label?: string; shape?: TableShape; ... }`, while MPS uses `Partial<Pick<FloorTable, ...>>`. Both are semantically identical but violate guardrail G-33.
+- **Recommendation**: Both wrappers should use `Partial<Pick<FloorTable, 'label' | 'shape' | 'seatCount' | 'rotation'>>`.
+
+**m-3: `CanvasPropertiesPanel` imports unused `TableShape` type**
+
+- **Location**: `src/components/organisms/CanvasPropertiesPanel.tsx:2`
+- **Issue**: `TableShape` is only referenced in the inline `onUpdate` type. If unified per m-2, this import becomes unnecessary.
+- **Recommendation**: Unify type and remove import.
+
+**m-4: `GuestListView` calls `getTables()` on every render without memoization**
+
+- **Location**: `src/pages/GuestListView.tsx:40`
+- **Issue**: `const tables = getTables()` deserializes from localStorage on every render. For current data size this is negligible but inconsistent with the `useState` lazy initializer pattern used for guests.
+- **Recommendation**: Wrap in `useMemo` or `useState` for consistency.
+
+**m-5: `LeftSidebar` and `SeatingPlanView` call `getUnassignedGuests` without memoization**
+
+- **Location**: `src/components/organisms/LeftSidebar.tsx:49`, `src/pages/SeatingPlanView.tsx:53`
+- **Issue**: `SeatingCanvas.tsx` wraps the same call in `useMemo`, but these two locations don't. Low impact but inconsistent.
+- **Recommendation**: Add `useMemo` wrappers for consistency.
+
+**m-6: `onDeleteTable` and `onSwapSeats` declared in `SeatingCanvas` Props but never destructured or used**
+
+- **Location**: `src/components/organisms/SeatingCanvas.tsx:33,36-42`
+- **Issue**: Pre-existing — these props are accepted but not used within the component. `SeatingPlanView` passes them unnecessarily.
+- **Recommendation**: Remove from Props interface and stop passing from `SeatingPlanView`. Follow-up cleanup.
+
+### INFO
+
+**I-1: All 10 tasks completed — all 20 proposed changes addressed**
+The only deliberately deferred item is Proposed Change #10 (reactive store pattern), well-documented with rationale in the spec.
+
+**I-2: App.tsx reduction: 332 lines → 17 lines**
+The god component was successfully decomposed into `GuestListView` (157 lines), `SeatingPlanView` (122 lines), plus extracted hooks (`useGuestStats`, `useDragEndHandler`) and utilities (`guest-utils`, `canvas-utils`, `storage-utils`, `outlet-context`).
+
+**I-3: Route architecture follows react-router v7 layout route pattern correctly**
+`GuestListView` acts as a layout route providing `OutletContext` to child form routes. `SeatingPlanView` is a standalone sibling route. `App` is a thin layout shell.
+
+**I-4: CSS token consolidation is clean**
+`:root` defines hex values once. `@theme` references them via `var(--nc-*)`. Both utility classes and `@layer components` classes resolve correctly.
+
+**I-5: `TablePropertiesForm` with `key` prop is idiomatic React**
+Cleanly replaces the error-prone `prevTableId` tracking pattern per React docs recommendation.
+
+**I-6: Bundle size unchanged (551 kB)**
+Expected for a structural refactor with no feature changes.
+
+**I-7: Dead file cleanup verified**
+`NavLink.tsx`, `SearchInput.tsx`, `App.css`, `react.svg`, `vite.svg` all confirmed deleted. No references to `mock-guests` type imports, `prevTableId`, or `searchQuery` remain anywhere.
+
+**I-8: Type re-exports properly removed**
+`guest-store.ts` no longer re-exports `Guest`/`GuestStatus`. `table-store.ts` no longer re-exports `FloorTable`/`TableShape`/`SeatAssignment`. All consumers import from type files directly.
 
 ---
 
-## Step 7: Verdict
+## Acceptance Criteria Verification
 
-### **APPROVED**
-
-- **CRITICAL findings**: 0
-- **MAJOR findings**: 0
-- **MINOR findings**: 4 (M-1 through M-4, all non-blocking)
-
-All 20 acceptance criteria are met. TypeScript compiles with zero errors (`npx tsc --noEmit`). ESLint passes with zero errors on all 6 modified files. Prettier formatting is correct. No convention violations. No security concerns. No performance regressions. No scope creep.
+| Task | Criteria                                                                                                                                 | Status |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| T-01 | Guest types in `guest-types.ts`, dead code removed from `mock-guests.ts`, `screenToCanvas` in `canvas-utils.ts`, type re-exports removed | PASS   |
+| T-02 | Dead files deleted, `searchQuery` prop removed                                                                                           | PASS   |
+| T-03 | `OutletContext` shared, `getUnassignedGuests` utility, `btn-destructive` CSS class                                                       | PASS   |
+| T-04 | `TablePropertiesForm` extracted, wrappers thinned, `prevTableId` eliminated                                                              | PASS   |
+| T-05 | `GuestDetailPanel` unified markup, `GuestRow` default export                                                                             | PASS   |
+| T-06 | `createStorage` utility, stores refactored, magic numbers extracted                                                                      | PASS   |
+| T-07 | `useEffect` for location state, `useGuestStats` hook, `handleGuestClick` rename, `totalSeats` fix                                        | PASS   |
+| T-08 | `useDragEndHandler` hook extracted                                                                                                       | PASS   |
+| T-09 | CSS tokens consolidated (`:root` → `@theme` via `var()`)                                                                                 | PASS   |
+| T-10 | `GuestListView` + `SeatingPlanView` extracted, `App.tsx` thin shell, routes updated                                                      | PASS   |
 
 ---
 
-## Step 8: Automated Verification Summary
+## Verdict: **APPROVED**
 
-| Check                                              | Result |
-| -------------------------------------------------- | ------ |
-| `npx tsc --noEmit`                                 | PASS   |
-| `npx eslint` (6 modified files)                    | PASS   |
-| `npx prettier --check` (6 modified files)          | PASS   |
-| No `activeTab` references in `src/`                | PASS   |
-| No `onTabChange` references in `src/`              | PASS   |
-| No `searchParams` / `setSearchParams` in `src/`    | PASS   |
-| No `?tab=` string references in `src/`             | PASS   |
-| No `NavLink` imports in `src/` (except definition) | PASS   |
+## Summary
+
+The refactoring is complete and high quality. All 10 tasks are done, the build passes, dead code has been fully cleaned up, and the architecture is significantly improved.
+
+- The god component (`App.tsx`) has been decomposed from 332 lines to 17 lines.
+- Route architecture follows react-router v7 layout patterns correctly.
+- All dead files, dead functions, and dead imports have been removed.
+- CSS tokens are consolidated. Shared utilities are well-factored.
+- The only MAJOR issue from iteration 1 (M-1: dead statistics functions in `guest-store.ts`) has been fixed — verified the file is now 50 lines with only CRUD operations.
+
+Remaining minor findings (m-0 through m-6) are low-impact code style observations suitable for follow-up work, not blockers.
