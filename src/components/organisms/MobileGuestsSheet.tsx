@@ -12,13 +12,15 @@ function MobileGuestsSheet({ guests, onClose }: Props) {
   return (
     <Drawer.Root
       open
+      snapPoints={[0.4, 0.75, 1]}
+      activeSnapPoint={0.75}
       onOpenChange={(open) => {
         if (!open) onClose()
       }}
     >
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-40 bg-black/40" />
-        <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 bg-surface rounded-t-2xl border-t border-border max-h-[60vh] flex flex-col outline-none">
+        <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 bg-surface rounded-t-2xl border-t border-border h-full flex flex-col outline-none">
           <Drawer.Handle className="bg-gray-600 my-3" />
           <Drawer.Title className="sr-only">Unassigned Guests</Drawer.Title>
 
