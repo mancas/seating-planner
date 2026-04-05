@@ -1,14 +1,10 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { Drawer } from 'vaul'
 import { LuX, LuDownload, LuUpload } from 'react-icons/lu'
 import IconButton from '../atoms/IconButton'
 import ConfirmDialog from '../molecules/ConfirmDialog'
-import {
-  downloadProjectExport,
-  validateProjectImport,
-  applyProjectImport,
-} from '../../utils/project-export'
-import type { ProjectExport } from '../../utils/project-export'
+import { downloadProjectExport } from '../../utils/project-export'
+import { useProjectImport } from '../../hooks/useProjectImport'
 
 interface Props {
   onClose: () => void
@@ -16,58 +12,20 @@ interface Props {
 
 function ProjectActionsSheet({ onClose }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(true)
-  const [importError, setImportError] = useState<string | null>(null)
-  const [pendingImport, setPendingImport] = useState<ProjectExport | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const {
+    fileInputRef,
+    importError,
+    pendingImport,
+    openFilePicker,
+    handleFileSelected,
+    confirmImport,
+    cancelImport,
+    clearError,
+  } = useProjectImport()
 
   function handleExport() {
     downloadProjectExport()
     setDrawerOpen(false)
-    onClose()
-  }
-
-  function handleImportClick() {
-    fileInputRef.current?.click()
-  }
-
-  function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = () => {
-      const content = reader.result as string
-      const result = validateProjectImport(content)
-      if (result) {
-        setPendingImport(result)
-      } else {
-        setImportError(
-          'INVALID_FILE // THE SELECTED FILE IS NOT A VALID PROJECT EXPORT',
-        )
-      }
-      setDrawerOpen(false)
-    }
-    reader.onerror = () => {
-      setImportError(
-        'INVALID_FILE // THE SELECTED FILE IS NOT A VALID PROJECT EXPORT',
-      )
-      setDrawerOpen(false)
-    }
-    reader.readAsText(file)
-
-    // Reset so the same file can be re-selected
-    e.target.value = ''
-  }
-
-  function handleConfirmImport() {
-    if (pendingImport) {
-      applyProjectImport(pendingImport)
-      window.location.reload()
-    }
-  }
-
-  function handleCancelImport() {
-    setPendingImport(null)
     onClose()
   }
 
@@ -90,6 +48,9 @@ function ProjectActionsSheet({ onClose }: Props) {
           <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 bg-surface rounded-t-2xl border-t border-border flex flex-col outline-none">
             <Drawer.Handle className="bg-gray-600 my-3" />
             <Drawer.Title className="sr-only">Project Actions</Drawer.Title>
+            <Drawer.Description className="sr-only">
+              Export or import project data
+            </Drawer.Description>
 
             {/* Header */}
             <div className="flex items-center justify-between px-4 pb-3 border-b border-border shrink-0">
@@ -112,7 +73,7 @@ function ProjectActionsSheet({ onClose }: Props) {
               </button>
               <button
                 className="btn-secondary w-full flex items-center justify-center gap-2 mt-2"
-                onClick={handleImportClick}
+                onClick={openFilePicker}
               >
                 <LuUpload size={16} />
                 IMPORT_PROJECT
@@ -137,8 +98,11 @@ function ProjectActionsSheet({ onClose }: Props) {
           message="This will replace all current data including guests, tables, and seating assignments. This action cannot be undone."
           confirmLabel="CONFIRM_IMPORT"
           cancelLabel="CANCEL"
-          onConfirm={handleConfirmImport}
-          onCancel={handleCancelImport}
+          onConfirm={confirmImport}
+          onCancel={() => {
+            cancelImport()
+            onClose()
+          }}
         />
       )}
 
@@ -149,11 +113,11 @@ function ProjectActionsSheet({ onClose }: Props) {
           message="THE SELECTED FILE IS NOT A VALID PROJECT EXPORT"
           confirmLabel="CLOSE"
           onConfirm={() => {
-            setImportError(null)
+            clearError()
             onClose()
           }}
           onCancel={() => {
-            setImportError(null)
+            clearError()
             onClose()
           }}
         />

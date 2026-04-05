@@ -23,6 +23,9 @@ function MobileGuestsSheet({ guests, onClose }: Props) {
         <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 bg-surface rounded-t-2xl border-t border-border h-full flex flex-col outline-none">
           <Drawer.Handle className="bg-gray-600 my-3" />
           <Drawer.Title className="sr-only">Unassigned Guests</Drawer.Title>
+          <Drawer.Description className="sr-only">
+            List of guests not yet assigned to a seat
+          </Drawer.Description>
 
           {/* Header */}
           <div className="flex items-center justify-between px-4 pb-3 border-b border-border shrink-0">

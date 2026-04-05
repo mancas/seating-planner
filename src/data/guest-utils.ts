@@ -10,3 +10,20 @@ export function getUnassignedGuests(
   )
   return guests.filter((g) => !assignedGuestIds.has(g.id))
 }
+
+export function getGuestSeatLocation(
+  guestId: string,
+  tables: FloorTable[],
+): { tableId: string; tableLabel: string; seatIndex: number } | null {
+  for (const table of tables) {
+    const seat = table.seats.find((s) => s.guestId === guestId)
+    if (seat) {
+      return {
+        tableId: table.id,
+        tableLabel: table.label,
+        seatIndex: seat.seatIndex,
+      }
+    }
+  }
+  return null
+}

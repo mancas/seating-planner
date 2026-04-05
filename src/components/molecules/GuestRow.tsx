@@ -3,17 +3,18 @@ import StatusIcon from '../atoms/StatusIcon'
 
 interface Props {
   guest: Guest
+  seatIndex: number | null
   isSelected: boolean
   onClick: () => void
 }
 
-function GuestRowMobile({ guest, isSelected, onClick }: Props) {
+function GuestRowMobile({ guest, seatIndex, isSelected, onClick }: Props) {
   const selectedClasses = isSelected
     ? 'border-l-2 border-l-primary bg-surface-elevated'
     : 'border-l-2 border-l-transparent'
 
   const seatDisplay =
-    guest.seatNumber !== null ? String(guest.seatNumber).padStart(2, '0') : '--'
+    seatIndex !== null ? String(seatIndex).padStart(2, '0') : '--'
 
   return (
     <div

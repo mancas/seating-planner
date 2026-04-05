@@ -95,6 +95,14 @@ export function assignGuestToSeat(
   const index = tables.findIndex((t) => t.id === tableId)
   if (index === -1) return undefined
 
+  // Clear guest from ALL tables first to prevent multi-assignment
+  for (let i = 0; i < tables.length; i++) {
+    const filtered = tables[i].seats.filter((s) => s.guestId !== guestId)
+    if (filtered.length !== tables[i].seats.length) {
+      tables[i] = { ...tables[i], seats: filtered }
+    }
+  }
+
   const table = { ...tables[index] }
   // Remove any existing assignment at this seat
   table.seats = table.seats.filter((s) => s.seatIndex !== seatIndex)
@@ -179,6 +187,14 @@ export function swapSeats(
   }
 
   tableStorage.write(tables)
+}
+
+export function findFirstEmptySeat(table: FloorTable): number | null {
+  const occupiedSeats = new Set(table.seats.map((s) => s.seatIndex))
+  for (let i = 0; i < table.seatCount; i++) {
+    if (!occupiedSeats.has(i)) return i
+  }
+  return null
 }
 
 export function clearGuestAssignments(guestId: string): void {

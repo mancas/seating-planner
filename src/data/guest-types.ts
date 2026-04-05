@@ -5,8 +5,6 @@ export interface Guest {
   firstName: string
   lastName: string
   status: GuestStatus
-  tableAssignment: string | null
-  seatNumber: number | null
   dietary: {
     type: string | null
     notes: string | null

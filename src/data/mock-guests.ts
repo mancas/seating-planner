@@ -6,8 +6,6 @@ export const guests: Guest[] = [
     firstName: 'ELARA',
     lastName: 'RIVERA',
     status: 'CONFIRMED',
-    tableAssignment: 'TABLE_04',
-    seatNumber: 1,
     gift: 250,
     dietary: {
       type: 'VEGAN',
@@ -20,8 +18,6 @@ export const guests: Guest[] = [
     firstName: 'ALEXANDER',
     lastName: 'VANCE',
     status: 'CONFIRMED',
-    tableAssignment: 'TABLE_04',
-    seatNumber: 2,
     gift: null,
     dietary: {
       type: null,
@@ -33,8 +29,6 @@ export const guests: Guest[] = [
     firstName: 'MARCUS',
     lastName: 'CHEN',
     status: 'PENDING',
-    tableAssignment: 'TABLE_02',
-    seatNumber: 1,
     gift: 100,
     dietary: {
       type: 'VEGETARIAN',
@@ -46,8 +40,6 @@ export const guests: Guest[] = [
     firstName: 'MARCUS',
     lastName: 'STERLING',
     status: 'CONFIRMED',
-    tableAssignment: 'TABLE_02',
-    seatNumber: 2,
     gift: 150,
     dietary: {
       type: null,
@@ -59,8 +51,6 @@ export const guests: Guest[] = [
     firstName: 'SARA',
     lastName: 'MORGAN',
     status: 'DECLINED',
-    tableAssignment: null,
-    seatNumber: null,
     gift: null,
     dietary: {
       type: 'GLUTEN-FREE',
@@ -72,8 +62,6 @@ export const guests: Guest[] = [
     firstName: 'JULIAN',
     lastName: 'KANE',
     status: 'PENDING',
-    tableAssignment: null,
-    seatNumber: null,
     gift: null,
     dietary: {
       type: null,

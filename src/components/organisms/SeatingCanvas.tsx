@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactZoomPanPinchContentRef } from 'react-zoom-pan-pinch'
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
 import { screenToCanvas } from '../../data/canvas-utils'
@@ -85,6 +85,12 @@ function SeatingCanvas({
   // Refs for stable callbacks (avoid re-creating per-table closures)
   const tablesRef = useRef(tables)
   const activeToolRef = useRef(activeTool)
+  useEffect(() => {
+    tablesRef.current = tables
+  }, [tables])
+  useEffect(() => {
+    activeToolRef.current = activeTool
+  }, [activeTool])
 
   // Compute unassigned guests
   const unassignedGuests = useMemo(

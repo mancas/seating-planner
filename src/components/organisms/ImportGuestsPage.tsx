@@ -90,8 +90,6 @@ function ImportGuestsPage({ onImportComplete }: Props) {
               firstName: guest.firstName,
               lastName: guest.lastName,
               status: guest.status,
-              tableAssignment: null,
-              seatNumber: null,
               gift: guest.gift,
               dietary: guest.dietary,
             })

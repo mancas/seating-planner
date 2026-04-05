@@ -13,10 +13,12 @@ interface Props {
 }
 
 function TablePropertiesForm({ table, onUpdate, onDelete }: Props) {
-  // Local state only for the label (so typing doesn't lag).
+  // Local state for interactive inputs (so dragging sliders doesn't lag).
   // Parent passes key={table.id} so this component remounts when the
   // selected table changes, which resets local state automatically.
   const [label, setLabel] = useState(table.label)
+  const [seatCount, setSeatCount] = useState(table.seatCount)
+  const [rotation, setRotation] = useState(table.rotation)
 
   function handleLabelChange(value: string) {
     setLabel(value)
@@ -27,12 +29,12 @@ function TablePropertiesForm({ table, onUpdate, onDelete }: Props) {
     onUpdate({ shape })
   }
 
-  function handleSeatCountChange(seatCount: number) {
-    onUpdate({ seatCount })
+  function handleSeatCountCommit(value: number) {
+    onUpdate({ seatCount: value })
   }
 
-  function handleRotationChange(rotation: number) {
-    onUpdate({ rotation })
+  function handleRotationCommit(value: number) {
+    onUpdate({ rotation: value })
   }
 
   return (
@@ -82,16 +84,17 @@ function TablePropertiesForm({ table, onUpdate, onDelete }: Props) {
               SEAT_COUNT
             </span>
             <span className="text-body-sm text-foreground font-semibold">
-              {table.seatCount}
+              {seatCount}
             </span>
           </div>
           <input
             type="range"
             min={1}
             max={20}
-            value={table.seatCount}
-            onChange={(e) => handleSeatCountChange(Number(e.target.value))}
-            className="w-full accent-[var(--nc-primary)]"
+            value={seatCount}
+            onChange={(e) => setSeatCount(Number(e.target.value))}
+            onPointerUp={() => handleSeatCountCommit(seatCount)}
+            className="w-full accent-(--nc-primary)"
           />
         </div>
 
@@ -100,24 +103,28 @@ function TablePropertiesForm({ table, onUpdate, onDelete }: Props) {
           <div className="flex items-center justify-between mb-1">
             <span className="text-caption text-foreground-muted">ROTATION</span>
             <span className="text-body-sm text-foreground font-semibold">
-              {table.rotation}°
+              {rotation}°
             </span>
           </div>
           <input
             type="range"
             min={0}
             max={359}
-            value={table.rotation}
-            onChange={(e) => handleRotationChange(Number(e.target.value))}
-            className="w-full accent-[var(--nc-primary)]"
+            value={rotation}
+            onChange={(e) => setRotation(Number(e.target.value))}
+            onPointerUp={() => handleRotationCommit(rotation)}
+            className="w-full accent-(--nc-primary)"
           />
           <div className="flex gap-2 mt-2">
             {[0, 90, 180, 270].map((angle) => (
               <button
                 key={angle}
-                onClick={() => handleRotationChange(angle)}
+                onClick={() => {
+                  setRotation(angle)
+                  handleRotationCommit(angle)
+                }}
                 className={`flex-1 px-2 py-1 text-caption rounded border cursor-pointer focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 ${
-                  table.rotation === angle
+                  rotation === angle
                     ? 'border-primary bg-primary text-primary-foreground'
                     : 'border-border bg-surface-elevated text-foreground-muted hover:text-foreground'
                 }`}

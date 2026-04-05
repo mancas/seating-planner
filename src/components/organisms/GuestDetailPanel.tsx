@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { LuGift, LuX } from 'react-icons/lu'
 import type { Guest } from '../../data/guest-types'
+import type { FloorTable } from '../../data/table-types'
+import { getGuestSeatLocation } from '../../data/guest-utils'
 import IconButton from '../atoms/IconButton'
 import StatusBadge from '../atoms/StatusBadge'
 import ConfirmDialog from '../molecules/ConfirmDialog'
@@ -8,6 +10,7 @@ import GuestDetailSection from '../molecules/GuestDetailSection'
 
 interface Props {
   guest: Guest
+  tables: FloorTable[]
   onClose: () => void
   onUpdate: () => void
   onDelete: () => void
@@ -17,6 +20,7 @@ interface Props {
 
 function GuestDetailPanel({
   guest,
+  tables,
   onClose,
   onUpdate,
   onDelete,
@@ -49,7 +53,7 @@ function GuestDetailPanel({
           </IconButton>
         </div>
 
-        {renderContent(guest)}
+        {renderContent(guest, tables)}
 
         {/* Action buttons */}
         <div className="px-4 py-4 mt-auto border-t border-border flex gap-3 shrink-0">
@@ -79,7 +83,8 @@ function GuestDetailPanel({
   )
 }
 
-function renderContent(guest: Guest) {
+function renderContent(guest: Guest, tables: FloorTable[]) {
+  const location = getGuestSeatLocation(guest.id, tables)
   return (
     <>
       {/* Guest identity */}
@@ -104,7 +109,7 @@ function renderContent(guest: Guest) {
                 ASSIGNED TABLE
               </dt>
               <dd className="text-body-sm text-foreground">
-                {guest.tableAssignment ?? '- - -'}
+                {location ? location.tableLabel : '- - -'}
               </dd>
             </div>
           </dl>

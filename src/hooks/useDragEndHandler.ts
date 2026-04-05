@@ -1,11 +1,11 @@
 import { useCallback } from 'react'
 import type { FloorTable } from '../data/table-types'
-import { DRAG_TYPE_GUEST, DRAG_TYPE_SEAT } from '../data/dnd-types'
-import type {
-  DragGuestData,
-  DragSeatData,
-  DropSeatData,
-  DropTableData,
+import { findFirstEmptySeat } from '../data/table-store'
+import {
+  isDragGuestData,
+  isDragSeatData,
+  isDropSeatData,
+  isDropTableData,
 } from '../data/dnd-types'
 
 export function useDragEndHandler(
@@ -32,47 +32,28 @@ export function useDragEndHandler(
       const { source, target } = event.operation
       if (!source || !target) return
 
-      const sourceData = source.data as Record<string, unknown>
-      const targetData = target.data as Record<string, unknown>
+      const sourceData: unknown = source.data
+      const targetData: unknown = target.data
 
-      if (sourceData.type === DRAG_TYPE_GUEST && 'seatIndex' in targetData) {
-        // Guest dropped on a seat
-        const guestData = sourceData as unknown as DragGuestData
-        const seatData = targetData as unknown as DropSeatData
+      if (isDragGuestData(sourceData) && isDropSeatData(targetData)) {
         handleAssignGuest(
-          seatData.tableId,
-          seatData.seatIndex,
-          guestData.guestId,
+          targetData.tableId,
+          targetData.seatIndex,
+          sourceData.guestId,
         )
-      } else if (
-        sourceData.type === DRAG_TYPE_SEAT &&
-        'seatIndex' in targetData
-      ) {
-        // Seat dropped on another seat — swap
-        const seatSrc = sourceData as unknown as DragSeatData
-        const seatTgt = targetData as unknown as DropSeatData
+      } else if (isDragSeatData(sourceData) && isDropSeatData(targetData)) {
         handleSwapSeats(
-          seatSrc.tableId,
-          seatSrc.seatIndex,
-          seatTgt.tableId,
-          seatTgt.seatIndex,
+          sourceData.tableId,
+          sourceData.seatIndex,
+          targetData.tableId,
+          targetData.seatIndex,
         )
-      } else if (
-        sourceData.type === DRAG_TYPE_GUEST &&
-        'tableId' in targetData &&
-        !('seatIndex' in targetData)
-      ) {
-        // Guest dropped on table body — find first empty seat
-        const guestData = sourceData as unknown as DragGuestData
-        const tableData = targetData as unknown as DropTableData
-        const table = tables.find((t) => t.id === tableData.tableId)
+      } else if (isDragGuestData(sourceData) && isDropTableData(targetData)) {
+        const table = tables.find((t) => t.id === targetData.tableId)
         if (table) {
-          const occupiedSeats = new Set(table.seats.map((s) => s.seatIndex))
-          for (let i = 0; i < table.seatCount; i++) {
-            if (!occupiedSeats.has(i)) {
-              handleAssignGuest(tableData.tableId, i, guestData.guestId)
-              break
-            }
+          const seatIndex = findFirstEmptySeat(table)
+          if (seatIndex !== null) {
+            handleAssignGuest(targetData.tableId, seatIndex, sourceData.guestId)
           }
         }
       }

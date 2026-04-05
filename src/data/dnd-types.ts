@@ -26,3 +26,41 @@ export interface DropSeatData {
 export interface DropTableData {
   tableId: string
 }
+
+// Type guards for safe runtime checks
+
+export function isDragGuestData(data: unknown): data is DragGuestData {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'type' in data &&
+    (data as Record<string, unknown>).type === DRAG_TYPE_GUEST
+  )
+}
+
+export function isDragSeatData(data: unknown): data is DragSeatData {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'type' in data &&
+    (data as Record<string, unknown>).type === DRAG_TYPE_SEAT
+  )
+}
+
+export function isDropSeatData(data: unknown): data is DropSeatData {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'tableId' in data &&
+    'seatIndex' in data
+  )
+}
+
+export function isDropTableData(data: unknown): data is DropTableData {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'tableId' in data &&
+    !('seatIndex' in data)
+  )
+}

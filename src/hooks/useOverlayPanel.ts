@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 
+type PanelPhase = 'closed' | 'open' | 'closing'
+
 export function useOverlayPanel(
   isOpen: boolean,
   onClose: () => void,
@@ -8,32 +10,26 @@ export function useOverlayPanel(
   isClosing: boolean
   onAnimationEnd: () => void
 } {
-  const [visible, setVisible] = useState(false)
-  const [isClosing, setIsClosing] = useState(false)
+  const [phase, setPhase] = useState<PanelPhase>('closed')
   const [prevIsOpen, setPrevIsOpen] = useState(false)
 
-  // Adjust state when prop changes (React-recommended pattern, no useEffect)
   if (isOpen !== prevIsOpen) {
     setPrevIsOpen(isOpen)
     if (isOpen) {
-      // false → true: panel opening
-      setVisible(true)
-      setIsClosing(false)
-    } else {
-      // true → false: panel closing, keep mounted for exit animation
-      setIsClosing(true)
+      setPhase('open')
+    } else if (phase === 'open') {
+      setPhase('closing')
     }
   }
 
   const onAnimationEnd = useCallback(() => {
-    if (isClosing) {
-      setVisible(false)
-      setIsClosing(false)
+    if (phase === 'closing') {
+      setPhase('closed')
     }
-  }, [isClosing])
+  }, [phase])
 
   useEffect(() => {
-    if (!visible) return
+    if (phase === 'closed') return
 
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') {
@@ -43,7 +39,11 @@ export function useOverlayPanel(
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [visible, onClose])
+  }, [phase, onClose])
 
-  return { visible, isClosing, onAnimationEnd }
+  return {
+    visible: phase !== 'closed',
+    isClosing: phase === 'closing',
+    onAnimationEnd,
+  }
 }

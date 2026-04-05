@@ -178,6 +178,7 @@ function GuestListView() {
       {panelVisible && panelGuest && (
         <GuestDetailPanel
           guest={panelGuest}
+          tables={tables}
           onClose={handleClosePanel}
           onUpdate={() => handleNavigateToEdit(panelGuest.id)}
           onDelete={() => handleDeleteGuest(panelGuest.id)}

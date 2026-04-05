@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import type { Guest } from '../../data/guest-types'
 import type { FloorTable } from '../../data/table-types'
 import GuestRowMobile from '../molecules/GuestRow'
@@ -14,56 +15,11 @@ import { LuEllipsis } from 'react-icons/lu'
 
 const columnHelper = createColumnHelper<Guest>()
 
-const columns = [
-  columnHelper.accessor('firstName', {
-    header: 'NAME / IDENTIFIER',
-    cell: (info) => {
-      const guest = info.row.original
-      return (
-        <div>
-          <p className="text-body-sm font-semibold text-foreground-heading uppercase">
-            {guest.firstName} {guest.lastName}
-          </p>
-          <p className="text-caption text-foreground-muted">ID: {guest.id}</p>
-        </div>
-      )
-    },
-  }),
-  columnHelper.accessor('status', {
-    header: 'STATUS',
-    cell: (info) => <StatusBadge status={info.getValue()} />,
-  }),
-  columnHelper.accessor('tableAssignment', {
-    header: 'TABLE',
-    cell: (info) => (
-      <span className="text-body-sm text-foreground-muted">
-        {info.getValue() ?? '- - -'}
-      </span>
-    ),
-  }),
-  columnHelper.display({
-    id: 'actions',
-    header: 'ACTIONS',
-    cell: () => (
-      <IconButton label="Actions">
-        <LuEllipsis size={16} />
-      </IconButton>
-    ),
-  }),
-]
-
 interface Props {
   guests: Guest[]
   tables: FloorTable[]
   selectedGuestId: string | null
   onGuestClick: (guestId: string) => void
-}
-
-function getLocationLabel(table: string): string {
-  if (table === 'UNASSIGNED') return 'UNASSIGNED'
-  const tableNum = table.replace(/\D/g, '')
-  const letter = String.fromCharCode(64 + parseInt(tableNum, 10))
-  return `LOCATION_${letter}`
 }
 
 function GuestTable({
@@ -72,34 +28,102 @@ function GuestTable({
   selectedGuestId,
   onGuestClick,
 }: Props) {
-  // Build a lookup map from table assignment key to actual seat count
-  const seatCountMap = new Map<string, number>()
-  for (const ft of floorTables) {
-    seatCountMap.set(ft.label, ft.seatCount)
-    seatCountMap.set(ft.badgeId, ft.seatCount)
-    seatCountMap.set(ft.id, ft.seatCount)
-  }
-
-  // Group guests by table assignment for mobile view
-  // Filtering is handled by the parent (App.tsx) — guests prop is already filtered
-  const groupMap = new Map<string, Guest[]>()
-  for (const guest of guests) {
-    const key = guest.tableAssignment ?? 'UNASSIGNED'
-    const group = groupMap.get(key)
-    if (group) {
-      group.push(guest)
-    } else {
-      groupMap.set(key, [guest])
+  // Build a lookup from guestId → table location
+  const guestLocationMap = useMemo(() => {
+    const map = new Map<
+      string,
+      { tableId: string; tableLabel: string; seatIndex: number }
+    >()
+    for (const table of floorTables) {
+      for (const seat of table.seats) {
+        map.set(seat.guestId, {
+          tableId: table.id,
+          tableLabel: table.label,
+          seatIndex: seat.seatIndex,
+        })
+      }
     }
-  }
+    return map
+  }, [floorTables])
 
-  // Sort: named tables first (alphabetically), UNASSIGNED last
-  const sortedKeys = Array.from(groupMap.keys()).sort((a, b) => {
-    if (a === 'UNASSIGNED') return 1
-    if (b === 'UNASSIGNED') return -1
-    return a.localeCompare(b)
-  })
+  // Dynamic columns that use floorTables for table lookup
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('firstName', {
+        header: 'NAME / IDENTIFIER',
+        cell: (info) => {
+          const guest = info.row.original
+          return (
+            <div>
+              <p className="text-body-sm font-semibold text-foreground-heading uppercase">
+                {guest.firstName} {guest.lastName}
+              </p>
+              <p className="text-caption text-foreground-muted">
+                ID: {guest.id}
+              </p>
+            </div>
+          )
+        },
+      }),
+      columnHelper.accessor('status', {
+        header: 'STATUS',
+        cell: (info) => <StatusBadge status={info.getValue()} />,
+      }),
+      columnHelper.display({
+        id: 'table',
+        header: 'TABLE',
+        cell: (info) => {
+          const loc = guestLocationMap.get(info.row.original.id)
+          return (
+            <span className="text-body-sm text-foreground-muted">
+              {loc ? loc.tableLabel : '- - -'}
+            </span>
+          )
+        },
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: 'ACTIONS',
+        cell: () => (
+          <IconButton label="Actions">
+            <LuEllipsis size={16} />
+          </IconButton>
+        ),
+      }),
+    ],
+    [guestLocationMap],
+  )
 
+  // Group guests by table for mobile view
+  const { groupMap, sortedKeys } = useMemo(() => {
+    const gMap = new Map<string, { table: FloorTable | null; guests: Guest[] }>()
+
+    for (const guest of guests) {
+      const loc = guestLocationMap.get(guest.id)
+      const key = loc ? loc.tableId : 'UNASSIGNED'
+      const existing = gMap.get(key)
+      if (existing) {
+        existing.guests.push(guest)
+      } else {
+        const ft = loc
+          ? floorTables.find((t) => t.id === loc.tableId) ?? null
+          : null
+        gMap.set(key, { table: ft, guests: [guest] })
+      }
+    }
+
+    const keys = Array.from(gMap.keys()).sort((a, b) => {
+      if (a === 'UNASSIGNED') return 1
+      if (b === 'UNASSIGNED') return -1
+      const labelA = gMap.get(a)!.table?.label ?? ''
+      const labelB = gMap.get(b)!.table?.label ?? ''
+      return labelA.localeCompare(labelB)
+    })
+
+    return { groupMap: gMap, sortedKeys: keys }
+  }, [guests, floorTables, guestLocationMap])
+
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table API is not memoizable by design; component is not compiled
   const table = useReactTable({
     data: guests,
     columns,
@@ -154,25 +178,23 @@ function GuestTable({
       {/* Mobile layout */}
       <div className="md:hidden">
         {sortedKeys.map((tableKey) => {
-          const groupGuests = groupMap.get(tableKey)!
-          const tableName =
-            tableKey === 'UNASSIGNED' ? 'NO TABLE' : tableKey.replace('_', ' ')
+          const group = groupMap.get(tableKey)!
+          const ft = group.table
+          const tableName = ft ? ft.label : 'NO TABLE'
+          const badgeId = ft ? ft.badgeId : 'UNASSIGNED'
           return (
             <div key={tableKey}>
               <TableGroupHeader
-                location={getLocationLabel(tableKey)}
+                location={badgeId}
                 tableName={tableName}
-                seatCount={groupGuests.length}
-                totalSeats={
-                  tableKey === 'UNASSIGNED'
-                    ? 0
-                    : (seatCountMap.get(tableKey) ?? groupGuests.length)
-                }
+                seatCount={group.guests.length}
+                totalSeats={ft ? ft.seatCount : 0}
               />
-              {groupGuests.map((guest) => (
+              {group.guests.map((guest) => (
                 <GuestRowMobile
                   key={guest.id}
                   guest={guest}
+                  seatIndex={guestLocationMap.get(guest.id)?.seatIndex ?? null}
                   isSelected={guest.id === selectedGuestId}
                   onClick={() => onGuestClick(guest.id)}
                 />

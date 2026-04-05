@@ -25,6 +25,14 @@ export const MIN_RECT_WIDTH = 120
 export const MIN_RECT_HEIGHT = 80
 export const MIN_CIRCLE_DIAMETER = 80
 
+// Height calculation for rectangular tables
+const RECT_BASE_HEIGHT = 60
+const RECT_MULTI_SEAT_EXTRA = 20
+
+// Diameter calculation for circular tables
+const SEAT_ARC_LENGTH = 16
+const CIRCLE_INNER_PADDING = 40
+
 // ── NATO phonetic labels ──────────────────────────────────────────────
 export const NATO_LABELS = [
   'ALPHA',
@@ -66,12 +74,18 @@ export function getRectTableSize(seatCount: number): {
     MIN_RECT_WIDTH,
     longSideSeats * SEAT_SPACING + TABLE_PADDING,
   )
-  const height = Math.max(MIN_RECT_HEIGHT, 60 + (seatCount <= 2 ? 0 : 20))
+  const height = Math.max(
+    MIN_RECT_HEIGHT,
+    RECT_BASE_HEIGHT + (seatCount <= 2 ? 0 : RECT_MULTI_SEAT_EXTRA),
+  )
   return { width, height }
 }
 
 export function getCircleTableDiameter(seatCount: number): number {
-  return Math.max(MIN_CIRCLE_DIAMETER, seatCount * 16 + 40)
+  return Math.max(
+    MIN_CIRCLE_DIAMETER,
+    seatCount * SEAT_ARC_LENGTH + CIRCLE_INNER_PADDING,
+  )
 }
 
 export function getSeatPositions(

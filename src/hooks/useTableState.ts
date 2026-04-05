@@ -58,9 +58,10 @@ export function useTableState() {
     [refreshTables],
   )
 
+  // assignGuestToSeat already clears previous assignments atomically,
+  // so reassign is just a direct call to assign.
   const handleReassignGuest = useCallback(
     (tableId: string, seatIndex: number, guestId: string) => {
-      storeClearGuestAssignments(guestId)
       storeAssignGuestToSeat(tableId, seatIndex, guestId)
       refreshTables()
     },

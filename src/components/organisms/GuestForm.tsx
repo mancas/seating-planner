@@ -9,8 +9,6 @@ interface GuestFormValues {
   firstName: string
   lastName: string
   status: GuestStatus
-  tableAssignment: string
-  seatNumber: string
   dietaryType: string
   dietaryNotes: string
   gift: string
@@ -36,8 +34,6 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
           firstName: guest.firstName,
           lastName: guest.lastName,
           status: guest.status,
-          tableAssignment: guest.tableAssignment ?? '',
-          seatNumber: guest.seatNumber?.toString() ?? '',
           dietaryType: guest.dietary.type ?? '',
           dietaryNotes: guest.dietary.notes ?? '',
           gift: guest.gift?.toString() ?? '',
@@ -46,8 +42,6 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
           firstName: '',
           lastName: '',
           status: 'PENDING' as GuestStatus,
-          tableAssignment: '',
-          seatNumber: '',
           dietaryType: '',
           dietaryNotes: '',
           gift: '',
@@ -61,8 +55,6 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
       firstName: values.firstName,
       lastName: values.lastName,
       status: values.status,
-      tableAssignment: values.tableAssignment || null,
-      seatNumber: values.seatNumber ? parseInt(values.seatNumber, 10) : null,
       gift: values.gift ? parseFloat(values.gift) : null,
       dietary: {
         type: values.dietaryType || null,
@@ -143,26 +135,6 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
                 <option value="CONFIRMED">CONFIRMED</option>
                 <option value="DECLINED">DECLINED</option>
               </select>
-            </FormField>
-          </FormSection>
-
-          <FormSection title="SEATING_ALLOCATION">
-            <FormField label="TABLE_ID" htmlFor="tableAssignment">
-              <input
-                id="tableAssignment"
-                className="input w-full"
-                placeholder="E.G. TABLE_04..."
-                {...register('tableAssignment')}
-              />
-            </FormField>
-            <FormField label="SEAT_POSITION" htmlFor="seatNumber">
-              <input
-                id="seatNumber"
-                type="number"
-                className="input w-full"
-                placeholder="E.G. 01..."
-                {...register('seatNumber')}
-              />
             </FormField>
           </FormSection>
 

@@ -58,6 +58,9 @@ function MobileSeatAssignmentSheet({
         <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 bg-surface rounded-t-2xl border-t border-border max-h-[60vh] flex flex-col outline-none">
           <Drawer.Handle className="bg-gray-600 my-3" />
           <Drawer.Title className="sr-only">Seat Assignment</Drawer.Title>
+          <Drawer.Description className="sr-only">
+            Assign or reassign a guest to this seat
+          </Drawer.Description>
 
           {/* Header */}
           <div className="flex items-center justify-between px-4 pb-3 border-b border-border shrink-0">
