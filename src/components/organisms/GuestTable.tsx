@@ -96,7 +96,10 @@ function GuestTable({
 
   // Group guests by table for mobile view
   const { groupMap, sortedKeys } = useMemo(() => {
-    const gMap = new Map<string, { table: FloorTable | null; guests: Guest[] }>()
+    const gMap = new Map<
+      string,
+      { table: FloorTable | null; guests: Guest[] }
+    >()
 
     for (const guest of guests) {
       const loc = guestLocationMap.get(guest.id)
@@ -106,7 +109,7 @@ function GuestTable({
         existing.guests.push(guest)
       } else {
         const ft = loc
-          ? floorTables.find((t) => t.id === loc.tableId) ?? null
+          ? (floorTables.find((t) => t.id === loc.tableId) ?? null)
           : null
         gMap.set(key, { table: ft, guests: [guest] })
       }

@@ -65,22 +65,17 @@ function CanvasTable({
     data: { tableId: table.id } satisfies DropTableData,
   })
 
-  const {
-    rootRef,
-    isDragMode,
-    onTouchStart,
-    onTouchMove,
-    onTouchEnd,
-  } = useTableTouchDrag({
-    tableId: table.id,
-    tableX: table.x,
-    tableY: table.y,
-    isMobile,
-    activeTool,
-    scale,
-    onSelectTable,
-    onTableTouchDrag: onTouchDragProp,
-  })
+  const { rootRef, isDragMode, onTouchStart, onTouchMove, onTouchEnd } =
+    useTableTouchDrag({
+      tableId: table.id,
+      tableX: table.x,
+      tableY: table.y,
+      isMobile,
+      activeTool,
+      scale,
+      onSelectTable,
+      onTableTouchDrag: onTouchDragProp,
+    })
 
   function handleMouseDown(e: React.MouseEvent) {
     e.stopPropagation()
