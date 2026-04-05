@@ -8,6 +8,7 @@ import SeatingPlanView from './pages/SeatingPlanView.tsx'
 import AddGuestPage from './pages/AddGuestPage.tsx'
 import EditGuestPage from './pages/EditGuestPage.tsx'
 import ImportGuestsView from './pages/ImportGuestsView.tsx'
+import SettingsView from './pages/SettingsView.tsx'
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -27,6 +28,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="guests/:id/edit" element={<EditGuestPage />} />
           </Route>
           <Route path="seating-plan" element={<SeatingPlanView />} />
+          <Route path="settings" element={<SettingsView />} />
         </Route>
       </Routes>
     </BrowserRouter>

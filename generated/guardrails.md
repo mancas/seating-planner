@@ -298,3 +298,22 @@ Lessons learned and constraints established from validated specs.
 
 **Rule**: When passing a callback function to a custom hook that uses it as a `useEffect` dependency, wrap the callback in `useCallback` at the call site. Inline arrow functions (`() => doSomething()`) create new references on every render, causing the effect to re-run unnecessarily.
 **Reason**: The `useOverlayPanel` hook's Escape key listener `useEffect` depends on `[visible, onClose]`. When `onClose` is an inline arrow function, the effect re-runs on every render while the panel is visible — removing and re-adding the `keydown` listener each time. This causes unnecessary DOM operations and potential missed key events during the listener swap. Wrapping `onClose` in `useCallback` provides a stable reference.
+
+---
+
+## From: Settings Screen (2026-04-05)
+
+### G-50: Fix Active States When Adding Routes to Navigation Components
+
+**Rule**: When adding a new route to navigation components (`LeftSidebar`, `BottomTabBar`), audit ALL existing nav items' `isActive` logic. Any item using a catch-all pattern (e.g., `!isCanvasView` meaning "active for everything except canvas") will incorrectly be active on the new route. Replace catch-all patterns with explicit exclusions (e.g., `!isCanvasView && location.pathname !== '/settings'`) or switch to positive matching (e.g., `location.pathname === '/'`).
+**Reason**: Both `LeftSidebar` and `BottomTabBar` used `!isCanvasView` as the "guests" active state, which was correct for a two-route app but became a bug when `/settings` was added. The spec's risk analysis correctly identified this as a critical integration point. This pattern will recur every time a new route is added.
+
+### G-51: Co-dependent File Changes Must Be Atomic
+
+**Rule**: When two files have mutual dependencies that must be updated together (e.g., removing a prop from a component AND removing the prop from its consumer), both changes must be in the same commit/task. Never leave the codebase in a state where one file references a removed prop/export from another.
+**Reason**: Removing `onOpenProjectMenu` from `TopNav` while `App.tsx` still passes it (or vice versa) would cause a TypeScript error. The spec correctly identified TASK-006 and TASK-007 as co-dependent and required them to be done together.
+
+### G-52: Verify Deletion Completeness with Grep After Removing Components
+
+**Rule**: After deleting a component file, run `grep -r 'ComponentName' src/` to verify zero remaining imports or references. Also check for any indirect references (e.g., dynamic imports, route configs, barrel exports).
+**Reason**: Deleting `ProjectActionsSheet.tsx` required verifying that `App.tsx` no longer imported it. TypeScript catches direct import errors, but indirect references (comments, string literals, documentation) may survive. A grep confirms full cleanup.

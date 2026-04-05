@@ -1,36 +1,44 @@
-# Task Report — TASK-004: Convert CanvasPropertiesPanel to overlay on desktop
+# Task Report — TASK-004: Add Settings navigation to LeftSidebar
 
 ## Status: COMPLETE
 
 ## Files Modified
 
-- `src/components/organisms/CanvasPropertiesPanel.tsx`
+- `src/components/organisms/LeftSidebar.tsx`
 
 ## Changes Made
 
-### `src/components/organisms/CanvasPropertiesPanel.tsx`
+### Step 1 — Updated imports
 
-1. **Added new props to `Props` interface**: `isClosing?: boolean` and `onAnimationEnd?: () => void` — these will be passed from the parent via `useOverlayPanel` (TASK-002).
+- Removed: `LuDownload` from `react-icons/lu`
+- Removed: `ConfirmDialog` from `../molecules/ConfirmDialog`
+- Removed: `downloadProjectExport` from `../../utils/project-export`
+- Removed: `useProjectImport` from `../../hooks/useProjectImport`
+- Kept: `LuUpload` (still used by IMPORT_CSV button)
+- Consolidated icon imports to single line
 
-2. **Updated `<aside>` className** from static layout to fixed overlay positioning:
-   - **Removed**: `w-[320px] min-w-[320px] bg-surface border-l border-border h-full overflow-y-auto` (flow-based layout)
-   - **Added**: `fixed top-[var(--nc-topnav-height)] right-0 bottom-0 z-40 w-[320px] bg-surface border-l border-border overflow-y-auto shadow-xl` (fixed overlay)
-   - `min-w-[320px]` removed — not needed for fixed positioning
-   - `h-full` removed — replaced by `top-[var(--nc-topnav-height)]` + `bottom-0`
-   - `shadow-xl` added for left-edge visual separation (no backdrop needed)
-   - `z-40` ensures proper stacking below modals
+### Step 2 — Removed useProjectImport hook call
 
-3. **Added conditional animation classes**: `md:animate-slide-in-right` when mounting, `md:animate-slide-out-right` when `isClosing` is true. The `md:` prefix ensures animations only apply on desktop breakpoint.
+- Deleted the entire `useProjectImport()` destructuring block (`fileInputRef`, `importError`, `pendingImport`, `openFilePicker`, `handleFileSelected`, `confirmImport`, `cancelImport`)
 
-4. **Added `onAnimationEnd` handler**: Calls `props.onAnimationEnd` only when the `slideOutRight` animation completes, filtering by `animationName` to avoid false triggers from other animations.
+### Step 3 — Fixed nav items active state and added Settings
 
-5. **Preserved `hidden md:flex` pattern**: Mobile behavior unchanged — panel remains hidden on mobile where `MobilePropertiesSheet` is used instead.
+- Changed "Listado de invitados" `isActive` from `{!isCanvasView}` to `{!isCanvasView && location.pathname !== '/settings'}` so it doesn't highlight when on `/settings`
+- Added third `SidebarNavItem` with label "Settings", active when `location.pathname === '/settings'`, navigates to `/settings`
+
+### Step 4 — Removed export/import from bottom section
+
+- Removed project actions separator (`border-t border-border my-3`)
+- Removed EXPORT_PROJECT button (used `LuDownload` + `downloadProjectExport`)
+- Removed IMPORT_PROJECT button (used `LuUpload` + `openFilePicker`)
+- Removed import error paragraph (`importError` display)
+- Removed `ConfirmDialog` for pending import confirmation
+- Removed hidden `<input type="file">` for project import
+- Kept IMPORT_CSV button (in the guest list view section)
 
 ## Verification
 
 - `npx tsc --noEmit` passes with zero errors
-- `hidden md:flex` preserved for mobile hiding
-- Fixed positioning with `top-[var(--nc-topnav-height)]` places panel below TopNav
-- `shadow-xl` provides left-edge separation without a backdrop
-- Animation classes conditionally applied based on `isClosing` prop
-- `onAnimationEnd` filters by `animationName === 'slideOutRight'` to only fire on close completion
+- File reduced from 184 lines to 129 lines
+- No semicolons, single quotes, 2-space indent conventions maintained
+- All removed imports are no longer referenced anywhere in the file

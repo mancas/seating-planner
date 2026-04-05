@@ -1,65 +1,73 @@
-# Codebase Context Updates — Export & Import Project
+# Codebase Context Updates — Settings Screen
 
-Updates to project structure and patterns based on the export-import-project spec implementation (validation iteration 1).
+Updates to project structure and patterns based on the settings-screen spec implementation.
 
 ---
 
 ## New Files
 
-### Utility Module
+### Pages
 
-| File                                     | Purpose                                                                                                                                                                                       |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/utils/project-export.ts` (83 lines) | Pure TypeScript module for project export/import. Exports: `generateProjectExport()`, `validateProjectImport()`, `applyProjectImport()`, `downloadProjectExport()`, interface `ProjectExport` |
-
-Follows the same pure utility pattern as `csv-import.ts` — no React dependencies, named exports, `import type` for type-only imports.
-
-### Components
-
-| File                                                           | Level    | Purpose                                                                                                             |
-| -------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------- |
-| `src/components/organisms/ProjectActionsSheet.tsx` (143 lines) | Organism | Mobile vaul Drawer bottom sheet with export/import buttons. Follows MobilePropertiesSheet/MobileGuestsSheet pattern |
+| File                                     | Purpose                                                                                                                                                            |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/pages/SettingsView.tsx` (160 lines) | Settings page with export, import, and delete project actions. Renders LeftSidebar + main content area. Uses `useProjectImport` hook and `ConfirmDialog` molecule. |
 
 ## Modified Files
 
-| File                                       | Change                                                                                                                       |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| `src/components/organisms/LeftSidebar.tsx` | Added export/import buttons, hidden file input, ConfirmDialog, inline error display. Self-contained import/export logic      |
-| `src/components/organisms/TopNav.tsx`      | Added optional `onOpenProjectMenu` prop, renders mobile-only overflow menu icon (`LuEllipsisVertical`) via `md:hidden`       |
-| `src/App.tsx`                              | Added `isProjectSheetOpen` state, `useIsMobile()` hook, passes callback to TopNav, conditionally renders ProjectActionsSheet |
+| File                                        | Change                                                                                                                                                                                       |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/utils/project-export.ts`               | Added `deleteProject()` function — removes all 3 localStorage keys                                                                                                                           |
+| `src/main.tsx`                              | Added `/settings` route as child of App layout route                                                                                                                                         |
+| `src/components/organisms/LeftSidebar.tsx`  | Added "Settings" nav item, fixed "Listado de invitados" active state to exclude `/settings`, removed export/import buttons, separator, ConfirmDialog, hidden file input, and related imports |
+| `src/components/organisms/BottomTabBar.tsx` | Added "SETTINGS" tab with `LuSettings` icon, added `isSettingsView` variable, fixed GUESTS active state to exclude `/settings`                                                               |
+| `src/components/organisms/TopNav.tsx`       | Reverted to stateless no-props component — removed all imports, Props interface, overflow menu icon                                                                                          |
+| `src/App.tsx`                               | Restored to thin 17-line layout shell — removed `useState`, `useIsMobile`, `ProjectActionsSheet` imports, state, and conditional rendering                                                   |
+
+## Deleted Files
+
+| File                                                           | Reason                                                            |
+| -------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `src/components/organisms/ProjectActionsSheet.tsx` (129 lines) | No longer needed — export/import moved to SettingsView. Per G-18. |
 
 ## Architecture Notes
 
-### Desktop vs Mobile Entry Points — Shared Utility
+### Settings Page Pattern
 
-The export/import business logic lives entirely in `project-export.ts`. Both the desktop entry point (LeftSidebar) and mobile entry point (ProjectActionsSheet) call the same utility functions. No logic duplication.
+`SettingsView` follows the same page component pattern as `ImportGuestsView`: renders its own `LeftSidebar` as a sibling, with `getGuests()`/`getTables()` called directly (not in `useState`), and `useCallback` for sidebar callback props. The page is action-oriented (export, import, delete) rather than data-display, so no reactive state is needed for guests/tables.
 
-### App.tsx State Addition
+### App.tsx Restored to Minimal Shell
 
-`App.tsx` now has 2 lines of UI state (`isProjectSheetOpen`, `isMobile`) and 1 conditional render. This is acceptable per G-40 (thin layout shell) since it's purely UI coordination state, not business logic. The App grew from 17 lines to 26 lines.
+With the removal of `ProjectActionsSheet`, `App.tsx` returns to its ideal thin layout shell state (G-40): only `Outlet`, `TopNav`, and `BottomTabBar`. No state, no hooks, no business logic. 17 lines total.
 
-### File Input Pattern
+### Active State Fix Pattern (G-50)
 
-Both LeftSidebar and ProjectActionsSheet use a hidden `<input type="file" accept=".json">` triggered programmatically. The input in ProjectActionsSheet is placed outside the `Drawer.Portal` to ensure it persists when the drawer closes.
+When the third route (`/settings`) was added, both `LeftSidebar` and `BottomTabBar` had catch-all active states (`!isCanvasView`) that incorrectly matched `/settings`. The fix uses explicit exclusion: `!isCanvasView && location.pathname !== '/settings'` for the guest list item, and `!isCanvasView && !isSettingsView` for the GUESTS tab. Future route additions must audit these patterns.
 
 ## Component Counts Update
 
 - **Atoms**: 11 (unchanged)
 - **Molecules**: 11 (unchanged)
-- **Organisms**: 17 (+1: ProjectActionsSheet)
-- **Pages**: 5 (unchanged)
-- **Utility modules**: 2 in `src/utils/` (csv-import.ts, project-export.ts)
+- **Organisms**: 16 (-1: ProjectActionsSheet deleted)
+- **Pages**: 6 (+1: SettingsView)
+- **Utility modules**: 2 in `src/utils/` (csv-import.ts, project-export.ts — project-export.ts now has 5 exports)
+
+## Updated Route Table
+
+| Path               | Component          | Description                                         |
+| ------------------ | ------------------ | --------------------------------------------------- |
+| `/`                | `GuestListView`    | Guest list (layout route)                           |
+| `/guests/new`      | `AddGuestPage`     | Guest creation form                                 |
+| `/guests/:id/edit` | `EditGuestPage`    | Guest edit form                                     |
+| `/guests/import`   | `ImportGuestsView` | CSV import                                          |
+| `/seating-plan`    | `SeatingPlanView`  | Interactive canvas with DnD                         |
+| `/settings`        | `SettingsView`     | Project management actions (export, import, delete) |
 
 ## New Guardrails
 
-- **G-44**: Do not unmount components that own pending dialog state — parent must keep component mounted until dialogs complete
-- **G-45**: Use function declarations (not arrow expressions) for component handlers — consistency across all organisms
-- **G-46**: Always set `reader.onerror` alongside `reader.onload` when using FileReader (extends G-42)
+- **G-50**: Fix active states when adding routes to navigation components — catch-all patterns (`!isCanvasView`) break when new routes are added
+- **G-51**: Co-dependent file changes must be atomic — mutual dependency removal must happen in one commit
+- **G-52**: Verify deletion completeness with grep after removing components
 
 ## Validation Status
 
-**CHANGES_REQUESTED** — 3 MAJOR findings pending resolution:
-
-1. MAJOR-1: ProjectActionsSheet unmounts before confirm/error dialogs render (mobile import broken)
-2. MAJOR-2: Missing `reader.onerror` handler in ProjectActionsSheet (G-42/G-46 violation)
-3. MAJOR-3: Arrow function handlers instead of function declarations (convention violation)
+**APPROVED** — 0 CRITICAL, 0 MAJOR, 3 MINOR (all non-blocking, consistent with existing codebase patterns). All 26 acceptance criteria met.

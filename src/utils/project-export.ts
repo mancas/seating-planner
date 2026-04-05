@@ -81,3 +81,9 @@ export function downloadProjectExport(): void {
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
 }
+
+export function deleteProject(): void {
+  localStorage.removeItem('seating-plan:guests')
+  localStorage.removeItem('seating-plan:tables')
+  localStorage.removeItem('seating-plan:table-counter')
+}

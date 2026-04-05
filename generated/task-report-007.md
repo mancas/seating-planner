@@ -1,36 +1,33 @@
-# Task Report — Remove accessLevel from types and mock data
+# Task Report — TASK-007: Clean up App.tsx and delete ProjectActionsSheet
 
 ## Status: COMPLETE
 
 ## Files Modified
 
-- `src/data/guest-types.ts`
-- `src/data/mock-guests.ts`
+- `src/App.tsx`
+
+## Files Deleted
+
+- `src/components/organisms/ProjectActionsSheet.tsx`
 
 ## Changes
 
-### `src/data/guest-types.ts`
+### `src/App.tsx`
 
-- Removed `accessLevel: string` property from the `Guest` interface (was line 8)
-- File reduced from 16 lines to 15 lines
+- Removed `import { useState } from 'react'`
+- Removed `import ProjectActionsSheet from './components/organisms/ProjectActionsSheet'`
+- Removed `import { useIsMobile } from './hooks/useIsMobile'`
+- Removed `isProjectSheetOpen` state and `isMobile` hook usage
+- Removed `onOpenProjectMenu` prop from `<TopNav />`
+- Removed conditional rendering of `<ProjectActionsSheet />`
+- File reduced from 26 lines to 18 lines — clean layout shell only
 
-### `src/data/mock-guests.ts`
+### `src/components/organisms/ProjectActionsSheet.tsx`
 
-- Removed `accessLevel: 'TIER_01'` from guest `4492-AX` (ELARA RIVERA)
-- Removed `accessLevel: 'TIER_01'` from guest `3371-BK` (ALEXANDER VANCE)
-- Removed `accessLevel: 'TIER_02'` from guest `5580-CR` (MARCUS CHEN)
-- Removed `accessLevel: 'TIER_01'` from guest `1039-CK` (MARCUS STERLING)
-- Removed `accessLevel: 'TIER_02'` from guest `3311-DS` (SARA MORGAN)
-- Removed `accessLevel: 'TIER_02'` from guest `8821-BL` (JULIAN KANE)
-- File reduced from 89 lines to 83 lines
-- All comma placement verified correct after removals
+- Deleted entirely — no longer needed since project actions will live in the new Settings screen
 
-## Validation
+## Verification
 
-- `npx tsc --noEmit` passes with zero errors
-- No `accessLevel` references remain in `src/data/`
-- Grep confirmed no stale references in the two modified files
-
-## Note
-
-There are 5 remaining `accessLevel` references in `src/components/organisms/GuestForm.tsx` (form default value, submit handler, and form field markup). These were outside the scope of this task but will need to be addressed in a follow-up.
+- `npx tsc --noEmit` — zero errors
+- Grep for `ProjectActionsSheet` across `src/` — zero references remaining
+- App.tsx is now a pure layout shell: TopNav + Outlet + BottomTabBar

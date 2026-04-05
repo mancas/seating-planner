@@ -1,40 +1,34 @@
-# Task Report: TASK-002 — Create `useOverlayPanel` hook
+# Task Report: TASK-002 — Create `SettingsView.tsx`
 
 ## Status: COMPLETE
 
 ## Summary
 
-Created `src/hooks/useOverlayPanel.ts` — a reusable hook that manages overlay panel lifecycle with open → closing → closed states, Escape key listener, and animation-end callback for clean unmount after exit animation.
+Created `src/pages/SettingsView.tsx` — the settings page component providing project export, import, and delete functionality.
 
-## Changes Made
+## Files Created
 
-### Created: `src/hooks/useOverlayPanel.ts`
+### `src/pages/SettingsView.tsx`
 
-- Exported named function `useOverlayPanel(isOpen, onClose)` returning `{ visible, isClosing, onAnimationEnd }`.
-- **State machine** implemented via React-recommended "adjusting state when a prop changes" pattern (G-16 compliant — no `useEffect` for state sync):
-  - `isOpen` false → true: sets `visible = true`, `isClosing = false`.
-  - `isOpen` true → false: sets `isClosing = true`, keeps `visible = true` so component stays mounted during exit animation.
-  - `onAnimationEnd` called while closing: sets `visible = false`, `isClosing = false` to unmount.
-- **Escape key listener** via `useEffect`:
-  - Only attached when `visible === true`.
-  - Calls `onClose` on `keydown` with `key === 'Escape'`.
-  - Cleaned up when `visible` becomes `false` or on unmount.
-- `onAnimationEnd` wrapped in `useCallback` for stable reference.
-- Uses function declaration for `handleKeyDown` inside `useEffect` (G-45 compliant).
+- New page component following the same layout pattern as `ImportGuestsView.tsx` (LeftSidebar + main content)
+- Uses `useProjectImport` hook for file import flow (file picker, validation, confirmation)
+- Uses `downloadProjectExport` and `deleteProject` utilities from `project-export.ts`
+- Three action sections under "PROJECT DATA" heading:
+  - **Export**: triggers JSON file download via `downloadProjectExport()`
+  - **Import**: opens file picker, validates JSON, shows `ConfirmDialog` before applying
+  - **Delete**: shows destructive `ConfirmDialog`, then clears localStorage and redirects to `/`
+- Hidden `<input type="file">` for import file selection
+- Two `ConfirmDialog` instances: one for import confirmation, one for delete confirmation
+- Sidebar callbacks (`onAddGuest`, `onAddTable`) navigate to `/guests/new` and `/seating-plan` respectively
 
-## Acceptance Criteria Verification
+## Dependencies Used
 
-| Criterion                                                                     | Status |
-| ----------------------------------------------------------------------------- | ------ |
-| Returns `visible: false` when `isOpen` is false and no exit animation pending | PASS   |
-| Returns `visible: true, isClosing: false` when `isOpen` is true               | PASS   |
-| Returns `visible: true, isClosing: true` when `isOpen` transitions to false   | PASS   |
-| Calling `onAnimationEnd` during closing sets `visible: false`                 | PASS   |
-| Pressing Escape calls `onClose` when panel is visible                         | PASS   |
-| Escape listener cleaned up when panel is not visible                          | PASS   |
+- `react` (`useState`, `useCallback`)
+- `react-router` (`useNavigate`)
+- `react-icons/lu` (`LuDownload`, `LuUpload`, `LuTrash2`)
+- Internal: `guest-store`, `table-store`, `LeftSidebar`, `ConfirmDialog`, `project-export`, `useProjectImport`
 
 ## Validation
 
-- TypeScript compilation: **PASS** (no errors)
-- ESLint: **PASS** (no errors)
-- No files modified outside task scope.
+- TypeScript compilation: **PASS** (`npx tsc --noEmit` — zero errors)
+- No files modified outside task scope
