@@ -8,6 +8,7 @@ import {
 } from '../data/guest-store'
 import type { Guest } from '../data/guest-types'
 import { useGuestStats } from '../hooks/useGuestStats'
+import { useOverlayPanel } from '../hooks/useOverlayPanel'
 import {
   getTables,
   clearGuestAssignments as storeClearGuestAssignments,
@@ -94,6 +95,24 @@ function GuestListView() {
 
   const selectedGuest = guests.find((g) => g.id === selectedGuestId) ?? null
 
+  const isPanelOpen = selectedGuest !== null && !isChildRoute
+
+  const handleClosePanel = useCallback(() => setSelectedGuestId(null), [])
+
+  const {
+    visible: panelVisible,
+    isClosing: panelClosing,
+    onAnimationEnd: panelAnimationEnd,
+  } = useOverlayPanel(isPanelOpen, handleClosePanel)
+
+  // Preserve last-selected guest during exit animation using "adjusting state
+  // during render" pattern (avoids reading ref.current in render).
+  const [displayedGuest, setDisplayedGuest] = useState<Guest | null>(null)
+  if (selectedGuest && selectedGuest !== displayedGuest) {
+    setDisplayedGuest(selectedGuest)
+  }
+  const panelGuest = panelVisible ? (selectedGuest ?? displayedGuest) : null
+
   const {
     confirmedCount,
     pendingCount,
@@ -118,7 +137,7 @@ function GuestListView() {
         guests={guests}
         tables={tables}
       />
-      <main className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0">
+      <main className="relative flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0">
         {isChildRoute ? (
           <Outlet
             context={{
@@ -156,12 +175,14 @@ function GuestListView() {
           </>
         )}
       </main>
-      {selectedGuest && !isChildRoute && (
+      {panelVisible && panelGuest && (
         <GuestDetailPanel
-          guest={selectedGuest}
-          onClose={() => setSelectedGuestId(null)}
-          onUpdate={() => handleNavigateToEdit(selectedGuest.id)}
-          onDelete={() => handleDeleteGuest(selectedGuest.id)}
+          guest={panelGuest}
+          onClose={handleClosePanel}
+          onUpdate={() => handleNavigateToEdit(panelGuest.id)}
+          onDelete={() => handleDeleteGuest(panelGuest.id)}
+          isClosing={panelClosing}
+          onAnimationEnd={panelAnimationEnd}
         />
       )}
       {!isChildRoute && <FAB onClick={handleNavigateToAdd} label="Add guest" />}

@@ -52,6 +52,12 @@
   --radius-md: 4px;
   --radius-lg: 8px;
   --radius-xl: 12px;
+
+  /* Animations */
+  --animate-slide-in-right: slideInRight 200ms ease-out;
+  --animate-slide-out-right: slideOutRight 150ms ease-in forwards;
+  --animate-backdrop-in: backdropFadeIn 200ms ease-out;
+  --animate-backdrop-out: backdropFadeOut 150ms ease-in forwards;
 }
 
 :root {
@@ -90,6 +96,9 @@
   --nc-primary-hover: var(--nc-cobalt-700);
   --nc-primary-foreground: #ffffff;
   --nc-ring: var(--nc-cobalt-500);
+
+  /* Layout */
+  --nc-topnav-height: 56px;
 
   /* Dark mode only */
   color-scheme: dark;
@@ -429,5 +438,41 @@ code {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes backdropFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }

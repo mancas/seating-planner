@@ -11,13 +11,34 @@ interface Props {
   onClose: () => void
   onUpdate: () => void
   onDelete: () => void
+  isClosing?: boolean
+  onAnimationEnd?: () => void
 }
 
-function GuestDetailPanel({ guest, onClose, onUpdate, onDelete }: Props) {
+function GuestDetailPanel({
+  guest,
+  onClose,
+  onUpdate,
+  onDelete,
+  isClosing,
+  onAnimationEnd,
+}: Props) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   return (
     <>
-      <aside className="fixed inset-0 z-50 flex flex-col bg-background overflow-y-auto md:static md:inset-auto md:z-auto md:w-[320px] md:min-w-[320px] md:bg-surface md:border-l md:border-border">
+      <div
+        className={`hidden md:block fixed top-[var(--nc-topnav-height)] left-0 right-0 bottom-0 z-30 bg-black/20 ${isClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <aside
+        className={`fixed inset-0 z-50 flex flex-col bg-background overflow-y-auto md:top-[var(--nc-topnav-height)] md:inset-auto md:right-0 md:bottom-0 md:z-40 md:w-[320px] md:bg-surface md:border-l md:border-border ${isClosing ? 'md:animate-slide-out-right' : 'md:animate-slide-in-right'}`}
+        onAnimationEnd={(e) => {
+          if (isClosing && e.animationName === 'slideOutRight') {
+            onAnimationEnd?.()
+          }
+        }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
           <span className="text-label text-foreground-muted tracking-wider uppercase">

@@ -1,57 +1,61 @@
-# Task Report: TASK-001 — Make Action Bar Sticky in GuestForm
+# Task Report: TASK-001 — Add CSS animations and TopNav height variable
 
 ## Status: COMPLETED
 
 ## Summary
 
-Modified the action bar in `GuestForm.tsx` to use sticky positioning so it remains visible at the bottom of the viewport while scrolling the form. Added opaque background and top border for visual separation.
+Added slide-in/slide-out `@keyframes`, backdrop fade `@keyframes`, the `--nc-topnav-height` CSS custom property, and Tailwind `@theme` animation tokens to `src/index.css`.
 
 ## File Modified
 
-- `src/components/organisms/GuestForm.tsx`
+- `src/index.css`
 
 ## Changes Made
 
-### 1. Form content area padding (line 117)
+### 1. Added `--nc-topnav-height` to `:root` block (line 100-101)
 
-Changed `pb-6` to `pb-24` to add bottom padding that prevents the last form section from being hidden behind the sticky action bar.
+Added a new `/* Layout */` section in the `:root` block with the TopNav height variable matching `h-14` (56px):
 
-```diff
-- <div className="px-4 md:px-6 pb-6">
-+ <div className="px-4 md:px-6 pb-24">
+```css
+/* Layout */
+--nc-topnav-height: 56px;
 ```
 
-### 2. Action bar sticky positioning (line 273)
+### 2. Added animation tokens to `@theme` block (lines 56-60)
 
-Replaced the static action bar with sticky positioning and visual treatment:
+Added four `--animate-*` tokens inside the existing `@theme` block. These automatically generate Tailwind utility classes (`animate-slide-in-right`, etc.):
 
-```diff
-- <div className="flex justify-end gap-3 mt-8 px-4 md:px-6 pb-6">
-+ <div className="sticky bottom-0 flex justify-end gap-3 px-4 md:px-6 py-4 bg-background border-t border-border">
+```css
+/* Animations */
+--animate-slide-in-right: slideInRight 200ms ease-out;
+--animate-slide-out-right: slideOutRight 150ms ease-in forwards;
+--animate-backdrop-in: backdropFadeIn 200ms ease-out;
+--animate-backdrop-out: backdropFadeOut 150ms ease-in forwards;
 ```
 
-Changes:
+Exit animations use `forwards` fill mode to keep elements at their end state until unmount.
 
-- `sticky bottom-0` — pins the bar to the bottom of the scroll container
-- Replaced `mt-8 pb-6` with `py-4` — balanced vertical padding for the sticky bar
-- `bg-background` — opaque background prevents content from showing through
-- `border-t border-border` — visual separator from scrollable content
+### 3. Added four `@keyframes` blocks (lines 444-478)
+
+Added after the existing `@keyframes fadeSlideUp` block, following the same naming convention:
+
+- `slideInRight` — translateX(100%) → translateX(0)
+- `slideOutRight` — translateX(0) → translateX(100%)
+- `backdropFadeIn` — opacity 0 → 1
+- `backdropFadeOut` — opacity 1 → 0
 
 ## Acceptance Criteria Verification
 
-- [x] Action bar stays visible at the bottom of the viewport when scrolling the form
-- [x] Action bar has opaque background (no content bleeding through) via `bg-background`
-- [x] Action bar has a top border for visual separation via `border-t border-border`
-- [x] On mobile, action bar does not overlap with BottomTabBar (sticky within the form's scroll container)
-- [x] On desktop, action bar pins at the bottom of the main content area
-- [x] When form content fits without scrolling, the action bar appears at its natural position (sticky behavior)
-- [x] All buttons (CANCEL, DELETE in edit mode, SAVE_ENTRY) remain functional (no changes to button markup or handlers)
-- [x] TypeScript compiles without errors (`npm run build` passed)
+- [x] `animate-slide-in-right`, `animate-slide-out-right`, `animate-backdrop-in`, `animate-backdrop-out` utility classes are available in Tailwind (tokens registered in `@theme` block)
+- [x] `var(--nc-topnav-height)` resolves to `56px` (defined in `:root`)
+- [x] Existing styles and animations remain unchanged (only additive changes)
+- [x] TypeScript compiles without errors
+- [x] Build succeeds (`vite build` — 173 modules transformed, built in 265ms)
 
 ## Build Output
 
 ```
-tsc -b && vite build — completed successfully
-✓ 174 modules transformed
-✓ built in 311ms
+vite v8.0.3 building client environment for production...
+✓ 173 modules transformed
+✓ built in 265ms
 ```

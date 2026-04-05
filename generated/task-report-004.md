@@ -1,36 +1,36 @@
-# Task Report — TASK-004: Remove Logistics from GuestForm
+# Task Report — TASK-004: Convert CanvasPropertiesPanel to overlay on desktop
 
 ## Status: COMPLETE
 
 ## Files Modified
 
-- `src/components/organisms/GuestForm.tsx`
+- `src/components/organisms/CanvasPropertiesPanel.tsx`
 
 ## Changes Made
 
-### `src/components/organisms/GuestForm.tsx`
+### `src/components/organisms/CanvasPropertiesPanel.tsx`
 
-1. **Removed from `GuestFormValues` interface**: `shuttleRequired`, `shuttleFrom`, `lodgingBooked`, `lodgingVenue` fields (4 fields removed)
+1. **Added new props to `Props` interface**: `isClosing?: boolean` and `onAnimationEnd?: () => void` — these will be passed from the parent via `useOverlayPanel` (TASK-002).
 
-2. **Removed from edit-mode defaults**: `guest.logistics.shuttleRequired`, `guest.logistics.shuttleFrom`, `guest.logistics.lodgingBooked`, `guest.logistics.lodgingVenue` (4 lines removed)
+2. **Updated `<aside>` className** from static layout to fixed overlay positioning:
+   - **Removed**: `w-[320px] min-w-[320px] bg-surface border-l border-border h-full overflow-y-auto` (flow-based layout)
+   - **Added**: `fixed top-[var(--nc-topnav-height)] right-0 bottom-0 z-40 w-[320px] bg-surface border-l border-border overflow-y-auto shadow-xl` (fixed overlay)
+   - `min-w-[320px]` removed — not needed for fixed positioning
+   - `h-full` removed — replaced by `top-[var(--nc-topnav-height)]` + `bottom-0`
+   - `shadow-xl` added for left-edge visual separation (no backdrop needed)
+   - `z-40` ensures proper stacking below modals
 
-3. **Removed from add-mode defaults**: `shuttleRequired: false`, `shuttleFrom: ''`, `lodgingBooked: false`, `lodgingVenue: ''` (4 lines removed)
+3. **Added conditional animation classes**: `md:animate-slide-in-right` when mounting, `md:animate-slide-out-right` when `isClosing` is true. The `md:` prefix ensures animations only apply on desktop breakpoint.
 
-4. **Removed `useWatch` calls**: Both `shuttleRequired` and `lodgingBooked` watch hooks removed (2 lines removed)
+4. **Added `onAnimationEnd` handler**: Calls `props.onAnimationEnd` only when the `slideOutRight` animation completes, filtering by `animationName` to avoid false triggers from other animations.
 
-5. **Removed from `handleFormSubmit`**: Entire `logistics: { ... }` object construction (5 lines removed)
-
-6. **Removed entire LOGISTICS_CONFIG FormSection**: Shuttle toggle, shuttle origin input (conditional), lodging toggle, lodging venue input (conditional) — the full `<FormSection title="LOGISTICS_CONFIG">...</FormSection>` block (34 lines removed)
-
-7. **Cleaned up unused imports/destructured variables**:
-   - Removed `useWatch` from `react-hook-form` import
-   - Removed `Toggle` import from `../atoms/Toggle`
-   - Removed `control` and `setValue` from `useForm` destructure
+5. **Preserved `hidden md:flex` pattern**: Mobile behavior unchanged — panel remains hidden on mobile where `MobilePropertiesSheet` is used instead.
 
 ## Verification
 
 - `npx tsc --noEmit` passes with zero errors
-- No logistics-related code remains in GuestForm.tsx
-- Sticky action bar (TASK-001) preserved intact
-- File reduced from 305 lines to 246 lines (59 lines removed)
-- No new code added — strictly removal only
+- `hidden md:flex` preserved for mobile hiding
+- Fixed positioning with `top-[var(--nc-topnav-height)]` places panel below TopNav
+- `shadow-xl` provides left-edge separation without a backdrop
+- Animation classes conditionally applied based on `isClosing` prop
+- `onAnimationEnd` filters by `animationName === 'slideOutRight'` to only fire on close completion

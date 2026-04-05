@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router'
 import { DragDropProvider } from '@dnd-kit/react'
 import { getGuests } from '../data/guest-store'
 import type { Guest } from '../data/guest-types'
+import type { FloorTable } from '../data/table-types'
 import { getUnassignedGuests } from '../data/guest-utils'
 import { useDragEndHandler } from '../hooks/useDragEndHandler'
 import { useTableState } from '../hooks/useTableState'
+import { useOverlayPanel } from '../hooks/useOverlayPanel'
 import { useIsMobile } from '../hooks/useIsMobile'
 import SeatingCanvas from '../components/organisms/SeatingCanvas'
 import CanvasPropertiesPanel from '../components/organisms/CanvasPropertiesPanel'
@@ -82,6 +84,29 @@ function SeatingPlanView() {
   const selectedCanvasTable =
     tables.find((t) => t.id === selectedCanvasTableId) ?? null
 
+  const isPanelOpen = selectedCanvasTable !== null
+
+  const handleClosePanel = useCallback(
+    () => handleSelectTable(null),
+    [handleSelectTable],
+  )
+
+  const {
+    visible: panelVisible,
+    isClosing: panelClosing,
+    onAnimationEnd: panelAnimationEnd,
+  } = useOverlayPanel(isPanelOpen, handleClosePanel)
+
+  // Preserve last-selected table during exit animation using "adjusting state
+  // during render" pattern (avoids reading ref.current in render).
+  const [displayedTable, setDisplayedTable] = useState<FloorTable | null>(null)
+  if (selectedCanvasTable && selectedCanvasTable !== displayedTable) {
+    setDisplayedTable(selectedCanvasTable)
+  }
+  const panelTable = panelVisible
+    ? (selectedCanvasTable ?? displayedTable)
+    : null
+
   const unassignedGuests = getUnassignedGuests(guests, tables)
 
   return (
@@ -107,12 +132,14 @@ function SeatingPlanView() {
           onReassignGuest={handleReassignGuest}
         />
       </main>
-      {selectedCanvasTable && (
+      {panelVisible && !isMobile && panelTable && (
         <CanvasPropertiesPanel
-          table={selectedCanvasTable}
-          onUpdate={(data) => handleUpdateTable(selectedCanvasTable.id, data)}
-          onDelete={() => handleDeleteTable(selectedCanvasTable.id)}
-          onClose={() => handleSelectTable(null)}
+          table={panelTable}
+          onUpdate={(data) => handleUpdateTable(panelTable.id, data)}
+          onDelete={() => handleDeleteTable(panelTable.id)}
+          onClose={handleClosePanel}
+          isClosing={panelClosing}
+          onAnimationEnd={panelAnimationEnd}
         />
       )}
 

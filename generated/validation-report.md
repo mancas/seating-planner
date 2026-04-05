@@ -1,114 +1,108 @@
-# Validation Report: Export & Import Project
+# Validation Report: Overlay Sidebar
 
 ## Metadata
 
-- **Spec**: `spec/export-import-project.md`
-- **Iteration**: 2
+- **Spec**: `spec/overlay-sidebar.md`
+- **Iteration**: 2 of 2
 - **Date**: 2026-04-04
 - **Validator**: Validator Agent
-- **Build**: `npm run build` PASS (zero errors)
+- **Build**: `tsc -b` PASS, ESLint PASS (zero errors)
 
 ## Files Reviewed
 
-| File                                               | Lines | Status   |
-| -------------------------------------------------- | ----- | -------- |
-| `src/utils/project-export.ts`                      | 83    | NEW      |
-| `src/components/organisms/LeftSidebar.tsx`         | 229   | MODIFIED |
-| `src/components/organisms/TopNav.tsx`              | 33    | MODIFIED |
-| `src/components/organisms/ProjectActionsSheet.tsx` | 165   | NEW      |
-| `src/App.tsx`                                      | 26    | MODIFIED |
+| File                                                 | Lines | Status   |
+| ---------------------------------------------------- | ----- | -------- |
+| `src/pages/GuestListView.tsx`                        | 193   | MODIFIED |
+| `src/pages/SeatingPlanView.tsx`                      | 195   | MODIFIED |
+| `src/hooks/useOverlayPanel.ts`                       | 49    | NEW      |
+| `src/components/organisms/GuestDetailPanel.tsx`      | 160   | MODIFIED |
+| `src/components/organisms/CanvasPropertiesPanel.tsx` | 57    | MODIFIED |
+| `src/index.css`                                      | 478   | MODIFIED |
 
 ## Automated Checks
 
-| Check        | Result             |
-| ------------ | ------------------ |
-| `tsc -b`     | PASS (zero errors) |
-| `vite build` | PASS               |
+| Check    | Result             |
+| -------- | ------------------ |
+| `tsc -b` | PASS (zero errors) |
+| ESLint   | PASS (zero errors) |
 
 ---
 
 ## Iteration 1 Findings — Re-review
 
-### MAJOR-1: Component unmounts before confirm/error dialogs render
+### CRITICAL-1: useRef read/write during render
 
 **Status**: RESOLVED
 
-Fix verified: A local `drawerOpen` state (line 18) now controls `Drawer.Root open={drawerOpen}` (line 77), decoupling the drawer's visual state from component mount/unmount. In `handleFileSelected`, `setDrawerOpen(false)` is called instead of `onClose()`, so the component stays mounted while the drawer closes. The `onOpenChange` handler (lines 78-86) correctly distinguishes between "no dialog pending" (calls `onClose()` to unmount) and "dialog pending" (just hides drawer). `onClose()` is only called after the user dismisses the confirm/error dialog (lines 70, 152, 156). The mobile import flow now works end-to-end.
+Both views previously used `useRef` to track the displayed entity during exit animation, reading `ref.current` during render (a React Compiler violation).
 
-### MAJOR-2: Missing `reader.onerror` handler
+**Fix verified**:
+
+- **GuestListView.tsx** (lines 110-114): Replaced with `useState<Guest | null>` for `displayedGuest`. The pattern `if (selectedGuest && selectedGuest !== displayedGuest) { setDisplayedGuest(selectedGuest) }` is the React-recommended "adjusting state during render" approach. No ref reads during render.
+- **SeatingPlanView.tsx** (lines 102-108): Identical pattern with `useState<FloorTable | null>` for `displayedTable`. No ref reads during render.
+- **useOverlayPanel.ts** (lines 13-26): Already used `useState` for `prevIsOpen` tracking — confirmed clean, no ref reads.
+
+No `useRef` is imported or used in any of the reviewed files. CRITICAL-1 is fully resolved.
+
+### MAJOR-1: Unstable onClose callback
 
 **Status**: RESOLVED
 
-Fix verified: `reader.onerror` handler added at lines 50-55. It sets `importError` with an appropriate message and closes the drawer via `setDrawerOpen(false)`. This matches the pattern in `LeftSidebar.tsx` and satisfies guardrail G-42.
+Both views previously passed inline arrow functions as `onClose` to `useOverlayPanel`, causing the Escape key `useEffect` to re-attach on every render.
 
-### MAJOR-3: Arrow functions instead of function declarations
+**Fix verified**:
 
-**Status**: RESOLVED
+- **GuestListView.tsx** (line 100): `const handleClosePanel = useCallback(() => setSelectedGuestId(null), [])` — empty deps since `setSelectedGuestId` is a stable state setter. Passed to both `useOverlayPanel` (line 106) and `GuestDetailPanel` (line 181). Stable reference.
+- **SeatingPlanView.tsx** (lines 89-92): `const handleClosePanel = useCallback(() => handleSelectTable(null), [handleSelectTable])` — `handleSelectTable` is itself wrapped in `useCallback` (lines 76-82) with `[setSelectedCanvasTableId]` dep (stable setter). So `handleClosePanel` is stable. Passed to `useOverlayPanel` (line 98) and `CanvasPropertiesPanel` (line 140). Stable reference.
+- **useOverlayPanel.ts** (line 46): The `useEffect` for Escape key has `[visible, onClose]` deps — both now stable, so the effect won't needlessly re-run.
 
-Fix verified: All five component-internal handlers now use function declarations:
+MAJOR-1 is fully resolved.
 
-- `function handleExport()` (line 23)
-- `function handleImportClick()` (line 29)
-- `function handleFileSelected(e)` (line 33)
-- `function handleConfirmImport()` (line 62)
-- `function handleCancelImport()` (line 69)
+---
 
-This is consistent with the convention used across all other organisms in the codebase.
+## Verification: No Accidental Modifications to Other Files
+
+| File                                                 | Status                                              |
+| ---------------------------------------------------- | --------------------------------------------------- |
+| `src/hooks/useOverlayPanel.ts`                       | Unchanged from iteration 1 — correct implementation |
+| `src/components/organisms/GuestDetailPanel.tsx`      | Unchanged from iteration 1 — correct implementation |
+| `src/components/organisms/CanvasPropertiesPanel.tsx` | Unchanged from iteration 1 — correct implementation |
+| `src/index.css`                                      | Unchanged from iteration 1 — correct implementation |
 
 ---
 
 ## New Issues Introduced by Fixes
 
-None found. The fix implementation is clean:
+None found. The fixes are minimal and surgical:
 
-- The `onOpenChange` logic correctly handles all three scenarios (swipe-to-close with no dialog, swipe-to-close with dialog pending, programmatic close)
-- Inline arrow functions in JSX props (e.g., `onOpenChange`, `onConfirm`, `onCancel`) are standard React patterns, not component-internal handlers — no convention violation
-- The `handleExport` function correctly calls both `setDrawerOpen(false)` and `onClose()` since no follow-up dialog is needed after export
+- Replacing `useRef<T>(null)` + `ref.current` with `useState<T>(null)` + conditional `setState` in render is a direct 1:1 pattern swap.
+- Wrapping inline arrows in `useCallback` is standard React practice.
+- No new imports, no structural changes, no logic alterations.
 
----
-
-## Outstanding MINOR Issues (non-blocking, from iteration 1)
-
-| ID      | File                          | Issue                                               |
-| ------- | ----------------------------- | --------------------------------------------------- |
-| MINOR-1 | `ProjectActionsSheet.tsx:148` | Empty `targetName` shows "TARGET: " in error dialog |
-| MINOR-2 | `project-export.ts:19-21`     | `JSON.parse` not wrapped in try/catch               |
-| MINOR-3 | `LeftSidebar.tsx:110`         | Import doesn't navigate to `/` from canvas view     |
-| MINOR-4 | `ProjectActionsSheet.tsx:90`  | Missing `max-h-[60vh]` vs other sheets              |
+**Minor observation** (non-blocking): In both views, the state-during-render comparison uses reference equality (`selectedGuest !== displayedGuest`, `selectedCanvasTable !== displayedTable`). If the parent data arrays are rebuilt with new object references (e.g., after `setGuests(getGuests())`), `setDisplayedGuest` / `setDisplayedTable` will fire an extra state update when the selected entity is truthy. This is functionally harmless — React batches the update and the rendered output is identical — but could be optimized with an ID comparison in a future pass.
 
 ---
 
 ## Acceptance Criteria Checklist
 
-| AC    | Description                                       | Status | Notes                                                          |
-| ----- | ------------------------------------------------- | ------ | -------------------------------------------------------------- |
-| AC-1  | Export triggers `.json` download on any view      | PASS   | `downloadProjectExport()` called from sidebar and sheet        |
-| AC-2  | File contains version, exportedAt, data structure | PASS   | `generateProjectExport()` produces correct schema              |
-| AC-3  | Filename `seating-plan-YYYY-MM-DD.json`           | PASS   | `project-export.ts:74`                                         |
-| AC-4  | Empty project generates valid file                | PASS   | Defaults to `[]`/`0`                                           |
-| AC-5  | No navigation on export                           | PASS   | Only triggers download                                         |
-| AC-6  | Import opens file picker filtered to `.json`      | PASS   | `accept=".json"` on both inputs                                |
-| AC-7  | Valid file parsed and validated                   | PASS   | `validateProjectImport()` checks version, data, arrays, number |
-| AC-8  | Invalid file shows error message                  | PASS   | Both desktop inline error and mobile ConfirmDialog work        |
-| AC-9  | Valid file shows confirmation dialog              | PASS   | Both desktop and mobile ConfirmDialog render correctly         |
-| AC-10 | Cancel closes dialog without changes              | PASS   | `handleCancelImport` clears state and calls `onClose()`        |
-| AC-11 | Confirm overwrites localStorage and reloads       | PASS   | `applyProjectImport()` + `window.location.reload()`            |
-| AC-12 | Imported data visible after reload                | PASS   | Page reload re-reads localStorage                              |
-| AC-13 | Navigated to `/` after import on guest list view  | PASS   | Already on `/`; reload stays on `/`. See MINOR-3               |
-| AC-14 | Invalid content in `.json` shows error            | PASS   | `validateProjectImport()` returns null                         |
-| AC-15 | Buttons visible in sidebar on guest list view     | PASS   | Shared section below ternary                                   |
-| AC-16 | Buttons visible in sidebar on canvas view         | PASS   | Same shared section                                            |
-| AC-17 | Mobile overflow menu opens ProjectActionsSheet    | PASS   | TopNav -> App -> ProjectActionsSheet wiring                    |
-| AC-18 | Mobile export triggers download and closes sheet  | PASS   | `handleExport` calls download then closes                      |
-| AC-19 | Mobile import follows same flow as desktop        | PASS   | Drawer closes, ConfirmDialog renders while component mounted   |
-| AC-20 | Overflow menu icon visible on both views (mobile) | PASS   | `md:hidden` wrapper in TopNav                                  |
-| AC-21 | Mobile import confirmation uses ConfirmDialog     | PASS   | `pendingImport && <ConfirmDialog ...>` renders after drawer    |
-| AC-22 | Overflow menu hidden on desktop                   | PASS   | `md:hidden` class                                              |
+| AC   | Description                                       | Status | Notes                                                                                                                                  |
+| ---- | ------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| AC-1 | GuestDetailPanel overlays content on desktop      | PASS   | `fixed` positioning, `md:z-40`, `md:w-[320px]`, main content does not shift                                                            |
+| AC-2 | CanvasPropertiesPanel overlays content on desktop | PASS   | `fixed` positioning, `z-40`, `w-[320px]`, canvas does not resize                                                                       |
+| AC-3 | Slide-in/slide-out animation                      | PASS   | `animate-slide-in-right` (200ms ease-out), `animate-slide-out-right` (150ms ease-in) via `@keyframes` in index.css                     |
+| AC-4 | Semi-transparent backdrop (GuestDetailPanel only) | PASS   | Backdrop div with `bg-black/20`, `onClick={onClose}`, `hidden md:block`                                                                |
+| AC-5 | CanvasPropertiesPanel — no backdrop               | PASS   | No backdrop element, `shadow-xl` provides visual separation                                                                            |
+| AC-6 | Mobile behavior unchanged                         | PASS   | GuestDetailPanel: `fixed inset-0 z-50` preserved. CanvasPropertiesPanel: `hidden md:flex` preserved, mobile uses MobilePropertiesSheet |
+| AC-7 | Panel width unchanged (320px)                     | PASS   | Both panels: `w-[320px]`                                                                                                               |
+| AC-8 | Escape key closes panel                           | PASS   | `useOverlayPanel` attaches `keydown` listener when `visible`, calls stable `onClose`                                                   |
 
 ---
 
 ## Verdict: APPROVED
 
-All 3 MAJOR issues from iteration 1 have been properly resolved. No new CRITICAL or MAJOR issues were introduced. The build passes cleanly. All 22 acceptance criteria now pass on both desktop and mobile flows.
+Both issues from iteration 1 have been properly resolved:
 
-4 MINOR issues remain noted for future improvement but are non-blocking.
+- **CRITICAL-1** (useRef read/write during render): Replaced with `useState`-based "adjusting state during render" pattern in both views. No ref reads during render anywhere.
+- **MAJOR-1** (unstable onClose callback): Both views now wrap `onClose` in `useCallback` with stable dependencies.
+
+No new CRITICAL, MAJOR, or MINOR issues were introduced by the fixes. All 8 acceptance criteria pass. The build and lint checks are clean.

@@ -284,3 +284,17 @@ Lessons learned and constraints established from validated specs.
 
 **Rule**: A feature commit must only modify the files listed in the spec's "Affected files" section. If you notice an improvement opportunity in an unrelated file while working on a feature, do NOT include it in the same commit. Create a separate commit, task, or spec for the improvement.
 **Reason**: The sticky action bar commit modified `EditGuestPage.tsx` (refactoring `useEffect` redirect to `<Navigate>` component) alongside the in-scope `GuestForm.tsx` change. While the refactor was valid, it violated the spec's explicit scope ("fix is entirely contained within GuestForm.tsx") and made the commit harder to review and revert. Out-of-scope changes in feature commits create traceability issues and can introduce unrelated regressions under the cover of a focused feature change.
+
+---
+
+## From: Overlay Sidebar (2026-04-04)
+
+### G-48: Do Not Read or Write `useRef.current` During Render — Use `useState` Instead
+
+**Rule**: Never read or write `ref.current` in the component's render body (the synchronous code that runs before the return statement). The `react-hooks/refs` ESLint rule flags this as an error and blocks the pre-commit hook. When you need to preserve a value across renders for use in rendering (e.g., keeping stale data visible during an exit animation), use the `useState`-based "adjusting state during render" pattern instead.
+**Reason**: The overlay sidebar implementation used `useRef` to store the last-selected guest/table so the panel could display stale data during its slide-out animation. Reading and writing `ref.current` during render triggered 8 ESLint errors (`react-hooks/refs`), blocking all commits. The React Compiler treats refs as values not needed for rendering — accessing them during render can cause the component to not update as expected. The fix is to use `useState` with the "adjusting state when a prop changes" pattern (tracking previous value, conditionally calling `setState` during render).
+
+### G-49: Stabilize Callback Props Passed to Hooks with `useCallback`
+
+**Rule**: When passing a callback function to a custom hook that uses it as a `useEffect` dependency, wrap the callback in `useCallback` at the call site. Inline arrow functions (`() => doSomething()`) create new references on every render, causing the effect to re-run unnecessarily.
+**Reason**: The `useOverlayPanel` hook's Escape key listener `useEffect` depends on `[visible, onClose]`. When `onClose` is an inline arrow function, the effect re-runs on every render while the panel is visible — removing and re-adding the `keydown` listener each time. This causes unnecessary DOM operations and potential missed key events during the listener swap. Wrapping `onClose` in `useCallback` provides a stable reference.

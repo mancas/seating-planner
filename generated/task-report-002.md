@@ -1,23 +1,40 @@
-# Task Report: TASK-002 — Remove logistics from Guest type and store
+# Task Report: TASK-002 — Create `useOverlayPanel` hook
 
-## Status: COMPLETED
+## Status: COMPLETE
+
+## Summary
+
+Created `src/hooks/useOverlayPanel.ts` — a reusable hook that manages overlay panel lifecycle with open → closing → closed states, Escape key listener, and animation-end callback for clean unmount after exit animation.
 
 ## Changes Made
 
-### `src/data/guest-types.ts` (MODIFIED)
+### Created: `src/hooks/useOverlayPanel.ts`
 
-- Removed the `logistics` property from the `Guest` interface (lines 16–21 in original)
-- The removed property was a nested object with fields: `shuttleRequired`, `shuttleFrom`, `lodgingBooked`, `lodgingVenue`
-- No other properties or types were modified
+- Exported named function `useOverlayPanel(isOpen, onClose)` returning `{ visible, isClosing, onAnimationEnd }`.
+- **State machine** implemented via React-recommended "adjusting state when a prop changes" pattern (G-16 compliant — no `useEffect` for state sync):
+  - `isOpen` false → true: sets `visible = true`, `isClosing = false`.
+  - `isOpen` true → false: sets `isClosing = true`, keeps `visible = true` so component stays mounted during exit animation.
+  - `onAnimationEnd` called while closing: sets `visible = false`, `isClosing = false` to unmount.
+- **Escape key listener** via `useEffect`:
+  - Only attached when `visible === true`.
+  - Calls `onClose` on `keydown` with `key === 'Escape'`.
+  - Cleaned up when `visible` becomes `false` or on unmount.
+- `onAnimationEnd` wrapped in `useCallback` for stable reference.
+- Uses function declaration for `handleKeyDown` inside `useEffect` (G-45 compliant).
 
-### `src/data/guest-store.ts` (MODIFIED)
+## Acceptance Criteria Verification
 
-- Removed the `logistics` deep merge line from the `updateGuest()` function (line 37 in original):
-  `logistics: { ...existing.logistics, ...data.logistics },`
-- No other logic was modified
+| Criterion                                                                     | Status |
+| ----------------------------------------------------------------------------- | ------ |
+| Returns `visible: false` when `isOpen` is false and no exit animation pending | PASS   |
+| Returns `visible: true, isClosing: false` when `isOpen` is true               | PASS   |
+| Returns `visible: true, isClosing: true` when `isOpen` transitions to false   | PASS   |
+| Calling `onAnimationEnd` during closing sets `visible: false`                 | PASS   |
+| Pressing Escape calls `onClose` when panel is visible                         | PASS   |
+| Escape listener cleaned up when panel is not visible                          | PASS   |
 
-## Verification
+## Validation
 
-- Both files contain only removals — no new code was added
-- The `Guest` interface now has 10 properties: `id`, `firstName`, `lastName`, `status`, `accessLevel`, `tableAssignment`, `seatNumber`, `dietary`, `gift`
-- The `updateGuest()` function still correctly deep-merges `dietary` but no longer references `logistics`
+- TypeScript compilation: **PASS** (no errors)
+- ESLint: **PASS** (no errors)
+- No files modified outside task scope.

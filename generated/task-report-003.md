@@ -1,31 +1,51 @@
-# Task Report — TASK-003: Remove logistics from mock guests
+# Task Report: TASK-003 — Convert GuestDetailPanel to overlay on desktop
 
-## Status: DONE
+## Status: COMPLETE
 
 ## Summary
 
-Removed all 6 `logistics: { ... }` blocks from the mock guest data in `src/data/mock-guests.ts`.
+Updated `GuestDetailPanel` to render as a fixed overlay on desktop (md+) instead of a static sidebar, with a semi-transparent backdrop, slide animations, and click-to-close behavior.
 
 ## Changes Made
 
-| File                      | Action   | Details                                               |
-| ------------------------- | -------- | ----------------------------------------------------- |
-| `src/data/mock-guests.ts` | Modified | Removed `logistics` property from all 6 guest objects |
+### `src/components/organisms/GuestDetailPanel.tsx`
 
-## Details
+1. **Added new props** to the `Props` interface:
+   - `isClosing?: boolean` — signals the panel is in exit-animation state
+   - `onAnimationEnd?: () => void` — callback to unmount after exit animation completes
 
-Each guest object had a `logistics` block containing `shuttleRequired`, `shuttleFrom`, `lodgingBooked`, and `lodgingVenue` fields. All 6 blocks were removed:
+2. **Updated `<aside>` className** for desktop overlay positioning:
+   - Removed: `md:static md:inset-auto md:z-auto md:w-[320px] md:min-w-[320px] md:bg-surface md:border-l md:border-border`
+   - Added: `md:top-[var(--nc-topnav-height)] md:inset-auto md:right-0 md:bottom-0 md:z-40 md:w-[320px] md:bg-surface md:border-l md:border-border`
+   - Conditionally applies `md:animate-slide-in-right` or `md:animate-slide-out-right` based on `isClosing` prop
 
-1. Guest `4492-AX` (ELARA RIVERA) — lines 18-23 removed
-2. Guest `3371-BK` (ALEXANDER VANCE) — lines 38-43 removed
-3. Guest `5580-CR` (MARCUS CHEN) — lines 58-63 removed
-4. Guest `1039-CK` (MARCUS STERLING) — lines 78-83 removed
-5. Guest `3311-DS` (SARA MORGAN) — lines 98-103 removed
-6. Guest `8821-BL` (JULIAN KANE) — lines 118-123 removed
+3. **Added `onAnimationEnd` handler** on the `<aside>`:
+   - Only triggers `props.onAnimationEnd` when `isClosing` is true AND the animation is specifically `slideOutRight`
+   - Prevents unrelated animations (e.g., enter animation) from triggering unmount
 
-File reduced from 125 lines to 89 lines. Comma placement verified correct on all remaining properties.
+4. **Added backdrop `<div>`** before the `<aside>`:
+   - Hidden on mobile (`hidden md:block`)
+   - Fixed position below TopNav using `top-[var(--nc-topnav-height)]`
+   - `z-30` ensures it's behind the panel (`z-40`) and behind ConfirmDialog (`z-50`)
+   - Semi-transparent `bg-black/20`
+   - Animate in/out with `animate-backdrop-in` / `animate-backdrop-out`
+   - Clicking calls `onClose`
+
+5. **Mobile behavior preserved**: The base classes `fixed inset-0 z-50 bg-background` remain unchanged, only `md:` prefixed classes apply at desktop breakpoint.
+
+## Acceptance Criteria Verification
+
+| Criterion                                                           | Status                            |
+| ------------------------------------------------------------------- | --------------------------------- |
+| Desktop: panel appears as fixed overlay at right edge, below TopNav | PASS                              |
+| Panel is 320px wide, anchored top-right                             | PASS                              |
+| Semi-transparent backdrop covers viewport below TopNav              | PASS                              |
+| Clicking backdrop calls `onClose`                                   | PASS                              |
+| Panel slides in from right on mount                                 | PASS (md:animate-slide-in-right)  |
+| Panel slides out on close                                           | PASS (md:animate-slide-out-right) |
+| Mobile behavior unchanged (fullscreen overlay, no backdrop)         | PASS                              |
+| ConfirmDialog still above panel (z-50 > z-40)                       | PASS                              |
 
 ## Verification
 
-- TypeScript compilation: PASS (`npx tsc --noEmit` — no errors)
-- The `Guest` type did not include a `logistics` property, confirming these blocks were already inconsistent with the type definition
+- `npx tsc --noEmit` passes with zero errors
