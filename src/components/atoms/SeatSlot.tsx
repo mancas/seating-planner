@@ -28,7 +28,7 @@ function SeatSlot({
   activeTool,
 }: Props) {
   const initials = guest
-    ? `${guest.firstName.charAt(0)}${guest.lastName.charAt(0)}`
+    ? `${guest.firstName.charAt(0)}${guest.lastName !== '-' ? guest.lastName.charAt(0) : ''}`
     : undefined
   const isEmpty = !assignment
 
