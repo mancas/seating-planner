@@ -47,6 +47,7 @@ function LeftSidebar({
   const location = useLocation()
   const navigate = useNavigate()
   const isCanvasView = location.pathname === '/seating-plan'
+  const isExpensesView = location.pathname.startsWith('/expenses')
 
   const unassignedGuests = getUnassignedGuests(guests, tables)
 
@@ -62,13 +63,22 @@ function LeftSidebar({
       <div className="flex-1 py-2">
         <SidebarNavItem
           label="Listado de invitados"
-          isActive={!isCanvasView && location.pathname !== '/settings'}
+          isActive={
+            !isCanvasView &&
+            location.pathname !== '/settings' &&
+            !isExpensesView
+          }
           onClick={() => navigate('/')}
         />
         <SidebarNavItem
           label="Canvas"
           isActive={isCanvasView}
           onClick={() => navigate('/seating-plan')}
+        />
+        <SidebarNavItem
+          label="Expenses"
+          isActive={isExpensesView}
+          onClick={() => navigate('/expenses')}
         />
         <SidebarNavItem
           label="Settings"

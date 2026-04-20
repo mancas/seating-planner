@@ -1,4 +1,4 @@
-import { LuSquarePen, LuUser, LuSettings } from 'react-icons/lu'
+import { LuSquarePen, LuUser, LuSettings, LuReceipt } from 'react-icons/lu'
 import { useLocation, useNavigate } from 'react-router'
 import TabBarItem from '../atoms/TabBarItem'
 
@@ -7,6 +7,7 @@ function BottomTabBar() {
   const navigate = useNavigate()
   const isCanvasView = location.pathname === '/seating-plan'
   const isSettingsView = location.pathname === '/settings'
+  const isExpensesView = location.pathname.startsWith('/expenses')
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-border">
@@ -20,7 +21,7 @@ function BottomTabBar() {
         <TabBarItem
           icon={<LuUser size={16} />}
           label="GUESTS"
-          isActive={!isCanvasView && !isSettingsView}
+          isActive={!isCanvasView && !isSettingsView && !isExpensesView}
           onClick={() => navigate('/')}
         />
         <TabBarItem
@@ -28,6 +29,12 @@ function BottomTabBar() {
           label="SETTINGS"
           isActive={isSettingsView}
           onClick={() => navigate('/settings')}
+        />
+        <TabBarItem
+          icon={<LuReceipt size={16} />}
+          label="EXPENSES"
+          isActive={isExpensesView}
+          onClick={() => navigate('/expenses')}
         />
       </div>
     </nav>

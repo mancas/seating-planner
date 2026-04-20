@@ -1,34 +1,49 @@
-# Task Report: TASK-002 — Create `SettingsView.tsx`
+# Task Report: TASK-002 — Create Expense Store Module
 
-## Status: COMPLETE
+## Status: COMPLETED
 
 ## Summary
 
-Created `src/pages/SettingsView.tsx` — the settings page component providing project export, import, and delete functionality.
+Created `src/data/expense-store.ts` with all 7 required CRUD and aggregate functions, following the exact pattern from `src/data/guest-store.ts`.
 
 ## Files Created
 
-### `src/pages/SettingsView.tsx`
+- `src/data/expense-store.ts`
 
-- New page component following the same layout pattern as `ImportGuestsView.tsx` (LeftSidebar + main content)
-- Uses `useProjectImport` hook for file import flow (file picker, validation, confirmation)
-- Uses `downloadProjectExport` and `deleteProject` utilities from `project-export.ts`
-- Three action sections under "PROJECT DATA" heading:
-  - **Export**: triggers JSON file download via `downloadProjectExport()`
-  - **Import**: opens file picker, validates JSON, shows `ConfirmDialog` before applying
-  - **Delete**: shows destructive `ConfirmDialog`, then clears localStorage and redirects to `/`
-- Hidden `<input type="file">` for import file selection
-- Two `ConfirmDialog` instances: one for import confirmation, one for delete confirmation
-- Sidebar callbacks (`onAddGuest`, `onAddTable`) navigate to `/guests/new` and `/seating-plan` respectively
+## Implementation Details
 
-## Dependencies Used
+### Storage Setup
 
-- `react` (`useState`, `useCallback`)
-- `react-router` (`useNavigate`)
-- `react-icons/lu` (`LuDownload`, `LuUpload`, `LuTrash2`)
-- Internal: `guest-store`, `table-store`, `LeftSidebar`, `ConfirmDialog`, `project-export`, `useProjectImport`
+- Storage key: `seating-plan:expenses`
+- Uses `createStorage<Expense[]>('seating-plan:expenses', [])` pattern from `storage-utils.ts`
 
-## Validation
+### Exported Functions
 
-- TypeScript compilation: **PASS** (`npx tsc --noEmit` — zero errors)
-- No files modified outside task scope
+| Function           | Signature                                                                               | Notes                                                                       |
+| ------------------ | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `getExpenses`      | `(): Expense[]`                                                                         | Returns `storage.read().slice().reverse()` — newest first                   |
+| `getExpenseById`   | `(id: string): Expense \| undefined`                                                    | Finds by id                                                                 |
+| `addExpense`       | `(data: Omit<Expense, 'id' \| 'createdAt'>): Expense`                                   | Generates UUID via `uuidv4()`, ISO timestamp via `new Date().toISOString()` |
+| `updateExpense`    | `(id: string, data: Partial<Omit<Expense, 'id' \| 'createdAt'>>): Expense \| undefined` | Merges with spread, returns undefined if not found                          |
+| `deleteExpense`    | `(id: string): boolean`                                                                 | Filters out by id, returns true if removed                                  |
+| `getTotalExpenses` | `(): number`                                                                            | Reduces all amounts to sum                                                  |
+| `getExpenseCount`  | `(): number`                                                                            | Returns array length                                                        |
+
+### Conventions Followed
+
+- `import type` for the `Expense` interface
+- Function declarations (not arrow functions)
+- camelCase function names, kebab-case file name
+- Pattern matches `guest-store.ts` exactly (variable naming, control flow, return patterns)
+
+## Acceptance Criteria Verification
+
+- [x] All 7 functions are exported
+- [x] `addExpense` generates UUID and ISO timestamp
+- [x] `getExpenses` returns newest first (`.slice().reverse()`)
+- [x] Storage key is `seating-plan:expenses`
+- [x] TypeScript compiles with no errors
+
+## Dependencies
+
+- TASK-001 (expense-types.ts) — confirmed present and used

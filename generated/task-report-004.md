@@ -1,4 +1,4 @@
-# Task Report — TASK-004: Add Settings navigation to LeftSidebar
+# Task Report — TASK-004: Update LeftSidebar Navigation (Expenses)
 
 ## Status: COMPLETE
 
@@ -8,37 +8,54 @@
 
 ## Changes Made
 
-### Step 1 — Updated imports
+### 1. Added `isExpensesView` variable (line 50)
 
-- Removed: `LuDownload` from `react-icons/lu`
-- Removed: `ConfirmDialog` from `../molecules/ConfirmDialog`
-- Removed: `downloadProjectExport` from `../../utils/project-export`
-- Removed: `useProjectImport` from `../../hooks/useProjectImport`
-- Kept: `LuUpload` (still used by IMPORT_CSV button)
-- Consolidated icon imports to single line
+```ts
+const isExpensesView = location.pathname === '/expenses'
+```
 
-### Step 2 — Removed useProjectImport hook call
+### 2. Updated "Listado de invitados" `isActive` prop (lines 66-70)
 
-- Deleted the entire `useProjectImport()` destructuring block (`fileInputRef`, `importError`, `pendingImport`, `openFilePicker`, `handleFileSelected`, `confirmImport`, `cancelImport`)
+Added `&& !isExpensesView` to the existing negation pattern so it is not active when on `/expenses`:
 
-### Step 3 — Fixed nav items active state and added Settings
+```tsx
+isActive={!isCanvasView && location.pathname !== '/settings' && !isExpensesView}
+```
 
-- Changed "Listado de invitados" `isActive` from `{!isCanvasView}` to `{!isCanvasView && location.pathname !== '/settings'}` so it doesn't highlight when on `/settings`
-- Added third `SidebarNavItem` with label "Settings", active when `location.pathname === '/settings'`, navigates to `/settings`
+### 3. Added "Expenses" `SidebarNavItem` (lines 78-82)
 
-### Step 4 — Removed export/import from bottom section
+Inserted between "Canvas" and "Settings" nav items:
 
-- Removed project actions separator (`border-t border-border my-3`)
-- Removed EXPORT_PROJECT button (used `LuDownload` + `downloadProjectExport`)
-- Removed IMPORT_PROJECT button (used `LuUpload` + `openFilePicker`)
-- Removed import error paragraph (`importError` display)
-- Removed `ConfirmDialog` for pending import confirmation
-- Removed hidden `<input type="file">` for project import
-- Kept IMPORT_CSV button (in the guest list view section)
+```tsx
+<SidebarNavItem
+  label="Expenses"
+  isActive={isExpensesView}
+  onClick={() => navigate('/expenses')}
+/>
+```
+
+## Guardrails Audit (G-50)
+
+All nav items' `isActive` conditions audited after adding the `/expenses` route:
+
+| Nav Item             | `isActive` condition                                           | Correct? |
+| -------------------- | -------------------------------------------------------------- | -------- |
+| Listado de invitados | `!isCanvasView && pathname !== '/settings' && !isExpensesView` | Yes      |
+| Canvas               | `isCanvasView` (`pathname === '/seating-plan'`)                | Yes      |
+| Expenses             | `isExpensesView` (`pathname === '/expenses'`)                  | Yes      |
+| Settings             | `pathname === '/settings'`                                     | Yes      |
+
+No overlapping active states. Each route activates exactly one nav item.
 
 ## Verification
 
 - `npx tsc --noEmit` passes with zero errors
-- File reduced from 184 lines to 129 lines
-- No semicolons, single quotes, 2-space indent conventions maintained
-- All removed imports are no longer referenced anywhere in the file
+- No files modified outside scope
+- File grew from 129 to 139 lines
+
+## Acceptance Criteria
+
+- [x] "Expenses" nav item appears between "Canvas" and "Settings"
+- [x] Clicking it navigates to `/expenses`
+- [x] It is highlighted when on `/expenses`
+- [x] "Listado de invitados" is NOT active when on `/expenses`

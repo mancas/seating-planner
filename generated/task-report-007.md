@@ -1,33 +1,25 @@
-# Task Report — TASK-007: Clean up App.tsx and delete ProjectActionsSheet
+# Task Report — TASK-007: Register Expenses Route in Main Router
 
 ## Status: COMPLETE
 
 ## Files Modified
 
-- `src/App.tsx`
-
-## Files Deleted
-
-- `src/components/organisms/ProjectActionsSheet.tsx`
+- `src/main.tsx`
 
 ## Changes
 
-### `src/App.tsx`
+### `src/main.tsx`
 
-- Removed `import { useState } from 'react'`
-- Removed `import ProjectActionsSheet from './components/organisms/ProjectActionsSheet'`
-- Removed `import { useIsMobile } from './hooks/useIsMobile'`
-- Removed `isProjectSheetOpen` state and `isMobile` hook usage
-- Removed `onOpenProjectMenu` prop from `<TopNav />`
-- Removed conditional rendering of `<ProjectActionsSheet />`
-- File reduced from 26 lines to 18 lines — clean layout shell only
+1. **Added import** (line 11): `import ExpensesView from './pages/ExpensesView.tsx'`
+2. **Added route** (line 32): `<Route path="expenses" element={<ExpensesView />} />` — placed after the `seating-plan` route and before the `settings` route, nested inside `<Route element={<App />}>`
 
-### `src/components/organisms/ProjectActionsSheet.tsx`
+## Acceptance Criteria
 
-- Deleted entirely — no longer needed since project actions will live in the new Settings screen
+- Navigating to `/expenses` will render the `ExpensesView` component
+- The route is nested under the `App` layout route, so `TopNav` and `BottomTabBar` are rendered around it
+- Route ordering: guests > seating-plan > **expenses** > settings
 
-## Verification
+## Notes
 
-- `npx tsc --noEmit` — zero errors
-- Grep for `ProjectActionsSheet` across `src/` — zero references remaining
-- App.tsx is now a pure layout shell: TopNav + Outlet + BottomTabBar
+- Minimal change: 1 import line + 1 Route element added
+- Follows existing conventions: `.tsx` extension in import, direct child of App layout route

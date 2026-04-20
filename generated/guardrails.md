@@ -317,3 +317,17 @@ Lessons learned and constraints established from validated specs.
 
 **Rule**: After deleting a component file, run `grep -r 'ComponentName' src/` to verify zero remaining imports or references. Also check for any indirect references (e.g., dynamic imports, route configs, barrel exports).
 **Reason**: Deleting `ProjectActionsSheet.tsx` required verifying that `App.tsx` no longer imported it. TypeScript catches direct import errors, but indirect references (comments, string literals, documentation) may survive. A grep confirms full cleanup.
+
+---
+
+## From: Wedding Expenses (2026-04-12)
+
+### G-53: Prefer Derived State Over Redundant Store Functions
+
+**Rule**: When a component already holds entity data in local state (e.g., `expenses` array from `useState`), derive aggregate values (totals, counts) directly from that state rather than calling separate store functions that re-read localStorage. Store-level aggregate functions remain useful as a public API for other consumers but should not be the primary computation path in the owning component.
+**Reason**: `ExpensesView` correctly derives `totalExpenses` and `expenseCount` from the local `expenses` state rather than calling `getTotalExpenses()` and `getExpenseCount()`, which would redundantly deserialize localStorage. This pattern avoids unnecessary I/O during render and keeps the UI consistent with the local state snapshot.
+
+### G-54: Non-null Assertions in Guarded Handler Contexts
+
+**Rule**: When a handler function is only callable within a UI context that guarantees a state value is non-null (e.g., a form that only renders when `editingId !== null`), a non-null assertion (`!`) is acceptable but an early-return guard is preferred for defensive coding. If using `!`, add a comment explaining the invariant.
+**Reason**: `ExpensesView` uses `editingId!` in `handleEditSubmit` and `deleteTarget!` in `handleDeleteConfirm`. These are safe because the UI rendering conditions prevent calling these handlers when the values are null, but the assertions make the code fragile to future refactoring that might change the rendering conditions.

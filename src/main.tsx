@@ -8,6 +8,8 @@ import SeatingPlanView from './pages/SeatingPlanView.tsx'
 import AddGuestPage from './pages/AddGuestPage.tsx'
 import EditGuestPage from './pages/EditGuestPage.tsx'
 import ImportGuestsView from './pages/ImportGuestsView.tsx'
+import ExpensesLogView from './pages/ExpensesLogView.tsx'
+import AddExpenseView from './pages/AddExpenseView.tsx'
 import SettingsView from './pages/SettingsView.tsx'
 
 if ('serviceWorker' in navigator) {
@@ -28,6 +30,8 @@ createRoot(document.getElementById('root')!).render(
             <Route path="guests/:id/edit" element={<EditGuestPage />} />
           </Route>
           <Route path="seating-plan" element={<SeatingPlanView />} />
+          <Route path="expenses" element={<ExpensesLogView />} />
+          <Route path="expenses/new" element={<AddExpenseView />} />
           <Route path="settings" element={<SettingsView />} />
         </Route>
       </Routes>

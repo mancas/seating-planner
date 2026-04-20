@@ -1,6 +1,6 @@
 # Task Report: TASK-005
 
-## Task: Add "SETTINGS" tab to BottomTabBar
+## Task: Add "EXPENSES" tab to BottomTabBar
 
 ## Status: COMPLETED
 
@@ -8,42 +8,52 @@
 
 ### File: `src/components/organisms/BottomTabBar.tsx` (modified)
 
-**1. Added `LuSettings` icon import (line 1):**
+**1. Added `LuReceipt` icon import (line 1):**
 
-- Before: `import { LuSquarePen, LuUser } from 'react-icons/lu'`
-- After: `import { LuSquarePen, LuUser, LuSettings } from 'react-icons/lu'`
+- Before: `import { LuSquarePen, LuUser, LuSettings } from 'react-icons/lu'`
+- After: `import { LuSquarePen, LuUser, LuSettings, LuReceipt } from 'react-icons/lu'`
 
-**2. Added `isSettingsView` route detection (line 9):**
+**2. Added `isExpensesView` route detection (line 10):**
 
 ```ts
-const isSettingsView = location.pathname === '/settings'
+const isExpensesView = location.pathname === '/expenses'
 ```
 
-**3. Updated GUESTS tab `isActive` logic (line 23):**
+**3. Updated GUESTS tab `isActive` logic (line 24):**
 
-- Before: `isActive={!isCanvasView}`
-- After: `isActive={!isCanvasView && !isSettingsView}`
+- Before: `isActive={!isCanvasView && !isSettingsView}`
+- After: `isActive={!isCanvasView && !isSettingsView && !isExpensesView}`
 
-This ensures GUESTS is no longer active when the settings route is displayed.
+This ensures GUESTS is no longer active when the expenses route is displayed.
 
-**4. Added SETTINGS `TabBarItem` (lines 26–31):**
+**4. Added EXPENSES `TabBarItem` as the fourth tab (lines 33–38):**
 
 ```tsx
 <TabBarItem
-  icon={<LuSettings size={16} />}
-  label="SETTINGS"
-  isActive={isSettingsView}
-  onClick={() => navigate('/settings')}
+  icon={<LuReceipt size={16} />}
+  label="EXPENSES"
+  isActive={isExpensesView}
+  onClick={() => navigate('/expenses')}
 />
 ```
 
+## Guardrail Checks
+
+- **G-50 (audit ALL tab items' isActive):** Verified all four tabs have correct mutual exclusion:
+  - CANVAS: `isCanvasView` (pathname === '/seating-plan')
+  - GUESTS: `!isCanvasView && !isSettingsView && !isExpensesView` (catch-all for remaining routes)
+  - SETTINGS: `isSettingsView` (pathname === '/settings')
+  - EXPENSES: `isExpensesView` (pathname === '/expenses')
+- **G-21 (verify icon export name):** `LuReceipt` confirmed to exist in `react-icons/lu` — TypeScript compilation passes.
+
 ## Acceptance Criteria Verification
 
-- [x] SETTINGS tab renders in the bottom tab bar with `LuSettings` icon
-- [x] Navigates to `/settings` on click
-- [x] `isActive` is true only when on `/settings` route
-- [x] GUESTS tab is no longer active when on `/settings` route
-- [x] CANVAS tab logic unchanged
+- [x] "EXPENSES" tab appears as the fourth tab in the bottom tab bar
+- [x] Uses `LuReceipt` icon at size 16
+- [x] Navigates to `/expenses` on click
+- [x] `isActive` is true only when on `/expenses` route
+- [x] GUESTS tab is NOT active when on `/expenses` route
+- [x] Four tabs distribute evenly via existing `justify-around` on the parent flex container
 
 ## Build Verification
 

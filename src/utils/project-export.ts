@@ -1,3 +1,4 @@
+import type { Expense } from '../data/expense-types'
 import type { Guest } from '../data/guest-types'
 import type { FloorTable } from '../data/table-types'
 
@@ -8,6 +9,7 @@ export interface ProjectExport {
     guests: Guest[]
     tables: FloorTable[]
     tableCounter: number
+    expenses?: Expense[]
   }
 }
 
@@ -15,10 +17,12 @@ export function generateProjectExport(): string {
   const guestsRaw = localStorage.getItem('seating-plan:guests')
   const tablesRaw = localStorage.getItem('seating-plan:tables')
   const counterRaw = localStorage.getItem('seating-plan:table-counter')
+  const expensesRaw = localStorage.getItem('seating-plan:expenses')
 
   const guests: Guest[] = guestsRaw ? JSON.parse(guestsRaw) : []
   const tables: FloorTable[] = tablesRaw ? JSON.parse(tablesRaw) : []
   const tableCounter: number = counterRaw ? JSON.parse(counterRaw) : 0
+  const expenses: Expense[] = expensesRaw ? JSON.parse(expensesRaw) : []
 
   const exportData: ProjectExport = {
     version: 1,
@@ -27,6 +31,7 @@ export function generateProjectExport(): string {
       guests,
       tables,
       tableCounter,
+      expenses,
     },
   }
 
@@ -54,6 +59,7 @@ export function validateProjectImport(content: string): ProjectExport | null {
   if (!Array.isArray(data.guests)) return null
   if (!Array.isArray(data.tables)) return null
   if (typeof data.tableCounter !== 'number') return null
+  if (data.expenses !== undefined && !Array.isArray(data.expenses)) return null
 
   return parsed as ProjectExport
 }
@@ -64,6 +70,10 @@ export function applyProjectImport(data: ProjectExport): void {
   localStorage.setItem(
     'seating-plan:table-counter',
     JSON.stringify(data.data.tableCounter),
+  )
+  localStorage.setItem(
+    'seating-plan:expenses',
+    JSON.stringify(data.data.expenses ?? []),
   )
 }
 
@@ -86,4 +96,5 @@ export function deleteProject(): void {
   localStorage.removeItem('seating-plan:guests')
   localStorage.removeItem('seating-plan:tables')
   localStorage.removeItem('seating-plan:table-counter')
+  localStorage.removeItem('seating-plan:expenses')
 }
