@@ -1,4 +1,10 @@
-import { LuUserPlus, LuPlus, LuGripVertical, LuUpload } from 'react-icons/lu'
+import {
+  LuUserPlus,
+  LuPlus,
+  LuGripVertical,
+  LuUpload,
+  LuCircleCheck,
+} from 'react-icons/lu'
 import { useDraggable } from '@dnd-kit/react'
 import { useLocation, useNavigate } from 'react-router'
 import SidebarNavItem from '../molecules/SidebarNavItem'
@@ -26,9 +32,21 @@ function DraggableGuestItem({ guest }: { guest: Guest }) {
       ref={ref}
       className={`flex items-center gap-2 text-body-sm text-foreground cursor-grab px-1 py-1 rounded hover:bg-surface-elevated ${isDragging ? 'opacity-40' : ''}`}
     >
-      <LuGripVertical
+      <LuGripVertical size={14} className="text-foreground-muted shrink-0" />
+      <span className="truncate">
+        {guest.firstName} {guest.lastName}
+      </span>
+    </li>
+  )
+}
+
+function SeatedGuestItem({ guest }: { guest: Guest }) {
+  return (
+    <li className="flex items-center gap-2 text-body-sm text-foreground-muted px-1 py-1 opacity-60">
+      <LuCircleCheck
         size={14}
-        className="text-foreground-muted flex-shrink-0"
+        className="text-primary shrink-0"
+        aria-label="Seated"
       />
       <span className="truncate">
         {guest.firstName} {guest.lastName}
@@ -50,6 +68,8 @@ function LeftSidebar({
   const isExpensesView = location.pathname.startsWith('/expenses')
 
   const unassignedGuests = getUnassignedGuests(guests, tables)
+  const unassignedIds = new Set(unassignedGuests.map((g) => g.id))
+  const seatedGuests = guests.filter((g) => !unassignedIds.has(g.id))
 
   return (
     <aside className="hidden md:flex flex-col min-w-55 bg-surface border-r border-border">
@@ -98,14 +118,17 @@ function LeftSidebar({
               <LuPlus size={16} />
               ADD TABLE
             </button>
-            {unassignedGuests.length > 0 && (
+            {guests.length > 0 && (
               <div className="mt-3">
                 <p className="text-caption text-foreground-muted mb-2">
-                  UNASSIGNED ({unassignedGuests.length})
+                  GUESTS ({unassignedGuests.length}/{guests.length})
                 </p>
                 <ul className="space-y-1 max-h-50 overflow-y-auto">
                   {unassignedGuests.map((g) => (
                     <DraggableGuestItem key={g.id} guest={g} />
+                  ))}
+                  {seatedGuests.map((g) => (
+                    <SeatedGuestItem key={g.id} guest={g} />
                   ))}
                 </ul>
               </div>

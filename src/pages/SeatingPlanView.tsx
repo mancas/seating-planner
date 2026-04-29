@@ -43,7 +43,9 @@ function mobileUIReducer(
 function SeatingPlanView() {
   const navigate = useNavigate()
   const isMobile = useIsMobile()
-  const [guests] = useState<Guest[]>(() => getGuests())
+  const [guests] = useState<Guest[]>(() =>
+    getGuests().filter((g) => g.status !== 'DECLINED'),
+  )
   const [mobileSheet, dispatchSheet] = useReducer(mobileUIReducer, 'none')
 
   const {
@@ -184,7 +186,8 @@ function SeatingPlanView() {
       {/* Mobile unassigned guests sheet */}
       {isMobile && mobileSheet === 'guests' && (
         <MobileGuestsSheet
-          guests={unassignedGuests}
+          guests={guests}
+          tables={tables}
           onClose={() => dispatchSheet({ type: 'CLOSE_SHEET' })}
         />
       )}
