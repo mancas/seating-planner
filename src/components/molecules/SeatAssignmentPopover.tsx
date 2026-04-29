@@ -1,11 +1,13 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import type { Guest } from '../../data/guest-types'
+import type { FloorTable } from '../../data/table-types'
 
 interface Props {
   seatIndex: number
   tableLabel: string
   assignedGuest: Guest | null
-  unassignedGuests: Guest[]
+  guests: Guest[]
+  tables: FloorTable[]
   onAssign: (guestId: string) => void
   onUnassign: () => void
   onClose: () => void
@@ -19,13 +21,24 @@ function SeatAssignmentPopover({
   seatIndex,
   tableLabel,
   assignedGuest,
-  unassignedGuests,
+  guests,
+  tables,
   onAssign,
   onUnassign,
   onClose,
   anchorRect,
 }: Props) {
   const popoverRef = useRef<HTMLDivElement>(null)
+
+  const seatedTableByGuestId = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const t of tables) {
+      for (const s of t.seats) {
+        map.set(s.guestId, t.label)
+      }
+    }
+    return map
+  }, [tables])
 
   useEffect(() => {
     function handlePointerDown(e: MouseEvent | TouchEvent) {
@@ -90,23 +103,34 @@ function SeatAssignmentPopover({
           <p className="text-caption text-foreground-muted mb-2">
             ASSIGN_GUEST // {tableLabel} // {seatLabel}
           </p>
-          {unassignedGuests.length > 0 ? (
+          {guests.length > 0 ? (
             <div className="max-h-48 overflow-y-auto">
-              {unassignedGuests.map((guest) => (
-                <button
-                  key={guest.id}
-                  onClick={() => onAssign(guest.id)}
-                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-elevated text-left"
-                >
-                  <span className="text-body-sm text-foreground-heading">
-                    {guest.firstName} {guest.lastName}
-                  </span>
-                </button>
-              ))}
+              {guests.map((guest) => {
+                const seatedAt = seatedTableByGuestId.get(guest.id)
+                return (
+                  <button
+                    key={guest.id}
+                    onClick={() => onAssign(guest.id)}
+                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-elevated text-left"
+                  >
+                    <span className="text-body-sm text-foreground-heading flex-1 truncate">
+                      {guest.firstName} {guest.lastName}
+                    </span>
+                    {seatedAt && (
+                      <span
+                        className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium tracking-wider uppercase bg-primary text-primary-foreground"
+                        aria-label={`Seated at ${seatedAt}`}
+                      >
+                        {seatedAt}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
             </div>
           ) : (
             <p className="text-caption text-foreground-muted text-center py-2">
-              NO_UNASSIGNED_GUESTS // ALL_ALLOCATED
+              NO_GUESTS
             </p>
           )}
         </>

@@ -128,7 +128,6 @@ function SeatingPlanView() {
           onAddTable={handleAddTable}
           onUpdateTable={handleUpdateTable}
           onDeleteTable={handleDeleteTable}
-          onAssignGuest={handleAssignGuest}
           onUnassignSeat={handleUnassignSeat}
           onSwapSeats={handleSwapSeats}
           onReassignGuest={handleReassignGuest}

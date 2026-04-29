@@ -1,5 +1,5 @@
 import { Drawer } from 'vaul'
-import { LuX, LuCircleCheck } from 'react-icons/lu'
+import { LuX } from 'react-icons/lu'
 import type { Guest } from '../../data/guest-types'
 import type { FloorTable } from '../../data/table-types'
 import { getUnassignedGuests } from '../../data/guest-utils'
@@ -13,8 +13,12 @@ interface Props {
 
 function MobileGuestsSheet({ guests, tables, onClose }: Props) {
   const unassignedGuests = getUnassignedGuests(guests, tables)
-  const unassignedIds = new Set(unassignedGuests.map((g) => g.id))
-  const seatedGuests = guests.filter((g) => !unassignedIds.has(g.id))
+  const seatedTableByGuestId = new Map<string, string>()
+  for (const t of tables) {
+    for (const s of t.seats) {
+      seatedTableByGuestId.set(s.guestId, t.label)
+    }
+  }
 
   return (
     <Drawer.Root
@@ -48,31 +52,27 @@ function MobileGuestsSheet({ guests, tables, onClose }: Props) {
           <div className="overflow-y-auto flex-1 px-4 py-3" data-vaul-no-drag>
             {guests.length > 0 ? (
               <div className="flex flex-col gap-2">
-                {unassignedGuests.map((guest) => (
-                  <div
-                    key={guest.id}
-                    className="flex items-center gap-2 py-1.5"
-                  >
-                    <span className="text-body-sm text-foreground-heading">
-                      {guest.firstName} {guest.lastName}
-                    </span>
-                  </div>
-                ))}
-                {seatedGuests.map((guest) => (
-                  <div
-                    key={guest.id}
-                    className="flex items-center gap-2 py-1.5 opacity-60"
-                  >
-                    <LuCircleCheck
-                      size={14}
-                      className="text-primary shrink-0"
-                      aria-label="Seated"
-                    />
-                    <span className="text-body-sm text-foreground-muted">
-                      {guest.firstName} {guest.lastName}
-                    </span>
-                  </div>
-                ))}
+                {guests.map((guest) => {
+                  const tableLabel = seatedTableByGuestId.get(guest.id)
+                  return (
+                    <div
+                      key={guest.id}
+                      className="flex items-center gap-2 py-1.5"
+                    >
+                      <span className="text-body-sm text-foreground-heading flex-1">
+                        {guest.firstName} {guest.lastName}
+                      </span>
+                      {tableLabel && (
+                        <span
+                          className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium tracking-wider uppercase bg-primary text-primary-foreground"
+                          aria-label={`Seated at ${tableLabel}`}
+                        >
+                          {tableLabel}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             ) : (
               <p className="text-caption text-foreground-muted text-center py-4">

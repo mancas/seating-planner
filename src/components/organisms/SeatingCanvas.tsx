@@ -31,7 +31,6 @@ interface Props {
     >,
   ) => void
   onDeleteTable: (id: string) => void
-  onAssignGuest: (tableId: string, seatIndex: number, guestId: string) => void
   onUnassignSeat: (tableId: string, seatIndex: number) => void
   onSwapSeats: (
     srcTableId: string,
@@ -67,7 +66,6 @@ function SeatingCanvas({
   onSelectTable,
   onAddTable,
   onUpdateTable,
-  onAssignGuest,
   onUnassignSeat,
   onReassignGuest,
 }: Props) {
@@ -311,9 +309,10 @@ function SeatingCanvas({
             seatIndex={activeSeat.seatIndex}
             tableLabel={activeSeatTable.label}
             assignedGuest={activeSeatGuest}
-            unassignedGuests={unassignedGuests}
+            guests={guests}
+            tables={tables}
             onAssign={(guestId) => {
-              onAssignGuest(activeSeat.tableId, activeSeat.seatIndex, guestId)
+              onReassignGuest(activeSeat.tableId, activeSeat.seatIndex, guestId)
               setActiveSeat(null)
             }}
             onUnassign={() => {

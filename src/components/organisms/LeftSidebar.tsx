@@ -1,10 +1,4 @@
-import {
-  LuUserPlus,
-  LuPlus,
-  LuGripVertical,
-  LuUpload,
-  LuCircleCheck,
-} from 'react-icons/lu'
+import { LuUserPlus, LuPlus, LuGripVertical, LuUpload } from 'react-icons/lu'
 import { useDraggable } from '@dnd-kit/react'
 import { useLocation, useNavigate } from 'react-router'
 import SidebarNavItem from '../molecules/SidebarNavItem'
@@ -40,16 +34,24 @@ function DraggableGuestItem({ guest }: { guest: Guest }) {
   )
 }
 
-function SeatedGuestItem({ guest }: { guest: Guest }) {
+function SeatedGuestItem({
+  guest,
+  tableLabel,
+}: {
+  guest: Guest
+  tableLabel: string
+}) {
   return (
-    <li className="flex items-center gap-2 text-body-sm text-foreground-muted px-1 py-1 opacity-60">
-      <LuCircleCheck
-        size={14}
-        className="text-primary shrink-0"
-        aria-label="Seated"
-      />
-      <span className="truncate">
+    <li className="flex items-center gap-2 text-body-sm text-foreground px-1 py-1">
+      <span className="w-3.5 shrink-0" aria-hidden />
+      <span className="truncate flex-1">
         {guest.firstName} {guest.lastName}
+      </span>
+      <span
+        className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium tracking-wider uppercase bg-primary text-primary-foreground"
+        aria-label={`Seated at ${tableLabel}`}
+      >
+        {tableLabel}
       </span>
     </li>
   )
@@ -68,8 +70,12 @@ function LeftSidebar({
   const isExpensesView = location.pathname.startsWith('/expenses')
 
   const unassignedGuests = getUnassignedGuests(guests, tables)
-  const unassignedIds = new Set(unassignedGuests.map((g) => g.id))
-  const seatedGuests = guests.filter((g) => !unassignedIds.has(g.id))
+  const seatedTableByGuestId = new Map<string, string>()
+  for (const t of tables) {
+    for (const s of t.seats) {
+      seatedTableByGuestId.set(s.guestId, t.label)
+    }
+  }
 
   return (
     <aside className="hidden md:flex flex-col min-w-55 bg-surface border-r border-border">
@@ -124,12 +130,18 @@ function LeftSidebar({
                   GUESTS ({unassignedGuests.length}/{guests.length})
                 </p>
                 <ul className="space-y-1 max-h-50 overflow-y-auto">
-                  {unassignedGuests.map((g) => (
-                    <DraggableGuestItem key={g.id} guest={g} />
-                  ))}
-                  {seatedGuests.map((g) => (
-                    <SeatedGuestItem key={g.id} guest={g} />
-                  ))}
+                  {guests.map((g) => {
+                    const tableLabel = seatedTableByGuestId.get(g.id)
+                    return tableLabel ? (
+                      <SeatedGuestItem
+                        key={g.id}
+                        guest={g}
+                        tableLabel={tableLabel}
+                      />
+                    ) : (
+                      <DraggableGuestItem key={g.id} guest={g} />
+                    )
+                  })}
                 </ul>
               </div>
             )}
