@@ -1,9 +1,9 @@
-import { memo } from 'react'
 import { useDraggable, useDroppable } from '@dnd-kit/react'
-import type { SeatAssignment } from '../../data/table-types'
-import type { Guest } from '../../data/guest-types'
-import { DRAG_TYPE_SEAT } from '../../data/dnd-types'
+import { memo } from 'react'
 import type { DragSeatData, DropSeatData } from '../../data/dnd-types'
+import { DRAG_TYPE_SEAT } from '../../data/dnd-types'
+import type { Guest } from '../../data/guest-types'
+import type { SeatAssignment } from '../../data/table-types'
 import SeatIndicator from './SeatIndicator'
 
 interface Props {
@@ -37,7 +37,11 @@ function SeatSlot({
     data: { tableId, seatIndex } satisfies DropSeatData,
   })
 
-  const { ref: dragRef, isDragging } = useDraggable({
+  const {
+    ref: dragRef,
+    handleRef,
+    isDragging,
+  } = useDraggable({
     id: `seat-drag-${tableId}-${seatIndex}`,
     disabled: isEmpty || !!isMobile,
     data: {
@@ -47,36 +51,37 @@ function SeatSlot({
       guestId: assignment?.guestId ?? '',
     } satisfies DragSeatData,
   })
+  const setRef = (el: Element | null) => {
+    dragRef(el)
+    dropRef(el)
+    handleRef(el)
+  }
 
   return (
-    <div ref={dropRef}>
-      <div ref={dragRef} className={isDragging ? 'opacity-40' : ''}>
-        <SeatIndicator
-          isEmpty={isEmpty}
-          initials={initials}
-          isSelected={activeSeatIndex === seatIndex}
-          isDropTarget={isDropTarget && isEmpty}
-          isSwapTarget={isDropTarget && !isEmpty}
-          onClick={(e) => {
-            e.stopPropagation()
-            const rect = (
-              e.currentTarget as HTMLElement
-            ).getBoundingClientRect()
-            onSeatClick(tableId, seatIndex, rect)
-          }}
-          onMobileTap={
-            isMobile && activeTool === 'select'
-              ? (e) => {
-                  e.stopPropagation()
-                  const rect = (
-                    e.currentTarget as HTMLElement
-                  ).getBoundingClientRect()
-                  onSeatClick(tableId, seatIndex, rect)
-                }
-              : undefined
-          }
-        />
-      </div>
+    <div ref={setRef} className={isDragging ? 'opacity-40' : ''}>
+      <SeatIndicator
+        isEmpty={isEmpty}
+        initials={initials}
+        isSelected={activeSeatIndex === seatIndex}
+        isDropTarget={isDropTarget && isEmpty}
+        isSwapTarget={isDropTarget && !isEmpty}
+        onClick={(e) => {
+          e.stopPropagation()
+          const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+          onSeatClick(tableId, seatIndex, rect)
+        }}
+        onMobileTap={
+          isMobile && activeTool === 'select'
+            ? (e) => {
+                e.stopPropagation()
+                const rect = (
+                  e.currentTarget as HTMLElement
+                ).getBoundingClientRect()
+                onSeatClick(tableId, seatIndex, rect)
+              }
+            : undefined
+        }
+      />
     </div>
   )
 }
