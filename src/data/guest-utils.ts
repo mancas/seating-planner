@@ -7,7 +7,9 @@ const DIETARY_EMOJI: Record<string, string> = {
   FISH: '🐟',
 }
 
-export function getDietaryEmoji(type: string | null | undefined): string | null {
+export function getDietaryEmoji(
+  type: string | null | undefined,
+): string | null {
   if (!type) return null
   return DIETARY_EMOJI[type] ?? null
 }
