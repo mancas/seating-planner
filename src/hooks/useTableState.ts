@@ -31,7 +31,13 @@ export function useTableState() {
       data: Partial<
         Pick<
           FloorTable,
-          'label' | 'shape' | 'seatCount' | 'x' | 'y' | 'rotation'
+          | 'label'
+          | 'tableNumber'
+          | 'shape'
+          | 'seatCount'
+          | 'x'
+          | 'y'
+          | 'rotation'
         >
       >,
     ) => {

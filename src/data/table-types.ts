@@ -9,6 +9,7 @@ export interface FloorTable {
   id: string
   badgeId: string
   label: string
+  tableNumber?: string
   shape: TableShape
   seatCount: number
   x: number

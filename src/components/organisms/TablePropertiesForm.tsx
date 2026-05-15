@@ -6,7 +6,10 @@ interface Props {
   table: FloorTable
   onUpdate: (
     data: Partial<
-      Pick<FloorTable, 'label' | 'shape' | 'seatCount' | 'rotation'>
+      Pick<
+        FloorTable,
+        'label' | 'tableNumber' | 'shape' | 'seatCount' | 'rotation'
+      >
     >,
   ) => void
   onDelete: () => void
@@ -17,12 +20,18 @@ function TablePropertiesForm({ table, onUpdate, onDelete }: Props) {
   // Parent passes key={table.id} so this component remounts when the
   // selected table changes, which resets local state automatically.
   const [label, setLabel] = useState(table.label)
+  const [tableNumber, setTableNumber] = useState(table.tableNumber ?? '')
   const [seatCount, setSeatCount] = useState(table.seatCount)
   const [rotation, setRotation] = useState(table.rotation)
 
   function handleLabelChange(value: string) {
     setLabel(value)
     onUpdate({ label: value })
+  }
+
+  function handleTableNumberChange(value: string) {
+    setTableNumber(value)
+    onUpdate({ tableNumber: value.trim() === '' ? undefined : value })
   }
 
   function handleShapeChange(shape: TableShape) {
@@ -52,6 +61,18 @@ function TablePropertiesForm({ table, onUpdate, onDelete }: Props) {
             type="text"
             value={label}
             onChange={(e) => handleLabelChange(e.target.value)}
+            className="input w-full"
+          />
+        </label>
+        <label className="block mb-3">
+          <span className="text-caption text-foreground-muted block mb-1">
+            TABLE_NUMBER
+          </span>
+          <input
+            type="text"
+            value={tableNumber}
+            onChange={(e) => handleTableNumberChange(e.target.value)}
+            placeholder="e.g. 5, VIP, 12A"
             className="input w-full"
           />
         </label>

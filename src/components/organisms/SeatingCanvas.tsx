@@ -27,7 +27,16 @@ interface Props {
   onUpdateTable: (
     id: string,
     data: Partial<
-      Pick<FloorTable, 'label' | 'shape' | 'seatCount' | 'x' | 'y' | 'rotation'>
+      Pick<
+        FloorTable,
+        | 'label'
+        | 'tableNumber'
+        | 'shape'
+        | 'seatCount'
+        | 'x'
+        | 'y'
+        | 'rotation'
+      >
     >,
   ) => void
   onDeleteTable: (id: string) => void

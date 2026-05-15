@@ -8,7 +8,10 @@ interface Props {
   table: FloorTable
   onUpdate: (
     data: Partial<
-      Pick<FloorTable, 'label' | 'shape' | 'seatCount' | 'rotation'>
+      Pick<
+        FloorTable,
+        'label' | 'tableNumber' | 'shape' | 'seatCount' | 'rotation'
+      >
     >,
   ) => void
   onDelete: () => void

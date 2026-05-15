@@ -119,6 +119,11 @@ function CanvasTable({
           borderRadius: isCircle ? '50%' : '8px',
         }}
       >
+        {table.tableNumber && (
+          <span className="text-body-sm font-bold text-primary leading-none bg-white px-1.5 py-0.5 rounded border border-border">
+            #{table.tableNumber}
+          </span>
+        )}
         <span className="text-body-sm text-foreground-heading font-semibold text-center">
           {table.label}
         </span>

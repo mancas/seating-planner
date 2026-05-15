@@ -7,6 +7,7 @@ interface Props {
   table: FloorTable
   onUpdate: (data: {
     label?: string
+    tableNumber?: string
     shape?: TableShape
     seatCount?: number
     rotation?: number
