@@ -146,7 +146,7 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
                 {...register('dietaryType')}
               >
                 <option value="">NONE</option>
-                <option value="VEGAN">🥬 VEGAN</option>
+                <option value="VEGAN">🥕 VEGAN</option>
                 <option value="VEGETARIAN">🥦 VEGETARIAN</option>
                 <option value="FISH">🐟 FISH</option>
               </select>
