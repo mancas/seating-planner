@@ -30,6 +30,9 @@ function SeatSlot({
   const initials = guest
     ? `${guest.firstName.charAt(0)}${guest.lastName !== '-' ? guest.lastName.charAt(0) : ''}`
     : undefined
+  const fullName = guest
+    ? `${guest.firstName}${guest.lastName !== '-' ? ` ${guest.lastName}` : ''}`
+    : undefined
   const isEmpty = !assignment
 
   const { ref: dropRef, isDropTarget } = useDroppable({
@@ -62,6 +65,7 @@ function SeatSlot({
       <SeatIndicator
         isEmpty={isEmpty}
         initials={initials}
+        fullName={fullName}
         isSelected={activeSeatIndex === seatIndex}
         isDropTarget={isDropTarget && isEmpty}
         isSwapTarget={isDropTarget && !isEmpty}

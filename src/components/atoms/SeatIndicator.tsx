@@ -1,6 +1,7 @@
 interface Props {
   isEmpty: boolean
   initials?: string
+  fullName?: string
   isSelected?: boolean
   isDropTarget?: boolean
   isSwapTarget?: boolean
@@ -11,6 +12,7 @@ interface Props {
 function SeatIndicator({
   isEmpty,
   initials,
+  fullName,
   isSelected = false,
   isDropTarget = false,
   isSwapTarget = false,
@@ -37,19 +39,26 @@ function SeatIndicator({
     : ''
 
   return (
-    <button
-      onClick={onClick}
-      onTouchEnd={(e) => {
-        if (onMobileTap) {
-          e.preventDefault()
-          onMobileTap(e)
-        }
-      }}
-      aria-label={isEmpty ? 'Empty seat' : `Seat: ${initials}`}
-      className={`${base} ${variant} ${selected} ${dropTarget} ${swapTarget}`}
-    >
-      {!isEmpty && initials}
-    </button>
+    <div className="relative flex items-center justify-center">
+      {!isEmpty && fullName && (
+        <span className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium leading-tight text-foreground">
+          {fullName}
+        </span>
+      )}
+      <button
+        onClick={onClick}
+        onTouchEnd={(e) => {
+          if (onMobileTap) {
+            e.preventDefault()
+            onMobileTap(e)
+          }
+        }}
+        aria-label={isEmpty ? 'Empty seat' : `Seat: ${fullName ?? initials}`}
+        className={`${base} ${variant} ${selected} ${dropTarget} ${swapTarget}`}
+      >
+        {!isEmpty && initials}
+      </button>
+    </div>
   )
 }
 
