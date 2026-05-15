@@ -61,7 +61,7 @@
 }
 
 :root {
-  /* NC design tokens — raw scales */
+  /* NC design tokens — raw scales (dark default) */
   --nc-gray-950: #0a0a0a;
   --nc-gray-900: #0e0e0e;
   --nc-gray-850: #131313;
@@ -97,11 +97,37 @@
   --nc-primary-foreground: #ffffff;
   --nc-ring: var(--nc-cobalt-500);
 
+  /* Badge — overridable per theme */
+  --nc-badge-bg: var(--nc-cobalt-950);
+  --nc-badge-fg: var(--nc-cobalt-400);
+
   /* Layout */
   --nc-topnav-height: 56px;
 
-  /* Dark mode only */
   color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  /* Gray scale inverted: gray-950 = lightest, gray-50 = darkest */
+  --nc-gray-950: #ffffff;
+  --nc-gray-900: #fafafa;
+  --nc-gray-850: #ffffff;
+  --nc-gray-800: #f4f4f5;
+  --nc-gray-700: #e5e5e5;
+  --nc-gray-600: #d4d4d4;
+  --nc-gray-500: #6b6b6b;
+  --nc-gray-400: #525252;
+  --nc-gray-300: #404040;
+  --nc-gray-200: #27272a;
+  --nc-gray-100: #18181b;
+  --nc-gray-50: #09090b;
+
+  --nc-border: rgba(20, 22, 28, 0.1);
+
+  --nc-badge-bg: #e6efff;
+  --nc-badge-fg: var(--nc-cobalt-700);
+
+  color-scheme: light;
 }
 
 html {
@@ -399,8 +425,8 @@ code {
     font-weight: 500;
     line-height: 1.4;
     letter-spacing: 0.12px;
-    color: var(--nc-cobalt-400);
-    background: var(--nc-cobalt-950);
+    color: var(--nc-badge-fg);
+    background: var(--nc-badge-bg);
     border-radius: 4px;
     padding: 2px 8px;
   }
