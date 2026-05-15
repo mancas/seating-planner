@@ -1,3 +1,4 @@
+import ExportCanvasButton from '../atoms/ExportCanvasButton'
 import ThemeToggle from '../atoms/ThemeToggle'
 
 function TopNav() {
@@ -13,6 +14,7 @@ function TopNav() {
 
       {/* Right section */}
       <div className="flex items-center gap-2 md:gap-3">
+        <ExportCanvasButton />
         <ThemeToggle />
       </div>
     </nav>

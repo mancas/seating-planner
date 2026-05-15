@@ -6,6 +6,10 @@ import type { Guest } from '../../data/guest-types'
 import { getUnassignedGuests } from '../../data/guest-utils'
 import type { FloorTable, TableShape } from '../../data/table-types'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import {
+  exportSeatingCanvas,
+  registerCanvasExporter,
+} from '../../lib/canvas-export'
 import CanvasStatusBar from '../atoms/CanvasStatusBar'
 import CanvasTable from '../molecules/CanvasTable'
 import type { CanvasTool } from '../molecules/CanvasToolbar'
@@ -92,6 +96,14 @@ function SeatingCanvas({
   useEffect(() => {
     activeToolRef.current = activeTool
   }, [activeTool])
+
+  useEffect(() => {
+    return registerCanvasExporter(async () => {
+      const node = canvasRef.current
+      if (!node) return
+      await exportSeatingCanvas(node, tablesRef.current)
+    })
+  }, [])
 
   // Compute unassigned guests
   const unassignedGuests = useMemo(
