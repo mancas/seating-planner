@@ -241,17 +241,21 @@ function SeatingCanvas({
       <div className="flex flex-1 relative overflow-hidden bg-background">
         <TransformWrapper
           ref={transformRef}
-          disabled={isMobile ? false : activeTool !== 'pan'}
+          disabled={false}
           initialScale={1}
-          minScale={isMobile ? 0.5 : 1}
-          maxScale={isMobile ? 3 : 1}
+          minScale={isMobile ? 0.5 : 0.25}
+          maxScale={isMobile ? 3 : 4}
           limitToBounds={false}
           panning={{
             disabled: isMobile ? activeTool === 'pan' : activeTool !== 'pan',
           }}
           pinch={{ disabled: !isMobile }}
           doubleClick={{ disabled: true }}
-          wheel={{ disabled: true }}
+          wheel={{
+            disabled: isMobile,
+            activationKeys: isMobile ? undefined : ['Control', 'Meta'],
+            step: 0.15,
+          }}
           onTransformed={(_ref, state) => {
             setCurrentZoom(state.scale)
           }}
@@ -315,7 +319,20 @@ function SeatingCanvas({
 
         {/* Status bar */}
         <div className="absolute top-4 right-4 z-10">
-          <CanvasStatusBar zoom={isMobile ? currentZoom : undefined} />
+          <CanvasStatusBar
+            zoom={currentZoom}
+            onZoomIn={
+              isMobile ? undefined : () => transformRef.current?.zoomIn()
+            }
+            onZoomOut={
+              isMobile ? undefined : () => transformRef.current?.zoomOut()
+            }
+            onZoomReset={
+              isMobile
+                ? undefined
+                : () => transformRef.current?.resetTransform()
+            }
+          />
         </div>
 
         {/* Seat assignment: popover on desktop, bottom sheet on mobile */}
