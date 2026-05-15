@@ -140,12 +140,16 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
 
           <FormSection title="DIETARY_PROTOCOL">
             <FormField label="DIETARY_TYPE" htmlFor="dietaryType">
-              <input
+              <select
                 id="dietaryType"
-                className="input w-full"
-                placeholder="E.G. VEGAN..."
+                className="input w-full appearance-none"
                 {...register('dietaryType')}
-              />
+              >
+                <option value="">NONE</option>
+                <option value="VEGAN">🥬 VEGAN</option>
+                <option value="VEGETARIAN">🥦 VEGETARIAN</option>
+                <option value="FISH">🐟 FISH</option>
+              </select>
             </FormField>
             <FormField label="DIETARY_NOTES" htmlFor="dietaryNotes">
               <textarea

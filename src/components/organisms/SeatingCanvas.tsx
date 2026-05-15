@@ -29,13 +29,7 @@ interface Props {
     data: Partial<
       Pick<
         FloorTable,
-        | 'label'
-        | 'tableNumber'
-        | 'shape'
-        | 'seatCount'
-        | 'x'
-        | 'y'
-        | 'rotation'
+        'label' | 'tableNumber' | 'shape' | 'seatCount' | 'x' | 'y' | 'rotation'
       >
     >,
   ) => void
