@@ -1,6 +1,17 @@
 import type { Guest } from './guest-types'
 import type { FloorTable } from './table-types'
 
+const DIETARY_EMOJI: Record<string, string> = {
+  VEGAN: '🥕',
+  VEGETARIAN: '🥦',
+  FISH: '🐟',
+}
+
+export function getDietaryEmoji(type: string | null | undefined): string | null {
+  if (!type) return null
+  return DIETARY_EMOJI[type] ?? null
+}
+
 export function getUnassignedGuests(
   guests: Guest[],
   tables: FloorTable[],

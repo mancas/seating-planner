@@ -2,6 +2,7 @@ interface Props {
   isEmpty: boolean
   initials?: string
   fullName?: string
+  dietaryEmoji?: string | null
   isSelected?: boolean
   isDropTarget?: boolean
   isSwapTarget?: boolean
@@ -13,6 +14,7 @@ function SeatIndicator({
   isEmpty,
   initials,
   fullName,
+  dietaryEmoji,
   isSelected = false,
   isDropTarget = false,
   isSwapTarget = false,
@@ -20,7 +22,7 @@ function SeatIndicator({
   onMobileTap,
 }: Props) {
   const base =
-    'w-7 h-7 rounded-full cursor-pointer hover:ring-2 hover:ring-primary/50 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2'
+    'relative w-7 h-7 rounded-full cursor-pointer hover:ring-2 hover:ring-primary/50 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2'
 
   const variant = isEmpty
     ? 'bg-gray-700 border border-gray-600'
@@ -56,7 +58,13 @@ function SeatIndicator({
         aria-label={isEmpty ? 'Empty seat' : `Seat: ${fullName ?? initials}`}
         className={`${base} ${variant} ${selected} ${dropTarget} ${swapTarget}`}
       >
-        {!isEmpty && initials}
+        {!isEmpty ? (
+          dietaryEmoji ? (
+            <span className="text-sm leading-none">{dietaryEmoji}</span>
+          ) : (
+            initials
+          )
+        ) : null}
       </button>
     </div>
   )
