@@ -45,7 +45,11 @@ export async function triggerCanvasExport(): Promise<void> {
   await registered()
 }
 
-const CROP_PADDING = 48
+const CROP_PADDING = 56
+// Seat circles (28px) overflow the table container, and guest name labels
+// sit above the seat. Extend the per-table bbox so neither gets clipped.
+const SEAT_OVERFLOW = 18
+const LABEL_OVERFLOW = 20
 
 interface BBox {
   x: number
@@ -63,10 +67,13 @@ function getTableBBox(table: FloorTable): BBox {
         })()
       : getRectTableSize(table.seatCount)
 
-  const w = inner.width + SEAT_RADIUS * 2
-  const h = inner.height + SEAT_RADIUS * 2
-  const cx = table.x + w / 2
-  const cy = table.y + h / 2
+  const containerW = inner.width + SEAT_RADIUS * 2
+  const containerH = inner.height + SEAT_RADIUS * 2
+
+  const w = containerW + (SEAT_OVERFLOW + LABEL_OVERFLOW) * 2
+  const h = containerH + (SEAT_OVERFLOW + LABEL_OVERFLOW) * 2
+  const cx = table.x + containerW / 2
+  const cy = table.y + containerH / 2
 
   const rad = (table.rotation * Math.PI) / 180
   const cos = Math.abs(Math.cos(rad))
@@ -121,8 +128,10 @@ export async function exportSeatingCanvas(
   const boxes = tables.map(getTableBBox)
   const bbox = unionBBox(boxes)
 
-  const cropX = Math.max(0, Math.floor(bbox.x - CROP_PADDING))
-  const cropY = Math.max(0, Math.floor(bbox.y - CROP_PADDING))
+  // Don't clamp to >= 0: tables may sit at negative canvas coordinates, and
+  // the translate below shifts them into view. Clamping would crop them out.
+  const cropX = Math.floor(bbox.x - CROP_PADDING)
+  const cropY = Math.floor(bbox.y - CROP_PADDING)
   const cropW = Math.ceil(bbox.w + CROP_PADDING * 2)
   const cropH = Math.ceil(bbox.h + CROP_PADDING * 2)
 
