@@ -12,6 +12,11 @@ export const ALLERGY_EMOJI: Record<Allergy, string> = {
   SEAFOOD: '🦐',
   SOY: '🫘',
   SPICY: '🌶️',
+  COW_MILK_PROTEIN: '🐄',
+  PEACH: '🍑',
+  COD: '🐟',
+  DRIED_FRUITS: '🥜',
+  CORN: '🌽',
 }
 
 export function getDietaryEmoji(

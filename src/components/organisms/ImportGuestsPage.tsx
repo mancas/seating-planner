@@ -159,7 +159,8 @@ function ImportGuestsPage({ onImportComplete }: Props) {
               allergies, gift
             </p>
             <p className="text-caption text-foreground-muted mt-1">
-              allergies: pipe-separated, any of LACTOSE | SEAFOOD | SOY | SPICY
+              allergies: pipe-separated, any of LACTOSE | COW_MILK_PROTEIN |
+              SEAFOOD | COD | SOY | CORN | PEACH | DRIED_FRUITS | SPICY
             </p>
             <button
               type="button"
