@@ -11,6 +11,7 @@ import ImportGuestsView from './pages/ImportGuestsView.tsx'
 import ExpensesLogView from './pages/ExpensesLogView.tsx'
 import AddExpenseView from './pages/AddExpenseView.tsx'
 import SettingsView from './pages/SettingsView.tsx'
+import StatsView from './pages/StatsView.tsx'
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -33,6 +34,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="expenses" element={<ExpensesLogView />} />
           <Route path="expenses/new" element={<AddExpenseView />} />
           <Route path="settings" element={<SettingsView />} />
+          <Route path="stats" element={<StatsView />} />
         </Route>
       </Routes>
     </BrowserRouter>

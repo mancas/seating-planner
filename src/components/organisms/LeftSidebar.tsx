@@ -68,6 +68,7 @@ function LeftSidebar({
   const navigate = useNavigate()
   const isCanvasView = location.pathname === '/seating-plan'
   const isExpensesView = location.pathname.startsWith('/expenses')
+  const isStatsView = location.pathname === '/stats'
 
   const unassignedGuests = getUnassignedGuests(guests, tables)
   const seatedTableByGuestId = new Map<string, string>()
@@ -92,7 +93,8 @@ function LeftSidebar({
           isActive={
             !isCanvasView &&
             location.pathname !== '/settings' &&
-            !isExpensesView
+            !isExpensesView &&
+            !isStatsView
           }
           onClick={() => navigate('/')}
         />
@@ -100,6 +102,11 @@ function LeftSidebar({
           label="Canvas"
           isActive={isCanvasView}
           onClick={() => navigate('/seating-plan')}
+        />
+        <SidebarNavItem
+          label="Stats"
+          isActive={isStatsView}
+          onClick={() => navigate('/stats')}
         />
         <SidebarNavItem
           label="Expenses"

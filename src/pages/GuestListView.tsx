@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useNavigate, useLocation, Outlet } from 'react-router'
 import {
   getGuests,
@@ -7,7 +7,6 @@ import {
   deleteGuest as storeDeleteGuest,
 } from '../data/guest-store'
 import type { Guest } from '../data/guest-types'
-import { useGuestStats } from '../hooks/useGuestStats'
 import { useOverlayPanel } from '../hooks/useOverlayPanel'
 import {
   getTables,
@@ -16,7 +15,6 @@ import {
 import LeftSidebar from '../components/organisms/LeftSidebar'
 import GuestListHeader from '../components/organisms/GuestListHeader'
 import GuestTable from '../components/organisms/GuestTable'
-import GuestListFooterStats from '../components/organisms/GuestListFooterStats'
 import GuestDetailPanel from '../components/organisms/GuestDetailPanel'
 import FAB from '../components/atoms/FAB'
 import EmptyState from '../components/organisms/EmptyState'
@@ -29,6 +27,15 @@ function GuestListView() {
 
   const [guests, setGuests] = useState<Guest[]>(() => getGuests())
   const [selectedGuestId, setSelectedGuestId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const filteredGuests = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return guests
+    return guests.filter((g) =>
+      `${g.firstName} ${g.lastName}`.toLowerCase().includes(q),
+    )
+  }, [guests, searchQuery])
 
   // Adjust selectedGuestId when location.state changes (React-recommended pattern).
   // Uses state to track previous value instead of useEffect to avoid cascading renders.
@@ -113,16 +120,6 @@ function GuestListView() {
   }
   const panelGuest = panelVisible ? (selectedGuest ?? displayedGuest) : null
 
-  const {
-    confirmedCount,
-    pendingCount,
-    totalGuests,
-    confirmationRate,
-    totalGifts,
-    giftCount,
-    waitlistCount,
-  } = useGuestStats(guests)
-
   // Stub for sidebar — need table add in case sidebar navigates to canvas
   const handleSidebarAddTable = useCallback(() => {
     navigate('/seating-plan')
@@ -156,21 +153,16 @@ function GuestListView() {
         ) : (
           <>
             <GuestListHeader
-              confirmedCount={confirmedCount}
-              pendingCount={pendingCount}
-              totalGuests={totalGuests}
-              waitlistCount={waitlistCount}
+              totalGuests={guests.length}
+              filteredCount={filteredGuests.length}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
             />
             <GuestTable
-              guests={guests}
+              guests={filteredGuests}
               tables={tables}
               selectedGuestId={selectedGuestId}
               onGuestClick={handleGuestClick}
-            />
-            <GuestListFooterStats
-              confirmationRate={confirmationRate}
-              totalGifts={totalGifts}
-              giftCount={giftCount}
             />
           </>
         )}
