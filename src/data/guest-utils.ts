@@ -1,4 +1,4 @@
-import type { Guest } from './guest-types'
+import type { Allergy, Guest } from './guest-types'
 import type { FloorTable } from './table-types'
 
 const DIETARY_EMOJI: Record<string, string> = {
@@ -7,11 +7,31 @@ const DIETARY_EMOJI: Record<string, string> = {
   FISH: '🐟',
 }
 
+export const ALLERGY_EMOJI: Record<Allergy, string> = {
+  LACTOSE: '🥛',
+  SEAFOOD: '🦐',
+  SOY: '🫘',
+  SPICY: '🌶️',
+}
+
 export function getDietaryEmoji(
   type: string | null | undefined,
 ): string | null {
   if (!type) return null
   return DIETARY_EMOJI[type] ?? null
+}
+
+export function getAllergyEmojis(
+  allergies: Allergy[] | null | undefined,
+): string[] {
+  if (!allergies) return []
+  return allergies.map((a) => ALLERGY_EMOJI[a]).filter(Boolean)
+}
+
+export function getRestrictionEmojis(guest: Guest): string[] {
+  const dietary = getDietaryEmoji(guest.dietary.type)
+  const allergies = getAllergyEmojis(guest.allergies)
+  return dietary ? [dietary, ...allergies] : allergies
 }
 
 export function getUnassignedGuests(

@@ -5,12 +5,17 @@ import { createStorage } from './storage-utils'
 const STORAGE_KEY = 'seating-plan:guests'
 const storage = createStorage<Guest[]>(STORAGE_KEY, [])
 
+function normalize(guest: Guest): Guest {
+  return guest.allergies ? guest : { ...guest, allergies: [] }
+}
+
 export function getGuests(): Guest[] {
-  return storage.read()
+  return storage.read().map(normalize)
 }
 
 export function getGuestById(id: string): Guest | undefined {
-  return storage.read().find((g) => g.id === id)
+  const found = storage.read().find((g) => g.id === id)
+  return found ? normalize(found) : undefined
 }
 
 export function addGuest(data: Omit<Guest, 'id'>): Guest {

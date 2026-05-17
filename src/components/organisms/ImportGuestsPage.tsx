@@ -92,6 +92,7 @@ function ImportGuestsPage({ onImportComplete }: Props) {
               status: guest.status,
               gift: guest.gift,
               dietary: guest.dietary,
+              allergies: guest.allergies,
             })
           }
 
@@ -155,7 +156,10 @@ function ImportGuestsPage({ onImportComplete }: Props) {
             </p>
             <p className="text-caption text-foreground-muted mt-3">
               Columns: firstName, lastName, status, dietaryType, dietaryNotes,
-              gift
+              allergies, gift
+            </p>
+            <p className="text-caption text-foreground-muted mt-1">
+              allergies: pipe-separated, any of LACTOSE | SEAFOOD | SOY | SPICY
             </p>
             <button
               type="button"

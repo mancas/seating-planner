@@ -1,4 +1,5 @@
-import type { GuestStatus } from '../data/guest-types'
+import type { Allergy, GuestStatus } from '../data/guest-types'
+import { ALLERGIES } from '../data/guest-types'
 
 export interface ParsedRow {
   [key: string]: string
@@ -18,6 +19,7 @@ export interface GuestImportData {
     type: string | null
     notes: string | null
   }
+  allergies: Allergy[]
   gift: number | null
 }
 
@@ -35,11 +37,12 @@ const EXPECTED_HEADERS: Record<string, string> = {
   status: 'status',
   dietarytype: 'dietaryType',
   dietarynotes: 'dietaryNotes',
+  allergies: 'allergies',
   gift: 'gift',
 }
 
 export function generateTemplate(): string {
-  return 'firstName,lastName,status,dietaryType,dietaryNotes,gift\nJane,Doe,CONFIRMED,VEGAN,Severe nut allergy,250\n'
+  return 'firstName,lastName,status,dietaryType,dietaryNotes,allergies,gift\nJane,Doe,CONFIRMED,VEGAN,Severe nut allergy,LACTOSE|SOY,250\n'
 }
 
 function splitCSVLine(line: string): string[] {
@@ -170,6 +173,7 @@ export function validateGuestRows(
     const giftRaw = (row['gift'] ?? '').trim()
     const dietaryType = (row['dietaryType'] ?? '').trim()
     const dietaryNotes = (row['dietaryNotes'] ?? '').trim()
+    const allergiesRaw = (row['allergies'] ?? '').trim()
 
     if (firstName === '') {
       errors.push({
@@ -216,6 +220,31 @@ export function validateGuestRows(
       }
     }
 
+    const allergies: Allergy[] = []
+    if (allergiesRaw !== '') {
+      const tokens = allergiesRaw
+        .split('|')
+        .map((t) => t.trim().toUpperCase())
+        .filter((t) => t !== '')
+      const invalid: string[] = []
+      for (const token of tokens) {
+        if ((ALLERGIES as readonly string[]).includes(token)) {
+          if (!allergies.includes(token as Allergy)) {
+            allergies.push(token as Allergy)
+          }
+        } else {
+          invalid.push(token)
+        }
+      }
+      if (invalid.length > 0) {
+        errors.push({
+          row: rowNum,
+          field: 'allergies',
+          message: `INVALID_VALUE // ALLERGIES must be pipe-separated from: ${ALLERGIES.join(', ')}`,
+        })
+      }
+    }
+
     guests.push({
       firstName,
       lastName,
@@ -224,6 +253,7 @@ export function validateGuestRows(
         type: dietaryType === '' ? null : dietaryType,
         notes: dietaryNotes === '' ? null : dietaryNotes,
       },
+      allergies,
       gift,
     })
   }

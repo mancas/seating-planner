@@ -1,6 +1,8 @@
 import { useForm } from 'react-hook-form'
 import { useState } from 'react'
-import type { Guest, GuestStatus } from '../../data/guest-types'
+import type { Allergy, Guest, GuestStatus } from '../../data/guest-types'
+import { ALLERGIES } from '../../data/guest-types'
+import { ALLERGY_EMOJI } from '../../data/guest-utils'
 import FormField from '../molecules/FormField'
 import FormSection from '../molecules/FormSection'
 import ConfirmDialog from '../molecules/ConfirmDialog'
@@ -11,6 +13,7 @@ interface GuestFormValues {
   status: GuestStatus
   dietaryType: string
   dietaryNotes: string
+  allergies: Allergy[]
   gift: string
 }
 
@@ -36,6 +39,7 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
           status: guest.status,
           dietaryType: guest.dietary.type ?? '',
           dietaryNotes: guest.dietary.notes ?? '',
+          allergies: guest.allergies ?? [],
           gift: guest.gift?.toString() ?? '',
         }
       : {
@@ -44,6 +48,7 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
           status: 'PENDING' as GuestStatus,
           dietaryType: '',
           dietaryNotes: '',
+          allergies: [],
           gift: '',
         },
   })
@@ -60,6 +65,7 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
         type: values.dietaryType || null,
         notes: values.dietaryNotes || null,
       },
+      allergies: values.allergies ?? [],
     }
     onSubmit(guestData)
   }
@@ -159,6 +165,41 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
                 placeholder="ADDITIONAL_NOTES..."
                 {...register('dietaryNotes')}
               />
+            </FormField>
+          </FormSection>
+
+          <FormSection title="ALLERGY_PROTOCOL">
+            <FormField label="ALLERGIES">
+              <div
+                role="group"
+                aria-label="Allergies"
+                className="grid grid-cols-2 gap-2"
+              >
+                {ALLERGIES.map((allergy) => {
+                  const id = `allergy-${allergy.toLowerCase()}`
+                  return (
+                    <label
+                      key={allergy}
+                      htmlFor={id}
+                      className="flex items-center gap-2 px-3 py-2 rounded border border-border bg-surface hover:border-primary/50 cursor-pointer transition-colors"
+                    >
+                      <input
+                        id={id}
+                        type="checkbox"
+                        value={allergy}
+                        className="accent-primary"
+                        {...register('allergies')}
+                      />
+                      <span className="text-base leading-none">
+                        {ALLERGY_EMOJI[allergy]}
+                      </span>
+                      <span className="text-body-sm text-foreground tracking-wider">
+                        {allergy}
+                      </span>
+                    </label>
+                  )
+                })}
+              </div>
             </FormField>
           </FormSection>
 

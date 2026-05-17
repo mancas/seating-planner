@@ -2,7 +2,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/react'
 import { memo } from 'react'
 import type { DragSeatData, DropSeatData } from '../../data/dnd-types'
 import { DRAG_TYPE_SEAT } from '../../data/dnd-types'
-import { getDietaryEmoji } from '../../data/guest-utils'
+import { getRestrictionEmojis } from '../../data/guest-utils'
 import type { Guest } from '../../data/guest-types'
 import type { SeatAssignment } from '../../data/table-types'
 import SeatIndicator from './SeatIndicator'
@@ -34,7 +34,7 @@ function SeatSlot({
   const fullName = guest
     ? `${guest.firstName}${guest.lastName !== '-' ? ` ${guest.lastName}` : ''}`
     : undefined
-  const dietaryEmoji = guest ? getDietaryEmoji(guest.dietary.type) : null
+  const restrictionEmojis = guest ? getRestrictionEmojis(guest) : []
   const isEmpty = !assignment
 
   const { ref: dropRef, isDropTarget } = useDroppable({
@@ -68,7 +68,7 @@ function SeatSlot({
         isEmpty={isEmpty}
         initials={initials}
         fullName={fullName}
-        dietaryEmoji={dietaryEmoji}
+        restrictionEmojis={restrictionEmojis}
         isSelected={activeSeatIndex === seatIndex}
         isDropTarget={isDropTarget && isEmpty}
         isSwapTarget={isDropTarget && !isEmpty}

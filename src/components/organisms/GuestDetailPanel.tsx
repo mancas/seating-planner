@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { LuGift, LuX } from 'react-icons/lu'
 import type { Guest } from '../../data/guest-types'
 import type { FloorTable } from '../../data/table-types'
-import { getGuestSeatLocation } from '../../data/guest-utils'
+import { ALLERGY_EMOJI, getGuestSeatLocation } from '../../data/guest-utils'
 import IconButton from '../atoms/IconButton'
 import StatusBadge from '../atoms/StatusBadge'
 import ConfirmDialog from '../molecules/ConfirmDialog'
@@ -119,11 +119,32 @@ function renderContent(guest: Guest, tables: FloorTable[]) {
       {/* Preferences */}
       <div className="px-4">
         <GuestDetailSection title="PREFERENCES">
-          {guest.dietary.type ? (
+          {guest.dietary.type || guest.allergies.length > 0 ? (
             <>
-              <p className="text-body-sm text-foreground">
-                DIETARY: <span className="font-bold">{guest.dietary.type}</span>
-              </p>
+              {guest.dietary.type && (
+                <p className="text-body-sm text-foreground">
+                  DIETARY:{' '}
+                  <span className="font-bold">{guest.dietary.type}</span>
+                </p>
+              )}
+              {guest.allergies.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-caption text-foreground-muted">
+                    ALLERGIES
+                  </p>
+                  <ul className="mt-1 flex flex-wrap gap-1.5">
+                    {guest.allergies.map((allergy) => (
+                      <li
+                        key={allergy}
+                        className="flex items-center gap-1 rounded border border-border bg-surface-elevated px-2 py-1 text-caption text-foreground"
+                      >
+                        <span aria-hidden="true">{ALLERGY_EMOJI[allergy]}</span>
+                        <span>{allergy}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {guest.dietary.notes && (
                 <div className="bg-surface-elevated rounded p-3 mt-2 text-caption text-foreground-muted italic">
                   &ldquo;{guest.dietary.notes}&rdquo;

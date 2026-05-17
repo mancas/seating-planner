@@ -2,7 +2,7 @@ interface Props {
   isEmpty: boolean
   initials?: string
   fullName?: string
-  dietaryEmoji?: string | null
+  restrictionEmojis?: string[]
   isSelected?: boolean
   isDropTarget?: boolean
   isSwapTarget?: boolean
@@ -14,7 +14,7 @@ function SeatIndicator({
   isEmpty,
   initials,
   fullName,
-  dietaryEmoji,
+  restrictionEmojis = [],
   isSelected = false,
   isDropTarget = false,
   isSwapTarget = false,
@@ -59,8 +59,16 @@ function SeatIndicator({
         className={`${base} ${variant} ${selected} ${dropTarget} ${swapTarget}`}
       >
         {!isEmpty ? (
-          dietaryEmoji ? (
-            <span className="text-sm leading-none">{dietaryEmoji}</span>
+          restrictionEmojis.length > 0 ? (
+            <span
+              className={`flex flex-wrap items-center justify-center leading-none ${
+                restrictionEmojis.length === 1 ? 'text-sm' : 'text-[9px] gap-px'
+              }`}
+            >
+              {restrictionEmojis.map((emoji, i) => (
+                <span key={i}>{emoji}</span>
+              ))}
+            </span>
           ) : (
             initials
           )
