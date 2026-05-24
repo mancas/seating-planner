@@ -34,4 +34,5 @@ export interface Guest {
   }
   allergies: Allergy[]
   gift: number | null
+  secretMission: boolean
 }

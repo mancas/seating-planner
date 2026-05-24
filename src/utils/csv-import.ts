@@ -21,6 +21,7 @@ export interface GuestImportData {
   }
   allergies: Allergy[]
   gift: number | null
+  secretMission: boolean
 }
 
 export interface ValidationResult {
@@ -39,10 +40,14 @@ const EXPECTED_HEADERS: Record<string, string> = {
   dietarynotes: 'dietaryNotes',
   allergies: 'allergies',
   gift: 'gift',
+  secretmission: 'secretMission',
 }
 
+const TRUTHY_VALUES: readonly string[] = ['true', '1', 'yes', 'y']
+const FALSY_VALUES: readonly string[] = ['false', '0', 'no', 'n', '']
+
 export function generateTemplate(): string {
-  return 'firstName,lastName,status,dietaryType,dietaryNotes,allergies,gift\nJane,Doe,CONFIRMED,VEGAN,Severe nut allergy,LACTOSE|SOY,250\n'
+  return 'firstName,lastName,status,dietaryType,dietaryNotes,allergies,gift,secretMission\nJane,Doe,CONFIRMED,VEGAN,Severe nut allergy,LACTOSE|SOY,250,true\n'
 }
 
 function splitCSVLine(line: string): string[] {
@@ -174,6 +179,7 @@ export function validateGuestRows(
     const dietaryType = (row['dietaryType'] ?? '').trim()
     const dietaryNotes = (row['dietaryNotes'] ?? '').trim()
     const allergiesRaw = (row['allergies'] ?? '').trim()
+    const secretMissionRaw = (row['secretMission'] ?? '').trim().toLowerCase()
 
     if (firstName === '') {
       errors.push({
@@ -245,6 +251,18 @@ export function validateGuestRows(
       }
     }
 
+    let secretMission = false
+    if (TRUTHY_VALUES.includes(secretMissionRaw)) {
+      secretMission = true
+    } else if (!FALSY_VALUES.includes(secretMissionRaw)) {
+      errors.push({
+        row: rowNum,
+        field: 'secretMission',
+        message:
+          'INVALID_VALUE // SECRET_MISSION must be true/false (or yes/no, 1/0)',
+      })
+    }
+
     guests.push({
       firstName,
       lastName,
@@ -255,6 +273,7 @@ export function validateGuestRows(
       },
       allergies,
       gift,
+      secretMission,
     })
   }
 

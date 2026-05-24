@@ -6,7 +6,10 @@ const STORAGE_KEY = 'seating-plan:guests'
 const storage = createStorage<Guest[]>(STORAGE_KEY, [])
 
 function normalize(guest: Guest): Guest {
-  return guest.allergies ? guest : { ...guest, allergies: [] }
+  const withAllergies = guest.allergies ? guest : { ...guest, allergies: [] }
+  return typeof withAllergies.secretMission === 'boolean'
+    ? withAllergies
+    : { ...withAllergies, secretMission: false }
 }
 
 export function getGuests(): Guest[] {

@@ -33,10 +33,13 @@ export function getAllergyEmojis(
   return allergies.map((a) => ALLERGY_EMOJI[a]).filter(Boolean)
 }
 
+export const SECRET_MISSION_EMOJI = '🕯️'
+
 export function getRestrictionEmojis(guest: Guest): string[] {
   const dietary = getDietaryEmoji(guest.dietary.type)
   const allergies = getAllergyEmojis(guest.allergies)
-  return dietary ? [dietary, ...allergies] : allergies
+  const base = dietary ? [dietary, ...allergies] : allergies
+  return guest.secretMission ? [...base, SECRET_MISSION_EMOJI] : base
 }
 
 export function getUnassignedGuests(

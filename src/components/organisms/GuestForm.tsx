@@ -15,6 +15,7 @@ interface GuestFormValues {
   dietaryNotes: string
   allergies: Allergy[]
   gift: string
+  secretMission: boolean
 }
 
 interface Props {
@@ -41,6 +42,7 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
           dietaryNotes: guest.dietary.notes ?? '',
           allergies: guest.allergies ?? [],
           gift: guest.gift?.toString() ?? '',
+          secretMission: guest.secretMission ?? false,
         }
       : {
           firstName: '',
@@ -50,6 +52,7 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
           dietaryNotes: '',
           allergies: [],
           gift: '',
+          secretMission: false,
         },
   })
 
@@ -66,6 +69,7 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
         notes: values.dietaryNotes || null,
       },
       allergies: values.allergies ?? [],
+      secretMission: !!values.secretMission,
     }
     onSubmit(guestData)
   }
@@ -212,6 +216,26 @@ function GuestForm({ guest, onSubmit, onDelete, onCancel }: Props) {
                 placeholder="E.G. 250..."
                 {...register('gift')}
               />
+            </FormField>
+          </FormSection>
+
+          <FormSection title="CLASSIFIED_PROTOCOL">
+            <FormField label="SECRET_MISSION">
+              <label
+                htmlFor="secretMission"
+                className="flex items-center gap-2 px-3 py-2 rounded border border-border bg-surface hover:border-primary/50 cursor-pointer transition-colors"
+              >
+                <input
+                  id="secretMission"
+                  type="checkbox"
+                  className="accent-primary"
+                  {...register('secretMission')}
+                />
+                <span className="text-base leading-none">🕯️</span>
+                <span className="text-body-sm text-foreground tracking-wider">
+                  SECRET_MISSION_AVAILABLE
+                </span>
+              </label>
             </FormField>
           </FormSection>
         </div>

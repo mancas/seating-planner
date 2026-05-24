@@ -13,6 +13,7 @@ export const guests: Guest[] = [
         'Severe nut allergy. Prefers quiet zone seating away from main speakers.',
     },
     allergies: ['LACTOSE'],
+    secretMission: false,
   },
   {
     id: '3371-BK',
@@ -25,6 +26,7 @@ export const guests: Guest[] = [
       notes: null,
     },
     allergies: [],
+    secretMission: true,
   },
   {
     id: '5580-CR',
@@ -37,6 +39,7 @@ export const guests: Guest[] = [
       notes: null,
     },
     allergies: ['SOY'],
+    secretMission: false,
   },
   {
     id: '1039-CK',
@@ -49,6 +52,7 @@ export const guests: Guest[] = [
       notes: null,
     },
     allergies: ['SPICY'],
+    secretMission: false,
   },
   {
     id: '3311-DS',
@@ -61,6 +65,7 @@ export const guests: Guest[] = [
       notes: 'Celiac disease - strict cross-contamination protocol',
     },
     allergies: ['LACTOSE', 'SEAFOOD'],
+    secretMission: false,
   },
   {
     id: '8821-BL',
@@ -73,5 +78,6 @@ export const guests: Guest[] = [
       notes: null,
     },
     allergies: [],
+    secretMission: true,
   },
 ]

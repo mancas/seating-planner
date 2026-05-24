@@ -2,7 +2,11 @@ import { useState } from 'react'
 import { LuGift, LuX } from 'react-icons/lu'
 import type { Guest } from '../../data/guest-types'
 import type { FloorTable } from '../../data/table-types'
-import { ALLERGY_EMOJI, getGuestSeatLocation } from '../../data/guest-utils'
+import {
+  ALLERGY_EMOJI,
+  SECRET_MISSION_EMOJI,
+  getGuestSeatLocation,
+} from '../../data/guest-utils'
 import IconButton from '../atoms/IconButton'
 import StatusBadge from '../atoms/StatusBadge'
 import ConfirmDialog from '../molecules/ConfirmDialog'
@@ -154,6 +158,26 @@ function renderContent(guest: Guest, tables: FloorTable[]) {
           ) : (
             <p className="text-body-sm text-foreground-muted">
               NO_RESTRICTIONS
+            </p>
+          )}
+        </GuestDetailSection>
+      </div>
+
+      {/* Secret Mission */}
+      <div className="px-4">
+        <GuestDetailSection title="CLASSIFIED_PROTOCOL">
+          {guest.secretMission ? (
+            <div className="flex items-center gap-2 py-2">
+              <span aria-hidden="true" className="text-base">
+                {SECRET_MISSION_EMOJI}
+              </span>
+              <p className="text-body-sm text-foreground">
+                SECRET_MISSION: <span className="font-bold">AVAILABLE</span>
+              </p>
+            </div>
+          ) : (
+            <p className="text-body-sm text-foreground-muted">
+              NO_MISSION_ASSIGNED
             </p>
           )}
         </GuestDetailSection>
